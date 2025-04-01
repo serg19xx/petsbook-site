@@ -1,0 +1,61 @@
+{
+  "navigation": {
+    "menu": "Menu",
+    "account": "Compte",
+    "home": "Accueil",
+    "pets": "Animaux",
+    "posts": "Publications",
+    "advertising": "Publicité",
+    "search": "Rechercher",
+    "notifications": "Notifications",
+    "profile": "Profil",
+    "user_menu": {
+      "my_profile": "Mon Profil",
+      "settings": "Paramètres",
+      "help": "Aide",
+      "logout": "Déconnexion",
+      "login": "Connexion",
+      "register": "S'inscrire"
+    }
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "login_title": "Connexion",
+    "login_button": "Se connecter",
+    "login_loading": "Connexion en cours...",
+    "email": "Email",
+    "password": "Mot de passe",
+    "email_placeholder": "Entrez votre email",
+    "password_placeholder": "Entrez votre mot de passe",
+    "forgot_password": "Mot de passe oublié?",
+    "no_account": "Pas encore de compte?",
+    "signup_link": "S'inscrire",
+    "error": {
+      "invalid_credentials": "Email ou mot de passe invalide",
+      "server_error": "Erreur serveur. Veuillez réessayer plus tard"
+    },
+    "recovery_title": "Récupération du mot de passe",
+    "recovery_description": "Entrez votre email pour recevoir les instructions de réinitialisation",
+    "recovery_button": "Envoyer",
+    "recovery_loading": "Envoi...",
+    "recovery_success": "Les instructions ont été envoyées à votre email",
+    "recovery_error": "Une erreur s'est produite lors de l'envoi des instructions",
+    "back_to_login": "Retour à la connexion"
+  },
+  "stats": {
+    "users": "utilisateurs",
+    "pets": "animaux",
+    "posts": "publications"
+  },
+  "common": {
+    "partners": "Nos Partenaires"
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "email": "Veuillez entrer une adresse email valide",
+    "minLength": "Longueur minimale: {min} caractères",
+    "maxLength": "Longueur maximale: {max} caractères",
+    "passwordMatch": "Les mots de passe doivent correspondre"
+  }
+}

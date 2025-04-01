@@ -1,0 +1,87 @@
+{
+  "navigation": {
+    "menu": "Меню",
+    "account": "Аккаунт",
+    "home": "Главная",
+    "pets": "Питомцы",
+    "posts": "Публикации",
+    "advertising": "Реклама",
+    "search": "Поиск",
+    "notifications": "Уведомления",
+    "profile": "Профиль",
+    "user_menu": {
+      "my_profile": "Мой профиль",
+      "my_pets": "Мои питомцы",
+      "my_posts": "Мои публикации",
+      "my_ads": "Мои объявления",
+      "settings": "Настройки",
+      "help": "Помощь",
+      "logout": "Выйти",
+      "login": "Войти",
+      "register": "Регистрация"
+    }
+  },
+  "auth": {
+    "login": "Войти",
+    "register": "Регистрация",
+    "login_title": "Вход в систему",
+    "login_button": "Войти",
+    "login_loading": "Выполняется вход...",
+    "email": "Email",
+    "password": "Пароль",
+    "email_placeholder": "Введите ваш email",
+    "password_placeholder": "Введите ваш пароль",
+    "forgot_password": "Забыли пароль?",
+    "no_account": "Еще нет аккаунта?",
+    "signup_link": "Зарегистрироваться",
+    "error": {
+      "invalid_credentials": "Неверный email или пароль",
+      "server_error": "Ошибка сервера. Попробуйте позже"
+    },
+    "recovery_title": "Восстановление пароля",
+    "recovery_description": "Введите ваш email для получения инструкций по восстановлению пароля",
+    "recovery_button": "Отправить",
+    "recovery_loading": "Отправка...",
+    "recovery_success": "Инструкции по восстановлению пароля отправлены на ваш email",
+    "recovery_error": "Произошла ошибка при отправке инструкций",
+    "back_to_login": "Вернуться к входу",
+    "signup_title": "Регистрация",
+    "signup_button": "Зарегистрироваться",
+    "signup_loading": "Регистрация...",
+    "signup_success": "Регистрация успешно завершена",
+    "signup_error": "Ошибка при регистрации",
+    "confirm_password": "Подтвердите пароль",
+    "role": {
+      "label": "Выберите роль",
+      "user": "Пользователь",
+      "business": "Бизнес",
+      "admin": "Администратор",
+      "select_placeholder": "Выберите роль"
+    },
+    "have_account": "Уже есть аккаунт?",
+    "login_link": "Войти"
+  },
+  "stats": {
+    "pets": "питомцев",
+    "posts": "постов"
+  },
+  "common": {
+    "partners": "Наши партнеры"
+  },
+  "validation": {
+    "required": "Это поле обязательно для заполнения",
+    "email": "Пожалуйста, введите корректный email адрес",
+    "minLength": "Минимальная длина: {min} символов",
+    "maxLength": "Максимальная длина: {max} символов",
+    "passwordMatch": "Пароли должны совпадать"
+  },
+  "errors": {
+    "network": "Ошибка сети. Проверьте подключение к интернету",
+    "server": "Ошибка сервера. Попробуйте позже",
+    "unauthorized": "Необходима авторизация",
+    "forbidden": "Доступ запрещен",
+    "notFound": "Ресурс не найден",
+    "validation": "Проверьте правильность заполнения формы",
+    "unknown": "Произошла неизвестная ошибка"
+  }
+}

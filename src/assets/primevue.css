@@ -1,0 +1,47 @@
+/* PrimeVue Input styling */
+.p-inputtext {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-lg transition-colors duration-200;
+}
+
+.p-inputtext:enabled:hover {
+  @apply border-gray-400;
+}
+
+.p-inputtext:enabled:focus {
+  @apply outline-none ring-2 ring-primary-500 border-transparent;
+}
+
+.p-inputtext.p-invalid {
+  @apply border-red-500;
+}
+
+/* PrimeVue Button styling */
+.p-button {
+  @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+}
+
+.p-button:not(.p-button-outlined):not(.p-button-text) {
+  @apply bg-primary-600 text-white hover:bg-primary-700;
+}
+
+.p-button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* PrimeVue Message styling */
+.p-message {
+  @apply rounded-lg p-4 mb-4;
+}
+
+.p-message.p-message-error {
+  @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+.p-message.p-message-success {
+  @apply bg-green-50 text-green-700 border border-green-200;
+}
+
+/* PrimeVue Small (error messages) styling */
+.p-error {
+  @apply text-sm text-red-600 mt-1 block;
+}

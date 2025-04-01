@@ -1,0 +1,87 @@
+{
+  "navigation": {
+    "menu": "Меню",
+    "account": "Обліковий запис",
+    "home": "Головна",
+    "pets": "Тварини",
+    "posts": "Публікації",
+    "advertising": "Реклама",
+    "search": "Пошук",
+    "notifications": "Сповіщення",
+    "profile": "Профіль",
+    "user_menu": {
+      "my_profile": "Мій профіль",
+      "settings": "Налаштування",
+      "help": "Допомога",
+      "logout": "Вийти",
+      "login": "Увійти",
+      "register": "Реєстрація"
+    }
+  },
+  "auth": {
+    "signup_title": "Реєстрація",
+    "signup_button": "Зареєструватися",
+    "signup_loading": "Реєстрація...",
+    "signup_success": "Реєстрація успішно завершена",
+    "signup_error": "Помилка при реєстрації",
+    "email": "Email",
+    "password": "Пароль",
+    "confirm_password": "Підтвердіть пароль",
+    "role": {
+      "label": "Оберіть роль",
+      "user": "Користувач",
+      "business": "Бізнес",
+      "admin": "Адміністратор",
+      "select_placeholder": "Оберіть роль"
+    },
+    "have_account": "Вже маєте обліковий запис?",
+    "login_link": "Увійти",
+    "login": "Увійти",
+    "register": "Реєстрація",
+    "login_title": "Вхід",
+    "login_button": "Увійти",
+    "login_loading": "Виконується вхід...",
+    "email": "Email",
+    "password": "Пароль",
+    "email_placeholder": "Введіть ваш email",
+    "password_placeholder": "Введіть ваш пароль",
+    "forgot_password": "Забули пароль?",
+    "no_account": "Ще немає облікового запису?",
+    "signup_link": "Зареєструватися",
+    "error": {
+      "invalid_credentials": "Невірний email або пароль",
+      "server_error": "Помилка сервера. Спробуйте пізніше"
+    },
+    "recovery_title": "Відновлення пароля",
+    "recovery_description": "Введіть ваш email для отримання інструкцій з відновлення пароля",
+    "recovery_button": "Надіслати",
+    "recovery_loading": "Надсилання...",
+    "recovery_success": "Інструкції з відновлення пароля надіслано на ваш email",
+    "recovery_error": "Виникла помилка під час надсилання інструкцій",
+    "back_to_login": "Повернутися до входу"
+  },
+  "stats": {
+    "users": "користувачів",
+    "pets": "тварин",
+    "posts": "дописів"
+  },
+  "common": {
+    "partners": "Наші Партнери"
+  },
+  "validation": {
+    "required": "Це поле обов'язкове для заповнення",
+    "email": "Будь ласка, введіть коректний email",
+    "minLength": "Мінімальна довжина: {min} символів",
+    "maxLength": "Максимальна довжина: {max} символів",
+    "passwordMatch": "Паролі повинні співпадати"
+  },
+  "errors": {
+    "network": "Помилка мережі. Перевірте підключення до інтернету",
+    "server": "Помилка сервера. Спробуйте пізніше",
+    "unauthorized": "Необхідна авторизація",
+    "forbidden": "Доступ заборонено",
+    "notFound": "Ресурс не знайдено",
+    "validation": "Перевірте правильність заповнення форми",
+    "unknown": "Виникла невідома помилка"
+  }
+}
