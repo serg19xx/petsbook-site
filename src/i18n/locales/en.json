@@ -97,5 +97,16 @@
     "notFound": "Resource not found",
     "validation": "Please check the form for errors",
     "unknown": "An unknown error occurred"
+  },
+  "notifications": {
+    "welcome": "Welcome!",
+    "login_success": "Successfully logged in",
+    "login_error": "Login error",
+    "logout_success": "Successfully logged out",
+    "unexpected_error": "An unexpected error occurred",
+    "form_errors": "Please check the form for errors"
+  },
+  "validation": {
+    "form_errors": "Please correct the form errors"
   }
 }

@@ -71,10 +71,13 @@ import { useAuthStore } from '@/stores/AuthStore'
 import { useVuelidate } from '@vuelidate/core'
 import { required, email } from '@vuelidate/validators'
 import { withI18nMessage } from '@/utils/validation'
+import { useI18n } from 'vue-i18n'
+import { toast } from 'vue3-toastify'
 import TwoFactorAuth from '@/components/auth/TwoFactorAuth.vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
@@ -99,40 +102,33 @@ const validateField = async (field) => {
 
 const handleSubmit = async () => {
   const isValid = await v$.value.$validate()
-  if (!isValid) return
+  if (!isValid) {
+    toast.error(t('validation.form_errors'))
+    return
+  }
 
   loading.value = true
   error.value = ''
 
   try {
-    console.log('Login attempt with:', {
-      email: formData.email,
-      password: formData.password?.length || 0 // логируем только длину пароля для безопасности
-    })
-
     const result = await authStore.login({
       email: formData.email,
       password: formData.password
     })
 
-    console.log('Login response:', {
-      success: result.success,
-      message: result.message
-    })
-
     if (result.success) {
-      console.log('Login successful, redirecting...')
+      toast.success(t('notifications.login_success'))
       const redirectPath = router.currentRoute.value.query.redirect || '/'
       await router.push(redirectPath)
       return
     }
 
-    console.log('Login failed:', result.message)
+    toast.error(t('notifications.login_error'))
     error.value = result.message
-
   } catch (err) {
+    toast.error(t('notifications.unexpected_error'))
+    error.value = t('notifications.unexpected_error')
     console.error('Login error:', err)
-    error.value = 'Произошла непредвиденная ошибка'
   } finally {
     loading.value = false
   }

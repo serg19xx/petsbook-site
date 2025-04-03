@@ -2,6 +2,106 @@
 @tailwind components;
 @tailwind utilities;
 
+@import 'vue3-toastify/dist/index.css';
+
+/* Основные стили для toast */
+.Vue3Toastify__toast {
+  @apply font-sans;
+  min-height: 64px;
+  padding: 12px 16px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  animation-duration: 300ms !important; /* Уменьшаем время анимации появления */
+  transition: all 300ms ease-in-out !important; /* Ускоряем переходы */
+}
+
+/* Кастомная анимация для появления справа */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* Применяем кастомные анимации */
+.Vue3Toastify__bounce-enter-active {
+  animation: slideInRight 300ms ease-out forwards !important;
+}
+
+.Vue3Toastify__bounce-exit-active {
+  animation: slideOutRight 300ms ease-in forwards !important;
+}
+
+/* Стили для разных типов уведомлений */
+.Vue3Toastify__toast--success {
+  @apply bg-green-600;
+  background: linear-gradient(to right, #4CAF50, #45a049);
+}
+
+.Vue3Toastify__toast--error {
+  @apply bg-red-600;
+  background: linear-gradient(to right, #f44336, #e53935);
+}
+
+.Vue3Toastify__toast--warning {
+  @apply bg-yellow-600;
+  background: linear-gradient(to right, #ff9800, #fb8c00);
+}
+
+.Vue3Toastify__toast--info {
+  @apply bg-blue-600;
+  background: linear-gradient(to right, #2196F3, #1e88e5);
+}
+
+/* Стили для прогресс-бара */
+.Vue3Toastify__progress-bar {
+  height: 4px;
+  opacity: 0.8;
+  transform-origin: left;
+  transition: transform linear !important; /* Делаем анимацию прогресс-бара линейной */
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Контейнер уведомлений */
+.Vue3Toastify__toast-container {
+  padding: 16px;
+  transition: transform 300ms ease-in-out;
+}
+
+/* Стили для текста и кнопки закрытия */
+.Vue3Toastify__toast-body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  padding: 4px 8px;
+  color: white;
+}
+
+.Vue3Toastify__close-button {
+  color: white;
+  opacity: 0.7;
+  transition: opacity 200ms ease;
+}
+
+.Vue3Toastify__close-button:hover {
+  opacity: 1;
+}
+
 @layer base {
   :root {
     --primary-50: 236 253 245;
@@ -170,6 +270,8 @@
   /* Base styles for form elements */
   .input-base {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg 
+    bg-white /* добавляем явный белый фон */
+    text-gray-900 /* добавляем явный цвет текста */
     transition-colors duration-200
     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
     disabled:bg-gray-100 disabled:cursor-not-allowed;
