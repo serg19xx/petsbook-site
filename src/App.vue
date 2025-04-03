@@ -6,7 +6,7 @@
       <div class="container mx-auto">
         <!-- Первая строка: логотип и язык -->
         <div class="px-4 py-3 flex justify-between items-center border-b">
-          <router-link to="/" class="text-xl font-bold text-sky-900">Petsbook</router-link>
+          <router-link to="/" class="text-3xl font-bold text-green-700">Petsbook</router-link>
           <LanguageSwitcher />
         </div>
 
@@ -54,7 +54,13 @@
                   icon="mdi:account-outline"
                   class="w-8 h-8 text-gray-600"
                 />
-                <img v-else :src="userAvatar" alt="User avatar" class="w-8 h-8 rounded-full" />
+                <img
+                  v-else
+                  :src="userAvatar"
+                  :alt="userName"
+                  class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+                  @error="handleAvatarError"
+                />
               </button>
               <!-- Выпадающее меню -->
               <div
@@ -164,7 +170,19 @@ const isMobileMenuOpen = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.name || 'User')
-const userAvatar = computed(() => authStore.user?.avatar || '/default-avatar.png')
+const userAvatar = computed(() => {
+  if (authStore.user?.avatar) {
+    return authStore.user.avatar
+  }
+  // Используем ui-avatars.com для генерации аватара на основе имени
+  const name = authStore.user?.name || 'User'
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`
+})
+
+// Альтернативный вариант со статической заглушкой
+// const userAvatar = computed(() =>
+//   authStore.user?.avatar || '/images/default-avatar.png'
+// )
 
 const menuItems = [
   { path: '/', label: 'home' },
@@ -180,9 +198,11 @@ const userMenuItems = [
 ]
 
 const handleLogout = async () => {
-  await authStore.logout()
-  isUserMenuOpen.value = false
-  router.push('/login')
+  const result = await authStore.logout()
+  if (result.success) {
+    isUserMenuOpen.value = false // закрываем меню пользователя
+    router.push('/login') // перенаправляем на страницу входа
+  }
 }
 
 // Добавляем обработчик клика вне меню

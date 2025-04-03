@@ -1,156 +1,131 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import api from '@/api/axios'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
-  const isAuthenticated = ref(false)
   const token = ref(localStorage.getItem('token') || null)
+  const user = ref(null)
+  const loading = ref(false)
+  const error = ref(null)
 
-  const login = async (email, password) => {
+  const isAdmin = computed(() => user.value?.role === 'admin')
+  const isUser = computed(() => user.value?.role === 'user')
+  const isBusiness = computed(() => user.value?.role === 'business')
+
+  const login = async (credentials) => {
+    loading.value = true
+    error.value = null
+
     try {
-      const response = await api.post('/auth/login', { email, password })
-      token.value = response.data.token
-      user.value = response.data.user
-      isAuthenticated.value = true
-      localStorage.setItem('token', token.value)
-      return { success: true }
-    } catch (error) {
-      console.error('Login error:', error)
+      console.log('Sending login request to:', '/auth/login')
+      const response = await api.post('/auth/login', credentials)
+      console.log('Raw server response:', response.data)
+
+      // Проверяем наличие данных в ответе
+      if (response.data && response.data.token) {
+        token.value = response.data.token
+        localStorage.setItem('token', response.data.token)
+        user.value = response.data.user
+        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+
+        return {
+          success: true,
+          message: 'Вход выполнен успешно',
+        }
+      }
+
+      // Если нет токена в ответе, считаем это ошибкой
+      error.value = response.data?.message || 'Неверные учетные данные'
       return {
         success: false,
-        message: error.response?.data?.message || 'Authentication failed',
+        message: error.value,
       }
-    }
-  }
-
-  const logout = () => {
-    user.value = null
-    token.value = null
-    isAuthenticated.value = false
-    localStorage.removeItem('token')
-  }
-
-  const verify2FA = async ({ email, code }) => {
-    try {
-      const response = await api.post('/auth/verify-2fa', { email, code })
-      if (response.data.success) {
-        // Установка токена и данных пользователя после успешной 2FA
-        setToken(response.data.token)
-        setUser(response.data.user)
-      }
-      return response.data
-    } catch (error) {
-      console.error('2FA verification error:', error)
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Ошибка проверки 2FA',
-      }
-    }
-  }
-
-  const register = async (email, password) => {
-    try {
-      const response = await api.post('/auth/register', { email, password })
-      return {
-        success: true,
-        message: 'Регистрация успешна',
-      }
-    } catch (error) {
-      console.error('Registration error:', error)
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Ошибка при регистрации',
-      }
-    }
-  }
-
-  const requestPasswordReset = async (email) => {
-    try {
-      const response = await api.post('/auth/request-reset', { email })
-      return {
-        success: true,
-        message: response.data.message,
-      }
-    } catch (error) {
-      console.error('Password reset request error:', error)
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to send reset request',
-      }
-    }
-  }
-
-  const resetPassword = async (token, newPassword) => {
-    try {
-      const response = await api.post('/auth/reset-password', {
-        token,
-        password: newPassword,
+    } catch (err) {
+      console.error('Login request error:', {
+        status: err.response?.status,
+        data: err.response?.data,
+        message: err.message,
       })
+
+      error.value = err.response?.data?.message || 'Ошибка при входе в систему'
+      return {
+        success: false,
+        message: error.value,
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
+  const logout = async () => {
+    try {
+      // Сначала очищаем локальное состояние
+      const currentToken = token.value
+
+      // Очищаем состояние
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+
+      // Очищаем заголовок авторизации
+      delete api.defaults.headers.common['Authorization']
+
+      // Уведомляем сервер только если был токен
+      if (currentToken) {
+        try {
+          await api.post(
+            '/auth/logout',
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${currentToken}`,
+              },
+            },
+          )
+        } catch (error) {
+          console.warn('Server logout failed:', error)
+          // Игнорируем ошибку, так как локальное состояние уже очищено
+        }
+      }
+
       return {
         success: true,
-        message: response.data.message,
+        message: 'Выход выполнен успешно',
       }
-    } catch (error) {
-      console.error('Password reset error:', error)
+    } catch (err) {
+      console.warn('Logout error:', err)
+      // Даже при ошибке считаем выход успешным, так как локальное состояние уже очищено
       return {
-        success: false,
-        message: error.response?.data?.message || 'Failed to reset password',
+        success: true,
+        message: 'Выход выполнен успешно',
       }
     }
   }
 
-  const enable2FA = async () => {
-    try {
-      const response = await api.post('/auth/2fa/enable')
-      return response.data
-    } catch (error) {
-      console.error('Enable 2FA error:', error)
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Ошибка включения 2FA',
-      }
-    }
-  }
+  // Проверка аутентификации
+  const isAuthenticated = computed(() => !!token.value && !!user.value)
 
-  const disable2FA = async () => {
-    try {
-      const response = await api.post('/auth/2fa/disable')
-      return response.data
-    } catch (error) {
-      console.error('Disable 2FA error:', error)
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Ошибка отключения 2FA',
-      }
-    }
-  }
-
-  const get2FAStatus = async () => {
-    try {
-      const response = await api.get('/auth/2fa/status')
-      return response.data
-    } catch (error) {
-      console.error('Get 2FA status error:', error)
-      return {
-        enabled: false,
-        error: true,
-      }
+  // Инициализация состояния при загрузке
+  const initializeAuth = () => {
+    const savedToken = localStorage.getItem('token')
+    if (savedToken) {
+      token.value = savedToken
+      api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
+      // Здесь можно добавить запрос для получения данных пользователя
     }
   }
 
   return {
-    user,
-    isAuthenticated,
     token,
+    user,
+    loading,
+    error,
+    isAdmin,
+    isUser,
+    isBusiness,
+    isAuthenticated,
     login,
     logout,
-    verify2FA,
-    register,
-    requestPasswordReset,
-    resetPassword,
-    enable2FA,
-    disable2FA,
-    get2FAStatus,
+    initializeAuth,
   }
 })

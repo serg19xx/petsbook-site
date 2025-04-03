@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'node:url'
+import { fileURLToPath } from 'url'
 
 export default defineConfig({
   plugins: [vue()],
@@ -11,15 +11,12 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    strictPort: false,
-    host: true,
-    hmr: {
-      overlay: false,
-    },
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080', // Убедитесь, что это правильный порт вашего PHP сервера
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

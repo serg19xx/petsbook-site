@@ -13,6 +13,7 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('@/views/auth/LoginView.vue'),
+      // Добавляем мета-тег для предотвращения доступа авторизованным пользователям
       meta: { requiresGuest: true },
     },
     {

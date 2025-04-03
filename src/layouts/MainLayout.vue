@@ -2,7 +2,7 @@
 <template>
   <div class="min-h-screen bg-gray-50">
     <!-- Banner Scroll Section -->
-    <div class="bg-white shadow-sm border-b fixed top-[125px] w-full z-30">
+    <div class="bg-white shadow-sm border-b fixed top-[117px] w-full z-30">
       <div class="container mx-auto px-4">
         <div class="py-2 relative overflow-hidden">
           <div class="banner-scroll flex items-center space-x-6 py-1.5">

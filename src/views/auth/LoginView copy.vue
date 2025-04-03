@@ -65,7 +65,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useVuelidate } from '@vuelidate/core'
@@ -81,14 +81,19 @@ const loading = ref(false)
 const error = ref('')
 const show2FA = ref(false)
 
-const formData = reactive({
+const formData = ref({
   email: '',
-  password: ''
+  password: '',
 })
 
 const rules = {
-  email: { required, email },
-  password: { required }
+  email: {
+    required: withI18nMessage(required),
+    email: withI18nMessage(email),
+  },
+  password: {
+    required: withI18nMessage(required),
+  },
 }
 
 const v$ = useVuelidate(rules, formData)
@@ -105,34 +110,18 @@ const handleSubmit = async () => {
   error.value = ''
 
   try {
-    console.log('Login attempt with:', {
-      email: formData.email,
-      password: formData.password?.length || 0 // логируем только длину пароля для безопасности
-    })
+    const result = await authStore.login(formData.value)
 
-    const result = await authStore.login({
-      email: formData.email,
-      password: formData.password
-    })
-
-    console.log('Login response:', {
-      success: result.success,
-      message: result.message
-    })
-
-    if (result.success) {
-      console.log('Login successful, redirecting...')
-      const redirectPath = router.currentRoute.value.query.redirect || '/'
-      await router.push(redirectPath)
-      return
+    if (result.requires2FA) {
+      show2FA.value = true
+    } else if (result.success) {
+      handleLoginSuccess()
+    } else {
+      error.value = result.message || 'Ошибка входа'
     }
-
-    console.log('Login failed:', result.message)
-    error.value = result.message
-
   } catch (err) {
+    error.value = 'Произошла ошибка при входе'
     console.error('Login error:', err)
-    error.value = 'Произошла непредвиденная ошибка'
   } finally {
     loading.value = false
   }
@@ -143,3 +132,27 @@ const handleLoginSuccess = () => {
   router.push(redirectPath)
 }
 </script>
+
+<style scoped>
+:deep(.p-password input) {
+  width: 100%;
+}
+
+:deep(.p-button) {
+  background-color: #4f46e5;
+  border: none;
+  font-weight: 500;
+}
+
+:deep(.p-button:enabled:hover) {
+  background-color: #4338ca;
+}
+
+:deep(.p-button:enabled:active) {
+  background-color: #3730a3;
+}
+
+:deep(.p-button.p-button-loading) {
+  background-color: #6366f1;
+}
+</style>

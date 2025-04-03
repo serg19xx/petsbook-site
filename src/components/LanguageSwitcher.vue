@@ -6,7 +6,7 @@
       class="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-100"
     >
       <Icon :icon="`flag:${currentCountryCode.toLowerCase()}-4x3`" class="w-6 h-4" />
-      <span class="text-sm">{{ SUPPORTED_LANGUAGES[currentLanguage] }}</span>
+      <span class="text-sm hidden sm:block">{{ SUPPORTED_LANGUAGES[currentLanguage] }}</span>
     </button>
 
     <div
