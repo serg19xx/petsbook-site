@@ -1,6 +1,6 @@
 // Augment: This file is stable. Do not modify.
 <template>
-  <div>
+  <div v-if="isReady"> <!-- Добавляем проверку готовности -->
     <!-- Верхняя строка меню -->
     <header class="bg-white shadow fixed top-0 left-0 right-0 z-50">
       <div class="container mx-auto">
@@ -59,7 +59,8 @@
                   :src="userAvatar"
                   :alt="userName"
                   class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
-                  @error="handleAvatarError"
+                  loading="lazy"
+                  crossorigin="anonymous"
                 />
               </button>
               <!-- Выпадающее меню -->
@@ -154,35 +155,52 @@
       <router-view />
     </div>
   </div>
+  <div v-else class="flex items-center justify-center min-h-screen">
+    <!-- Здесь можно добавить loader -->
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
+import { useUserStore } from '@/stores/UserStore'
 import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const userStore = useUserStore()
 const isUserMenuOpen = ref(false)
 const isMobileMenuOpen = ref(false)
+const isReady = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
-const userName = computed(() => authStore.user?.name || 'User')
-const userAvatar = computed(() => {
-  if (authStore.user?.avatar) {
-    return authStore.user.avatar
+const userName = computed(() => userStore.userData?.name || 'User')
+const userAvatar = computed(() => userStore.userData?.avatar)
+
+// Инициализация данных
+const initializeData = async () => {
+  try {
+    if (isAuthenticated.value && !userStore.userData) {
+      await userStore.fetchUserData()
+    }
+  } finally {
+    isReady.value = true
   }
-  // Используем ui-avatars.com для генерации аватара на основе имени
-  const name = authStore.user?.name || 'User'
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&color=fff&size=128`
+}
+
+onMounted(async () => {
+  await initializeData()
 })
 
-// Альтернативный вариант со статической заглушкой
-// const userAvatar = computed(() =>
-//   authStore.user?.avatar || '/images/default-avatar.png'
-// )
+// Следим за изменением статуса аутентификации
+watch(() => authStore.isAuthenticated, async (newValue) => {
+  if (newValue && !userStore.userData) {
+    await userStore.fetchUserData()
+  }
+})
 
 const menuItems = [
   { path: '/', label: 'home' },

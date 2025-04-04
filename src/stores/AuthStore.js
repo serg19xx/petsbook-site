@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api/axios'
+import { useUserStore } from './UserStore'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
@@ -17,16 +18,20 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      console.log('Sending login request to:', '/auth/login')
       const response = await api.post('/auth/login', credentials)
-      console.log('Raw server response:', response.data)
 
-      // Проверяем наличие данных в ответе
       if (response.data && response.data.token) {
         token.value = response.data.token
         localStorage.setItem('token', response.data.token)
-        user.value = response.data.user
         api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+
+        // Получаем данные пользователя после успешного логина
+        const userStore = useUserStore()
+        const userDataResult = await userStore.fetchUserData()
+
+        if (userDataResult.success) {
+          user.value = userDataResult.data
+        }
 
         return {
           success: true,
@@ -34,19 +39,13 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
 
-      // Если нет токена в ответе, считаем это ошибкой
       error.value = response.data?.message || 'Неверные учетные данные'
       return {
         success: false,
         message: error.value,
       }
     } catch (err) {
-      console.error('Login request error:', {
-        status: err.response?.status,
-        data: err.response?.data,
-        message: err.message,
-      })
-
+      console.error('Login request error:', err)
       error.value = err.response?.data?.message || 'Ошибка при входе в систему'
       return {
         success: false,
@@ -59,7 +58,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      // Сначала очищаем локальное состояние
       const currentToken = token.value
 
       // Очищаем состояние
@@ -67,24 +65,24 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       localStorage.removeItem('token')
 
+      // Очищаем данные пользователя
+      const userStore = useUserStore()
+      userStore.clearUserData()
+
       // Очищаем заголовок авторизации
       delete api.defaults.headers.common['Authorization']
 
-      // Уведомляем сервер только если был токен
       if (currentToken) {
         try {
           await api.post(
             '/auth/logout',
             {},
             {
-              headers: {
-                Authorization: `Bearer ${currentToken}`,
-              },
+              headers: { Authorization: `Bearer ${currentToken}` },
             },
           )
         } catch (error) {
           console.warn('Server logout failed:', error)
-          // Игнорируем ошибку, так как локальное состояние уже очищено
         }
       }
 
@@ -92,12 +90,10 @@ export const useAuthStore = defineStore('auth', () => {
         success: true,
         message: 'Выход выполнен успешно',
       }
-    } catch (err) {
-      console.warn('Logout error:', err)
-      // Даже при ошибке считаем выход успешным, так как локальное состояние уже очищено
+    } catch (error) {
       return {
-        success: true,
-        message: 'Выход выполнен успешно',
+        success: false,
+        message: 'Ошибка при выходе',
       }
     }
   }
@@ -106,12 +102,24 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
   // Инициализация состояния при загрузке
-  const initializeAuth = () => {
+  const initializeAuth = async () => {
     const savedToken = localStorage.getItem('token')
     if (savedToken) {
       token.value = savedToken
       api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
-      // Здесь можно добавить запрос для получения данных пользователя
+
+      const userStore = useUserStore()
+      try {
+        const result = await userStore.fetchUserData()
+        if (result.success) {
+          user.value = result.data
+        } else {
+          await logout()
+        }
+      } catch (err) {
+        console.error('Failed to fetch user data during initialization:', err)
+        await logout()
+      }
     }
   }
 

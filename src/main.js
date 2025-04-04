@@ -6,6 +6,7 @@ import i18n from './i18n'
 import './assets/main.css'
 import { createPinia } from 'pinia'
 import { useLanguageStore } from './stores/LanguageStore'
+import { useAuthStore } from './stores/AuthStore'
 import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
@@ -13,6 +14,11 @@ const app = createApp(App)
 const pinia = createPinia()
 
 app.use(pinia)
+
+// Инициализируем авторизацию перед монтированием приложения
+const authStore = useAuthStore()
+await authStore.initializeAuth()
+
 app.use(router)
 app.use(i18n)
 app.use(Vue3Toastify, {

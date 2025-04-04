@@ -1,8 +1,8 @@
+@import 'vue3-toastify/dist/index.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import 'vue3-toastify/dist/index.css';
 
 /* Основные стили для toast */
 .Vue3Toastify__toast {
@@ -12,8 +12,8 @@
   margin-bottom: 1rem;
   border-radius: 8px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  animation-duration: 300ms !important; /* Уменьшаем время анимации появления */
-  transition: all 300ms ease-in-out !important; /* Ускоряем переходы */
+  animation-duration: 300ms !important;
+  transition: all 300ms ease-in-out !important;
 }
 
 /* Кастомная анимация для появления справа */
