@@ -220,6 +220,75 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const requestPasswordReset = async (email) => {
+    try {
+      const response = await api.post(
+        '/auth/password-reset',
+        {
+          email: email,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+
+      console.log('Password reset response:', response)
+
+      return {
+        success: true,
+        message: 'Инструкции по восстановлению пароля отправлены на ваш email',
+      }
+    } catch (error) {
+      console.error('Password reset error:', error)
+
+      // Получаем сообщение об ошибке из ответа сервера
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Ошибка при восстановлении пароля'
+
+      return {
+        success: false,
+        message: errorMessage,
+      }
+    }
+  }
+
+  const resetPassword = async ({ token, password }) => {
+    try {
+      const response = await api.post('/auth/set-new-password', {
+        password,
+        token,
+      })
+
+      if (response.data?.status === 200) {
+        return {
+          success: true,
+          message: 'Пароль успешно изменен',
+        }
+      }
+
+      return {
+        success: false,
+        message: response.data?.message || 'Ошибка при смене пароля',
+      }
+    } catch (error) {
+      console.error('Password reset error:', error)
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Ошибка при смене пароля. Возможно, ссылка для сброса устарела или недействительна'
+
+      return {
+        success: false,
+        message: errorMessage,
+      }
+    }
+  }
+
   return {
     token,
     user,
@@ -233,5 +302,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     register,
     initializeAuth,
+    requestPasswordReset,
+    resetPassword,
   }
 })

@@ -56,6 +56,7 @@ import { useAuthStore } from '@/stores/AuthStore'
 import { useVuelidate } from '@vuelidate/core'
 import { required, email } from '@vuelidate/validators'
 import { withI18nMessage } from '@/utils/validation'
+import { toast } from 'vue3-toastify'
 
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
@@ -83,8 +84,12 @@ const validateField = async (fieldName) => {
 }
 
 const handleSubmit = async () => {
-  const isFormCorrect = await v$.value.$validate()
-  if (!isFormCorrect) return
+  const isValid = await v$.value.$validate()
+  if (!isValid) {
+    message.value = 'Введите корректный email адрес'
+    isError.value = true
+    return
+  }
 
   loading.value = true
   message.value = ''
@@ -92,17 +97,23 @@ const handleSubmit = async () => {
 
   try {
     const result = await authStore.requestPasswordReset(formData.value.email)
+
     if (result.success) {
       message.value = result.message
+      isError.value = false
       formData.value.email = ''
-      await v$.value.$reset()
+      toast.success(result.message)
     } else {
       message.value = result.message
       isError.value = true
+      toast.error(result.message)
     }
-  } catch (error) {
-    message.value = $t('auth.recovery_error')
+  } catch (err) {
+    const errorMsg = 'Произошла ошибка при отправке запроса. Попробуйте позже.'
+    message.value = errorMsg
     isError.value = true
+    toast.error(errorMsg)
+    console.error('Password reset error:', err)
   } finally {
     loading.value = false
   }

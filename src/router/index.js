@@ -39,6 +39,12 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/reset-password/:token',
+      name: 'reset-password',
+      component: () => import('@/views/auth/ResetPasswordView.vue'),
+      meta: { requiresGuest: true }, // Доступно только для неавторизованных пользователей
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),
