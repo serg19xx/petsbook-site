@@ -159,13 +159,31 @@ export const useAuthStore = defineStore('auth', () => {
         password: userData.password,
       }
 
-      const response = await api.post('/auth/register', requestData)
+      const response = await api
+        .post('/auth/register', requestData)
+        .then((response) => {
+          console.log('Register success response:', response?.data)
+          return response
+        })
+        .catch((error) => {
+          console.log('Register error response:', error.response?.data)
+          // Возвращаем объект ответа из catch для дальнейшей обработки
+          return {
+            data: {
+              success: false,
+              message:
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Ошибка сервера при регистрации. Пожалуйста, попробуйте позже.',
+            },
+          }
+        })
 
-      if (response.data && response.data.success) {
+      if (response.data?.success) {
         toast.success(
           'Поздравляем с успешной регистрацией! Для завершения процесса, пожалуйста, проверьте вашу электронную почту и перейдите по ссылке для подтверждения email адреса. После подтверждения вы сможете войти в систему.',
           {
-            autoClose: 8000, // Увеличиваем время показа важного сообщения
+            autoClose: 8000,
           },
         )
         return {
@@ -174,21 +192,20 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
 
-      // Получаем конкретную ошибку с бекенда
-      error.value = response.data?.message || 'Ошибка при регистрации'
-      toast.error(error.value, {
+      // Получаем сообщение об ошибке
+      const errorMessage = response.data?.message || 'Ошибка при регистрации'
+      error.value = errorMessage
+      toast.error(errorMessage, {
         autoClose: 5000,
       })
+
       return {
         success: false,
-        message: error.value,
+        message: errorMessage,
       }
     } catch (err) {
-      // Извлекаем конкретную ошибку из ответа бекенда
       const errorMessage =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.'
+        'Произошла непредвиденная ошибка при регистрации. Пожалуйста, попробуйте позже.'
       console.error('Registration error:', err)
       toast.error(errorMessage, {
         autoClose: 5000,

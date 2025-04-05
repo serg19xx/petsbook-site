@@ -28,6 +28,11 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
+      path: '/verify-email/:token',
+      name: 'EmailVerification',
+      component: () => import('@/views/auth/EmailVerification.vue'),
+    },
+    {
       path: '/settings/security',
       name: 'security-settings',
       component: () => import('@/components/security/SecuritySettings.vue'),
