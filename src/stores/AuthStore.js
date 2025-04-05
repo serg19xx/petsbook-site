@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api/axios'
 import { useUserStore } from './UserStore'
+import { toast } from 'vue3-toastify'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
@@ -18,38 +19,61 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      const response = await api.post('/auth/login', credentials)
+      const loginData = {
+        email: credentials?.email?.trim().toLowerCase() || '',
+        password: credentials?.password?.trim() || '',
+      }
 
-      if (response.data && response.data.token) {
-        token.value = response.data.token
-        localStorage.setItem('token', response.data.token)
-        api.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`
+      const response = await api
+        .post('/auth/login', loginData)
+        .then((response) => {
+          console.log('Login success response:', response?.data)
+          return response
+        })
+        .catch((error) => {
+          console.log('Login error response:', error.response?.data)
+          return error.response
+        })
 
-        // Получаем данные пользователя после успешного логина
-        const userStore = useUserStore()
-        const userDataResult = await userStore.fetchUserData()
+      // Проверяем успешный ответ по статусу и коду
+      if (response?.data?.status === 200 && response?.data?.error_code === 'LOGIN_SUCCESS') {
+        // Получаем токен из data
+        const receivedToken = response.data?.data?.token
 
-        if (userDataResult.success) {
-          user.value = userDataResult.data
-        }
+        if (receivedToken) {
+          // Устанавливаем токен в ref
+          token.value = receivedToken
+          // Сохраняем в localStorage
+          localStorage.setItem('token', receivedToken)
+          // Устанавливаем заголовок авторизации
+          api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
-        return {
-          success: true,
-          message: 'Вход выполнен успешно',
+          const userStore = useUserStore()
+          const userDataResult = await userStore.fetchUserData()
+
+          if (userDataResult.success) {
+            user.value = userDataResult.data
+            return {
+              success: true,
+              error_code: 'LOGIN_SUCCESS',
+              message: 'Вход выполнен успешно',
+            }
+          }
         }
       }
 
-      error.value = response.data?.message || 'Неверные учетные данные'
+      // Возвращаем объект с кодом ошибки
       return {
         success: false,
-        message: error.value,
+        error_code: response?.data?.error_code || 'UNKNOWN_ERROR',
+        message: response?.data?.message || 'Неизвестная ошибка при входе',
       }
     } catch (err) {
-      console.error('Login request error:', err)
-      error.value = err.response?.data?.message || 'Ошибка при входе в систему'
+      console.error('Unexpected login error:', err)
       return {
         success: false,
-        message: error.value,
+        error_code: 'SYSTEM_ERROR',
+        message: 'Непредвиденная ошибка при входе',
       }
     } finally {
       loading.value = false
@@ -123,6 +147,62 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const register = async (userData) => {
+    loading.value = true
+    error.value = null
+
+    try {
+      const requestData = {
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        password: userData.password,
+      }
+
+      const response = await api.post('/auth/register', requestData)
+
+      if (response.data && response.data.success) {
+        toast.success(
+          'Поздравляем с успешной регистрацией! Для завершения процесса, пожалуйста, проверьте вашу электронную почту и перейдите по ссылке для подтверждения email адреса. После подтверждения вы сможете войти в систему.',
+          {
+            autoClose: 8000, // Увеличиваем время показа важного сообщения
+          },
+        )
+        return {
+          success: true,
+          message: 'Регистрация успешно завершена',
+        }
+      }
+
+      // Получаем конкретную ошибку с бекенда
+      error.value = response.data?.message || 'Ошибка при регистрации'
+      toast.error(error.value, {
+        autoClose: 5000,
+      })
+      return {
+        success: false,
+        message: error.value,
+      }
+    } catch (err) {
+      // Извлекаем конкретную ошибку из ответа бекенда
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        'Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.'
+      console.error('Registration error:', err)
+      toast.error(errorMessage, {
+        autoClose: 5000,
+      })
+
+      return {
+        success: false,
+        message: errorMessage,
+      }
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     token,
     user,
@@ -134,6 +214,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAuthenticated,
     login,
     logout,
+    register,
     initializeAuth,
   }
 })

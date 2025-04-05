@@ -56,7 +56,9 @@
     "recovery_loading": "Sending...",
     "recovery_success": "Password reset instructions have been sent to your email",
     "recovery_error": "An error occurred while sending instructions",
-    "back_to_login": "Back to Login"
+    "back_to_login": "Back to Login",
+    "name": "Name",
+    "nameLength": "Name must be between 2 and 50 characters"
   },
   "stats": {
     "users": "users",

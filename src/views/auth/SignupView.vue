@@ -10,6 +10,14 @@
 
       <form @submit.prevent="handleSubmit" class="space-y-6" autocomplete="off">
         <Input
+          v-model="formData.name"
+          type="text"
+          :label="$t('auth.name')"
+          :error="v$.name.$error ? v$.name.$errors[0].$message : ''"
+          @blur="validateField('name')"
+        />
+
+        <Input
           v-model="formData.email"
           type="email"
           :label="$t('auth.email')"
@@ -83,6 +91,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const formData = ref({
+  name: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -94,7 +103,19 @@ const emailValidator = (value) => {
   return !value || emailRegex.test(value)
 }
 
+const nameValidator = (value) => {
+  return !value || (value.length >= 2 && value.length <= 50)
+}
+
 const rules = computed(() => ({
+  name: {
+    required: withI18nMessage(required, 'required'),
+    nameLength: withI18nMessage(
+      nameValidator,
+      'nameLength',
+      { min: 2, max: 50 }
+    ),
+  },
   email: {
     required: withI18nMessage(required, 'required'),
     email: withI18nMessage(emailValidator, 'email'),
@@ -128,24 +149,44 @@ const validateField = async (fieldName) => {
 
 const handleSubmit = async () => {
   const isFormCorrect = await v$.value.$validate()
-  if (!isFormCorrect) return
+  if (!isFormCorrect) {
+    toast.error('Пожалуйста, проверьте правильность заполнения всех полей')
+    return
+  }
 
   loading.value = true
 
   try {
     const result = await authStore.register({
+      name: formData.value.name,
       email: formData.value.email,
       password: formData.value.password,
-      role: formData.value.role,
+      role: formData.value.role
     })
 
     if (result.success) {
-      router.push('/login')
-    } else {
-      v$.value.email.$setErrors([result.message])
+      // Очищаем форму после успешной регистрации
+      formData.value = {
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: ''
+      }
+
+      // Даем небольшую задержку перед редиректом, чтобы пользователь успел прочитать сообщение
+      setTimeout(() => {
+        router.push({
+          path: '/login',
+          query: {
+            message: 'verification_sent',
+            email: formData.value.email
+          }
+        })
+      }, 2000)
     }
   } catch (err) {
-    v$.value.email.$setErrors([$t('auth.error')])
+    console.error('Registration error:', err)
   } finally {
     loading.value = false
   }
