@@ -4,7 +4,6 @@ import { useAuthStore } from '@/stores/AuthStore'
 import router from '@/router'
 
 export const handleApiResponse = {
-  // Обработка ответов аутентификации
   auth: {
     handle(response) {
       const code = response?.data?.code || response?.code
@@ -35,7 +34,6 @@ export const handleApiResponse = {
     },
   },
 
-  // Обработка ответов валидации
   validation: {
     handle(response) {
       const code = response?.data?.code || response?.code
@@ -60,7 +58,6 @@ export const handleApiResponse = {
     },
   },
 
-  // Обработка общих ошибок
   error: {
     handle(error) {
       if (!error.response) {

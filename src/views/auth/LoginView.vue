@@ -101,78 +101,17 @@ const validateField = async (field) => {
 }
 
 const handleSubmit = async () => {
-  const isValid = await v$.value.$validate()
-  if (!isValid) {
-    toast.error(t('validation.form_errors'))
-    return
-  }
-
-  loading.value = true
-  error.value = ''
-
   try {
-    const result = await authStore.login({
-      email: formData.email,
-      password: formData.password
-    })
+    const response = await authStore.login(credentials)
 
+    const result = handleApiResponse.auth.handle(response)
     if (result.success) {
-      toast.success('Вход выполнен успешно')
-      const redirectPath = router.currentRoute.value.query.redirect || '/'
-      await router.push(redirectPath)
-      return
+      showNotification.success('auth.login_success')
+      router.push(redirectPath)
     }
-
-    // Обработка различных кодов ошибок
-    switch (result.error_code) {
-      case 'MISSING_CREDENTIALS':
-        toast.error('Пожалуйста, введите email и пароль')
-        break
-
-      case 'INVALID_CREDENTIALS':
-        toast.error('Неверный email или пароль')
-        break
-
-      case 'LOGIN_FAILED':
-        toast.error('Не удалось выполнить вход')
-        break
-
-      case 'ACCOUNT_INACTIVE':
-        toast.warning('Ваш аккаунт неактивен. Пожалуйста, обратитесь в службу поддержки')
-        break
-
-      case 'EMAIL_NOT_VERIFIED':
-        toast.warning(
-          'Для входа необходимо подтвердить email. Проверьте вашу почту или запросите повторное письмо с подтверждением',
-          {
-            autoClose: 8000,
-            icon: '✉️'
-          }
-        )
-        break
-
-      case 'ACCOUNT_BLOCKED':
-        toast.error('Ваш аккаунт заблокирован. Пожалуйста, обратитесь в службу поддержки', {
-          autoClose: 8000
-        })
-        break
-
-      case 'SYSTEM_ERROR':
-        toast.error('Произошла системная ошибка. Попробуйте позже')
-        break
-
-      default:
-        toast.error('Произошла неизвестная ошибка')
-    }
-
-    error.value = result.message
-
-  } catch (err) {
-    console.error('Login error:', err)
-    toast.error(t('notifications.unexpected_error'))
-    error.value = t('notifications.unexpected_error')
-  } finally {
-    loading.value = false
+  } catch (error) {
+    // Ошибки уже обработаны в интерцепторе
+    console.error('Login error:', error)
   }
 }
 

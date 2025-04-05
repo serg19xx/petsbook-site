@@ -1,5 +1,7 @@
 import axios from 'axios'
+import { handleApiResponse } from '@/utils/apiResponseHandler'
 
+// Create axios instance
 const api = axios.create({
   baseURL: 'http://localhost:8080/api',
   headers: {
@@ -9,62 +11,27 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// Добавим логирование запросов
+// Add request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    // Логируем только в development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Request:', {
-        url: config.url,
-        method: config.method,
-        data: config.data,
-      })
-    }
     return config
   },
-  (error) => Promise.reject(error),
+  (error) => {
+    return Promise.reject(error)
+  },
 )
 
-// Улучшим обработку ответов
+// Add response interceptor
 api.interceptors.response.use(
   (response) => {
-    // Логируем успешные ответы только в development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Response:', {
-        status: response.status,
-        data: response.data,
-      })
-    }
     return response
   },
   (error) => {
-    // Для блокировки аккаунта возвращаем специальный формат
-    if (error.response?.status === 400 && error.response?.data?.error_code === 'ACCOUNT_BLOCKED') {
-      // Подавляем вывод ошибки в консоль
-      error.preventDefault?.()
-
-      return {
-        status: 200, // Меняем статус на 200
-        data: {
-          success: false,
-          error_code: 'ACCOUNT_BLOCKED',
-          message: 'Ваш аккаунт заблокирован. Пожалуйста, обратитесь в службу поддержки.',
-        },
-      }
-    }
-
-    // Логируем остальные ошибки только в development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Error Response:', {
-        status: error.response?.status,
-        data: error.response?.data,
-      })
-    }
-
+    handleApiResponse.error.handle(error)
     return Promise.reject(error)
   },
 )
