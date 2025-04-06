@@ -1,92 +1,56 @@
-import { API_CODES } from '@/constants/apiCodes'
+import { API_RESPONSE_CODES } from '@/constants/apiResponseCodes'
+import { API_MESSAGE_KEYS } from '@/i18n/locales/apiMessages'
 import { showNotification } from '@/utils/notifications'
 import { useAuthStore } from '@/stores/AuthStore'
 import router from '@/router'
+import i18n from '@/i18n'
+
+const { t } = i18n.global
 
 export const handleApiResponse = {
-  auth: {
-    handle(response) {
-      const code = response?.data?.code || response?.code
+  success(response) {
+    const code = response?.data?.code
 
-      switch (code) {
-        case API_CODES.AUTH.SUCCESS:
-          return { success: true }
+    if (API_MESSAGE_KEYS[code]) {
+      showNotification.success(t(API_MESSAGE_KEYS[code]))
+      return { success: true }
+    }
 
-        case API_CODES.AUTH.INVALID_CREDENTIALS:
-          showNotification.error('auth.invalid_credentials')
-          return { success: false }
-
-        case API_CODES.AUTH.TOKEN_EXPIRED:
-          const authStore = useAuthStore()
-          authStore.logout()
-          router.push('/login')
-          showNotification.error('auth.session_expired')
-          return { success: false }
-
-        case API_CODES.AUTH.EMAIL_NOT_VERIFIED:
-          showNotification.warning('auth.email_not_verified')
-          return { success: false }
-
-        default:
-          showNotification.error('errors.unexpected_error')
-          return { success: false }
-      }
-    },
+    return { success: true }
   },
 
-  validation: {
-    handle(response) {
-      const code = response?.data?.code || response?.code
+  error(error) {
+    const code = error.response?.data?.code
 
-      switch (code) {
-        case API_CODES.VALIDATION.INVALID_DATA:
-          showNotification.error('validation.invalid_data')
-          return { success: false }
+    // Обработка ошибок аутентификации
+    if (Object.values(API_RESPONSE_CODES.AUTH_ERROR).includes(code)) {
+      showNotification.error(t(API_MESSAGE_KEYS[code]))
+      return { success: false, code }
+    }
 
-        case API_CODES.VALIDATION.REQUIRED_FIELD:
-          showNotification.error('validation.required_field')
-          return { success: false }
+    // Обработка ошибок токена
+    if (Object.values(API_RESPONSE_CODES.TOKEN_ERROR).includes(code)) {
+      const authStore = useAuthStore()
+      authStore.logout()
+      router.push('/login')
+      showNotification.error(t(API_MESSAGE_KEYS[code]))
+      return { success: false, code }
+    }
 
-        case API_CODES.VALIDATION.PASSWORD_TOO_WEAK:
-          showNotification.error('validation.password.weak')
-          return { success: false }
+    // Обработка ошибок пользователя
+    if (Object.values(API_RESPONSE_CODES.USER_ERROR).includes(code)) {
+      showNotification.error(t(API_MESSAGE_KEYS[code]))
+      return { success: false, code }
+    }
 
-        default:
-          showNotification.error('validation.general_error')
-          return { success: false }
-      }
-    },
-  },
+    // Обработка системных ошибок
+    if (Object.values(API_RESPONSE_CODES.SYSTEM_ERROR).includes(code)) {
+      showNotification.error(t(API_MESSAGE_KEYS[code]))
+      return { success: false, code }
+    }
 
-  error: {
-    handle(error) {
-      if (!error.response) {
-        showNotification.error('errors.network_error')
-        return { success: false }
-      }
-
-      const code = error.response?.data?.code
-
-      switch (code) {
-        case API_CODES.OPERATION.FORBIDDEN:
-          showNotification.error('errors.forbidden')
-          return { success: false }
-
-        case API_CODES.OPERATION.UNAUTHORIZED:
-          const authStore = useAuthStore()
-          authStore.logout()
-          router.push('/login')
-          showNotification.error('errors.unauthorized')
-          return { success: false }
-
-        case API_CODES.DATA.NOT_FOUND:
-          showNotification.error('errors.not_found')
-          return { success: false }
-
-        default:
-          showNotification.error('errors.unexpected_error')
-          return { success: false }
-      }
-    },
+    // Обработка неизвестных ошибок
+    showNotification.error(t('api.system.general_error'))
+    return { success: false, code: API_RESPONSE_CODES.SYSTEM_ERROR.GENERAL }
   },
 }

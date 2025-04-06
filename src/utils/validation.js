@@ -5,6 +5,7 @@ const { t } = i18n.global
 
 export const withI18nMessage = (validator, messageKey, messageData = {}) => {
   return helpers.withMessage((props) => {
+    // Добавляем префикс validation только здесь
     return t(`validation.${messageKey}`, { ...messageData, ...props })
   }, validator)
 }

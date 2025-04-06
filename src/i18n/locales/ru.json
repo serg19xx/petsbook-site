@@ -25,18 +25,19 @@
     "login": "Войти",
     "register": "Регистрация",
     "login_title": "Вход в систему",
-    "login_button": "Войти",
-    "login_loading": "Выполняется вход...",
     "email": "Email",
     "password": "Пароль",
+    "login_button": "Войти",
+    "login_loading": "Выполняется вход...",
+    "login_success": "Вход выполнен успешно",
     "email_placeholder": "Введите ваш email",
     "password_placeholder": "Введите ваш пароль",
     "forgot_password": "Забыли пароль?",
-    "no_account": "Еще нет аккаунта?",
+    "no_account": "Нет аккаунта?",
     "signup_link": "Зарегистрироваться",
-    "error": {
-      "invalid_credentials": "Неверный email или пароль",
-      "server_error": "Ошибка сервера. Попробуйте позже"
+    "errors": {
+      "login_failed": "Ошибка входа",
+      "invalid_credentials": "Неверный email или пароль"
     },
     "recovery_title": "Восстановление пароля",
     "recovery_description": "Введите ваш email для получения инструкций по восстановлению пароля",
@@ -73,16 +74,11 @@
   },
   "validation": {
     "required": "Это поле обязательно для заполнения",
-    "email": "Пожалуйста, введите корректный email адрес",
+    "email": "Введите корректный email адрес",
+    "general_error": "Пожалуйста, проверьте правильность заполнения всех полей",
     "minLength": "Минимальная длина: {min} символов",
     "maxLength": "Максимальная длина: {max} символов",
-    "passwordMatch": "Пароли должны совпадать",
-    "invalid_data": "Неверные данные",
-    "required_field": "Обязательное поле",
-    "password": {
-      "weak": "Слишком слабый пароль"
-    },
-    "general_error": "Ошибка валидации"
+    "passwordMatch": "Пароли должны совпадать"
   },
   "errors": {
     "network": "Ошибка сети. Проверьте подключение к интернету",
@@ -94,7 +90,7 @@
     "forbidden": "Доступ запрещен",
     "unauthorized": "Необходима авторизация",
     "not_found": "Ресурс не найден",
-    "unexpected_error": "Неожиданная ошибка"
+    "unexpected_error": "Произошла непредвиденная ошибка. Пожалуйста, попробуйте позже"
   },
   "notifications": {
     "welcome": "Добро пожаловать!",
@@ -103,5 +99,58 @@
     "logout_success": "Вы успешно вышли из системы",
     "unexpected_error": "Произошла непредвиденная ошибка",
     "form_errors": "Пожалуйста, проверьте правильность заполнения формы"
+  },
+  "api": {
+    "success": {
+      "login": "Вход выполнен успешно",
+      "registration": "Регистрация успешно завершена",
+      "user_data": "Данные пользователя успешно получены",
+      "password_reset": "Пароль успешно сброшен",
+      "email_verification": "Email успешно подтвержден",
+      "users_list": "Список пользователей успешно получен",
+      "user_update": "Данные пользователя успешно обновлены",
+      "user_delete": "Пользователь успешно удален",
+      "users_search": "Поиск пользователей выполнен успешно"
+    },
+    "auth": {
+      "missing_credentials": "Введите email и пароль",
+      "invalid_credentials": "Неверный email или пароль",
+      "user_not_found": "Пользователь не найден",
+      "account_locked": "Аккаунт заблокирован",
+      "email_not_verified": "Email не подтвержден",
+      "invalid_token": "Недействительный токен авторизации",
+      "token_expired": "Срок действия токена истек",
+      "login_success": "Вход выполнен успешно",
+      "login_failed": "Ошибка при входе в систему",
+      "account_inactive": "Аккаунт неактивен",
+      "email_exists": "Пользователь с таким email уже существует",
+      "jwt_config_missing": "Ошибка конфигурации JWT"
+    },
+    "token": {
+      "not_provided": "Отсутствует токен авторизации",
+      "invalid": "Недействительный токен авторизации",
+      "expired": "Срок действия токена истек"
+    },
+    "user": {
+      "not_found": "Пользователь не найден",
+      "invalid_role": "Недопустимая роль пользователя",
+      "email_exists": "Email уже используется",
+      "invalid_data": "Некорректные данные пользователя"
+    },
+    "system": {
+      "general_error": "Системная ошибка",
+      "database_error": "Ошибка базы данных",
+      "email_send_error": "Ошибка отправки email"
+    }
+  },
+  "confirm_dialog": {
+    "logout": {
+      "title": "Подтверждение выхода",
+      "message": "Вы уверены, что хотите выйти?"
+    },
+    "buttons": {
+      "confirm": "Да",
+      "cancel": "Нет"
+    }
   }
 }

@@ -38,18 +38,30 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLanguageStore } from '@/stores/LanguageStore'
-import { SUPPORTED_LANGUAGES, COUNTRY_LANGUAGE_MAP } from '@/i18n'
+
+// Временная конфигурация поддерживаемых языков
+const SUPPORTED_LANGUAGES = {
+  'en': 'English',
+  'ru': 'Русский',
+  'es': 'Español',
+  'new': 'Add Language'
+}
+
+// Временная карта соответствия языков и стран
+const COUNTRY_LANGUAGE_MAP = {
+  'US': 'en',
+  'RU': 'ru',
+  'ES': 'es'
+}
 
 const languageStore = useLanguageStore()
 const isOpen = ref(false)
 const currentLanguage = computed(() => languageStore.currentLanguage)
 
-// Изменяем функцию getCountryCode
 function getCountryCode(langCode) {
   if (langCode === 'new') return 'new'
-  // Находим первую страну с данным языком
-  const countryCode =
-    Object.entries(COUNTRY_LANGUAGE_MAP).find(([_, lang]) => lang === langCode)?.[0] || 'US'
+  const countryCode = Object.entries(COUNTRY_LANGUAGE_MAP)
+    .find(([_, lang]) => lang === langCode)?.[0] || 'US'
   return countryCode
 }
 
@@ -57,13 +69,14 @@ const currentCountryCode = computed(() => {
   return getCountryCode(currentLanguage.value)
 })
 
-const changeLanguage = (lang) => {
+const changeLanguage = async (lang) => {
   if (lang === 'new') {
-    // Здесь можно добавить логику для открытия модального окна выбора нового языка
-    console.log('Opening new language selector')
+    console.log('Opening new language selector (not implemented)')
     return
   }
-  languageStore.setLanguage(lang)
+
+  // Пока оставляем уведомление о том, что смена языка временно недоступна
+  console.log(`Language change to ${lang} is currently disabled. Using English.`)
   isOpen.value = false
 }
 

@@ -1,17 +1,13 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div v-if="show2FA">
-      <TwoFactorAuth
-        :email="formData.email"
-        @cancel="show2FA = false"
-        @success="handleLoginSuccess"
-      />
-    </div>
-    <div v-else class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
       <div>
         <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">
           {{ $t('auth.login_title') }}
         </h1>
+        <p class="text-center text-gray-600 text-sm">
+          {{ t('auth.login_subtitle') }}
+        </p>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-6" autocomplete="off">
@@ -33,14 +29,14 @@
 
         <div class="flex items-center justify-end">
           <router-link to="/recovery" class="text-sm text-primary-600 hover:text-primary-500">
-            {{ $t('auth.forgot_password') }}
+            {{ t('auth.forgot_password_link') }}
           </router-link>
         </div>
 
         <Button
           type="submit"
           :loading="loading"
-          :label="loading ? $t('auth.login_loading') : $t('auth.login_button')"
+          :label="loading ? t('auth.login_loading') : t('auth.login_button')"
           severity="primary"
           class="w-full"
           style="height: 44px"
@@ -54,9 +50,9 @@
         </div>
 
         <div class="text-center mt-4">
-          <span class="text-sm text-gray-600">{{ $t('auth.no_account') }}</span>
+          <span class="text-sm text-gray-600">{{ t('auth.no_account') }}</span>
           <router-link to="/signup" class="ml-1 text-sm text-primary-600 hover:text-primary-500">
-            {{ $t('auth.signup_link') }}
+            {{ t('auth.signup_link') }}
           </router-link>
         </div>
       </form>
@@ -73,7 +69,6 @@ import { required, email } from '@vuelidate/validators'
 import { withI18nMessage } from '@/utils/validation'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
-import TwoFactorAuth from '@/components/auth/TwoFactorAuth.vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 
@@ -82,16 +77,19 @@ const router = useRouter()
 const authStore = useAuthStore()
 const loading = ref(false)
 const error = ref('')
-const show2FA = ref(false)
-
 const formData = reactive({
   email: '',
   password: ''
 })
 
 const rules = {
-  email: { required, email },
-  password: { required }
+  email: {
+    required: withI18nMessage(required, 'required'),
+    email: withI18nMessage(email, 'email')
+  },
+  password: {
+    required: withI18nMessage(required, 'required')
+  }
 }
 
 const v$ = useVuelidate(rules, formData)
@@ -101,22 +99,54 @@ const validateField = async (field) => {
 }
 
 const handleSubmit = async () => {
-  try {
-    const response = await authStore.login(credentials)
+  error.value = ''
+  const isValid = await v$.value.$validate()
 
-    const result = handleApiResponse.auth.handle(response)
-    if (result.success) {
-      showNotification.success('auth.login_success')
+  if (!isValid) {
+    const errorMessage = t('validation.general_error')
+    error.value = errorMessage
+    toast.error(errorMessage)
+    return
+  }
+
+  loading.value = true
+
+  try {
+    const response = await authStore.login({
+      email: formData.email,
+      password: formData.password
+    })
+
+    if (response.success) {
+      toast.success(t('notifications.login_success')) // Используем правильный ключ перевода
+      const redirectPath = router.currentRoute.value.query.redirect || '/'
       router.push(redirectPath)
+    } else {
+      let errorMessage = ''
+
+      if (response.error_code) {
+        const translationKey = `auth.errors.${response.error_code.toLowerCase()}`
+        errorMessage = t(translationKey)
+
+        if (errorMessage === translationKey) {
+          errorMessage = response.message || t('errors.unexpected_error')
+        }
+      } else {
+        errorMessage = response.message || t('errors.unexpected_error')
+      }
+
+      error.value = errorMessage
+      toast.error(errorMessage)
     }
-  } catch (error) {
-    // Ошибки уже обработаны в интерцепторе
-    console.error('Login error:', error)
+  } catch (err) {
+    const errorMessage = t('errors.unexpected_error')
+    error.value = errorMessage
+    toast.error(errorMessage)
+    console.error('Login error:', err)
+  } finally {
+    loading.value = false
   }
 }
 
-const handleLoginSuccess = () => {
-  const redirectPath = router.currentRoute.value.query.redirect || '/'
-  router.push(redirectPath)
-}
+
 </script>

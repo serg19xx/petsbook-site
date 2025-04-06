@@ -21,7 +21,7 @@
   "auth": {
     "login": "Iniciar Sesión",
     "register": "Registrarse",
-    "signup_title": "Registrarse",
+    "signup_title": "Crear una cuenta",
     "email": "Correo electrónico",
     "password": "Contraseña",
     "confirm_password": "Confirmar Contraseña",
@@ -32,23 +32,36 @@
       "business": "Negocio",
       "admin": "Administrador"
     },
-    "have_account": "¿Ya tienes una cuenta? Iniciar sesión",
+    "have_account": "¿Ya tienes una cuenta?",
+    "no_account": "¿No tienes una cuenta?",
     "signup_button": "Registrarse",
     "signup_loading": "Registrando...",
-    "error": "Se produjo un error durante el registro",
-    "login_title": "Iniciar sesión",
-    "login_button": "Entrar",
+    "login_title": "Iniciar sesión en tu cuenta",
+    "login_button": "Iniciar Sesión",
     "login_loading": "Iniciando sesión...",
-    "email": "Email",
-    "password": "Contraseña",
-    "email_placeholder": "Introduce tu email",
-    "password_placeholder": "Introduce tu contraseña",
+    "email_placeholder": "Ingrese su correo electrónico",
+    "password_placeholder": "Ingrese su contraseña",
     "forgot_password": "¿Olvidaste tu contraseña?",
-    "no_account": "¿No tienes cuenta?",
-    "signup_link": "Registrarse",
+    "signup_link": "Regístrate ahora",
+    "back_to_login": "Volver al inicio de sesión",
     "error": {
-      "invalid_credentials": "Email o contraseña inválidos",
-      "server_error": "Error del servidor. Inténtalo más tarde"
+      "invalid_credentials": "Correo electrónico o contraseña inválidos",
+      "server_error": "Error del servidor. Por favor, intente más tarde"
+    },
+    "api": {
+      "missing_credentials": "Por favor, ingrese el correo electrónico y la contraseña",
+      "invalid_credentials": "Correo electrónico o contraseña incorrectos",
+      "user_not_found": "Usuario no encontrado",
+      "account_locked": "Cuenta bloqueada",
+      "email_not_verified": "Correo electrónico no verificado",
+      "invalid_token": "Token de autorización inválido",
+      "token_expired": "Token de autorización expirado",
+      "login_success": "Inicio de sesión exitoso",
+      "login_failed": "Error al iniciar sesión",
+      "account_inactive": "Cuenta inactiva",
+      "email_exists": "Ya existe un usuario con este correo electrónico",
+      "jwt_config_missing": "Error de configuración JWT",
+      "system_error": "Error inesperado del sistema"
     },
     "recovery_title": "Recuperación de contraseña",
     "recovery_description": "Ingrese su email para recibir instrucciones de recuperación",
@@ -64,17 +77,64 @@
     "posts": "publicaciones"
   },
   "common": {
-    "partners": "Nuestros Socios",
-    "confirmation": "¿Estás seguro?",
-    "warning": "¡Atención!",
-    "success": "¡Éxito!",
-    "error": "¡Error!"
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "submit": "Enviar",
+    "continue": "Continuar"
   },
   "validation": {
     "required": "Este campo es obligatorio",
     "email": "Por favor, introduce un email válido",
+    "general_error": "Por favor, verifica todos los campos del formulario",
     "minLength": "Longitud mínima: {min} caracteres",
     "maxLength": "Longitud máxima: {max} caracteres",
-    "passwordMatch": "Las contraseñas deben coincidir"
+    "passwordMatch": "Las contraseñas deben coincidir",
+    "nameLength": "El nombre debe tener entre {min} y {max} caracteres",
+    "phone": "Por favor, introduce un número de teléfono válido",
+    "url": "Por favor, introduce una URL válida",
+    "alphaNum": "Solo se permiten letras y números",
+    "integer": "Por favor, introduce un número entero",
+    "decimal": "Por favor, introduce un número",
+    "date": "Por favor, introduce una fecha válida"
+  },
+  "errors": {
+    "network": "Error de red. Comprueba tu conexión a internet",
+    "server": "Error del servidor. Por favor, inténtalo más tarde",
+    "unauthorized": "Autorización requerida",
+    "forbidden": "Acceso denegado",
+    "notFound": "Recurso no encontrado",
+    "validation": "Por favor, verifica el formulario",
+    "unknown": "Ha ocurrido un error desconocido",
+    "unexpected_error": "Ha ocurrido un error inesperado. Por favor, inténtalo más tarde"
+  },
+  "notifications": {
+    "welcome": "¡Bienvenido!",
+    "login_success": "Inicio de sesión exitoso",
+    "login_error": "Error de inicio de sesión",
+    "logout_success": "Sesión cerrada exitosamente",
+    "unexpected_error": "Ha ocurrido un error inesperado",
+    "form_errors": "Por favor, verifica el formulario"
+  },
+  "auth": {
+    "api": {
+      "invalid_credentials": "Email o contraseña inválidos",
+      "user_not_found": "Usuario no encontrado",
+      "account_locked": "Cuenta bloqueada",
+      "email_not_verified": "Email no verificado",
+      "invalid_token": "Token de autorización inválido",
+      "token_expired": "Token de autorización expirado",
+      "login_success": "Inicio de sesión exitoso"
+    }
   }
 }

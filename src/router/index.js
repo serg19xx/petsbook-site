@@ -8,6 +8,13 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: () => import('@/views/UserProfileView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -52,18 +59,16 @@ const router = createRouter({
   ],
 })
 
-// Настраиваем защиту роутов
+// Navigation guard
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
   const isAuthenticated = authStore.isAuthenticated
 
-  // Если маршрут требует аутентификации и пользователь не авторизован
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })
     return
   }
 
-  // Если маршрут только для гостей и пользователь авторизован
   if (to.meta.requiresGuest && isAuthenticated) {
     next({ name: 'home' })
     return

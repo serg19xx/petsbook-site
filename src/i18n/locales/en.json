@@ -21,44 +21,77 @@
   "auth": {
     "login": "Sign In",
     "register": "Sign Up",
-    "signup_title": "Sign Up",
+    "signup_title": "Create an account",
+    "name": "Full Name",
     "email": "Email",
     "password": "Password",
     "confirm_password": "Confirm Password",
+    "signup_button": "Sign Up",
+    "signup_loading": "Creating account...",
+    "have_account": "Already have an account?",
+    "login": "Sign In",
     "role": {
-      "label": "Account Type",
-      "select_placeholder": "Select account type",
+      "label": "Role",
       "user": "User",
       "business": "Business",
-      "admin": "Administrator"
+      "admin": "Administrator",
+      "select_placeholder": "Select your role"
     },
-    "have_account": "Already have an account? Sign in",
-    "signup_button": "Sign Up",
-    "signup_loading": "Signing up...",
-    "error": "Registration error occurred",
-    "login_title": "Sign In",
+    "login_title": "Sign in to your account",
+    "login_subtitle": "Welcome back! Please enter your credentials to access your account",
     "login_button": "Sign In",
     "login_loading": "Signing in...",
-    "email": "Email",
-    "password": "Password",
     "email_placeholder": "Enter your email",
     "password_placeholder": "Enter your password",
-    "forgot_password": "Forgot password?",
+    "forgot_password": {
+      "title": "Password Recovery",
+      "subtitle": "Enter your email address and we'll send you instructions to reset your password",
+      "submit": "Send Reset Instructions",
+      "submitting": "Sending...",
+      "back_to_login": "Back to Login",
+      "email_sent": "Password reset instructions have been sent to {email}"
+    },
     "no_account": "Don't have an account?",
     "signup_link": "Sign Up",
     "error": {
       "invalid_credentials": "Invalid email or password",
       "server_error": "Server error. Please try again later"
     },
-    "recovery_title": "Password Recovery",
-    "recovery_description": "Enter your email to receive password reset instructions",
-    "recovery_button": "Send",
-    "recovery_loading": "Sending...",
-    "recovery_success": "Password reset instructions have been sent to your email",
-    "recovery_error": "An error occurred while sending instructions",
-    "back_to_login": "Back to Login",
-    "name": "Name",
-    "nameLength": "Name must be between 2 and 50 characters"
+    "reset_password": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password",
+      "new_password": "New Password",
+      "confirm_password": "Confirm Password",
+      "submit": "Reset Password",
+      "submitting": "Resetting...",
+      "back_to_login": "Back to Login",
+      "requirements": {
+        "title": "Password must contain:",
+        "length": "At least 8 characters",
+        "uppercase": "At least one uppercase letter",
+        "lowercase": "At least one lowercase letter",
+        "number": "At least one number"
+      },
+      "errors": {
+        "invalid_token": "Password reset link is invalid. Please request a new one.",
+        "token_expired": "Password reset link has expired. Please request a new one.",
+        "token_not_found": "Password reset link not found. Please request a new one.",
+        "password_too_weak": "Password is too weak. Please follow the password requirements.",
+        "default": "An error occurred while resetting your password. Please try again.",
+        "form_validation": "Please check the form for errors"
+      },
+      "success": {
+        "password_changed": "Password successfully changed"
+      }
+    },
+    "validation": {
+      "password_mismatch": "Passwords do not match",
+      "password_requirements": "Password does not meet requirements",
+      "invalid_token": "Invalid or expired reset token",
+      "email_required": "Email is required",
+      "invalid_email": "Please enter a valid email address"
+    },
+    "forgot_password_link": "Forgot your password?"
   },
   "stats": {
     "users": "users",
@@ -83,13 +116,15 @@
   "validation": {
     "required": "This field is required",
     "email": "Please enter a valid email address",
+    "general_error": "Please check all form fields for errors",
     "minLength": "Minimum length: {min} characters",
     "maxLength": "Maximum length: {max} characters",
     "passwordMatch": "Passwords must match",
     "invalidFormat": "Invalid format",
     "numberOnly": "Please enter numbers only",
     "phoneNumber": "Please enter a valid phone number",
-    "urlFormat": "Please enter a valid URL"
+    "urlFormat": "Please enter a valid URL",
+    "nameLength": "Name must be between {min} and {max} characters"
   },
   "errors": {
     "network": "Network error. Please check your internet connection",
@@ -98,7 +133,8 @@
     "forbidden": "Access denied",
     "notFound": "Resource not found",
     "validation": "Please check the form for errors",
-    "unknown": "An unknown error occurred"
+    "unknown": "An unknown error occurred",
+    "unexpected_error": "An unexpected error occurred. Please try again later"
   },
   "notifications": {
     "welcome": "Welcome!",
@@ -106,9 +142,33 @@
     "login_error": "Login error",
     "logout_success": "Successfully logged out",
     "unexpected_error": "An unexpected error occurred",
-    "form_errors": "Please check the form for errors"
+    "form_errors": "Please check the form for errors",
+    "registration": {
+      "validation_error": "Please check all required fields",
+      "success": "Registration successful! Please check your email for verification",
+      "email_exists": "User with this email already registered in our database. Try new one",
+      "system_error": "Registration failed. Please try again later"
+    }
   },
-  "validation": {
-    "form_errors": "Please correct the form errors"
+  "api": {
+    "auth": {
+      "invalid_credentials": "Invalid email or password",
+      "user_not_found": "User not found",
+      "account_locked": "Account is locked",
+      "email_not_verified": "Email is not verified",
+      "invalid_token": "Invalid authorization token",
+      "token_expired": "Authorization token has expired",
+      "login_success": "Login successful"
+    }
+  },
+  "confirm_dialog": {
+    "logout": {
+      "title": "Confirm Logout",
+      "message": "Are you sure you want to logout?"
+    },
+    "buttons": {
+      "confirm": "Yes",
+      "cancel": "No"
+    }
   }
 }

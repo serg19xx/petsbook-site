@@ -2,26 +2,52 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api/axios'
 import { useUserStore } from './UserStore'
-import { toast } from 'vue3-toastify'
+import i18n from '@/i18n'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
   const user = ref(null)
   const loading = ref(false)
-  const error = ref(null)
+  const { t } = i18n.global
 
-  const isAdmin = computed(() => user.value?.role === 'admin')
-  const isUser = computed(() => user.value?.role === 'user')
-  const isBusiness = computed(() => user.value?.role === 'business')
+  // Добавляем computed свойство для проверки аутентификации
+  const isAuthenticated = computed(() => !!token.value)
+
+  // Добавляем функцию инициализации
+  const initializeAuth = async () => {
+    const storedToken = localStorage.getItem('token')
+    if (storedToken) {
+      token.value = storedToken
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+
+      // Получаем данные пользователя при инициализации
+      const userStore = useUserStore()
+      const userDataResult = await userStore.fetchUserData()
+
+      if (userDataResult.success) {
+        user.value = userDataResult.data
+      } else {
+        // Если не удалось получить данные пользователя, выполняем выход
+        logout()
+      }
+    }
+  }
 
   const login = async (credentials) => {
     loading.value = true
-    error.value = null
 
     try {
       const loginData = {
         email: credentials?.email?.trim().toLowerCase() || '',
         password: credentials?.password?.trim() || '',
+      }
+
+      if (!loginData.email || !loginData.password) {
+        return {
+          success: false,
+          error_code: 'MISSING_CREDENTIALS',
+          message: t('auth.api.missing_credentials'),
+        }
       }
 
       const response = await api
@@ -35,17 +61,12 @@ export const useAuthStore = defineStore('auth', () => {
           return error.response
         })
 
-      // Проверяем успешный ответ по статусу и коду
-      if (response?.data?.status === 200 && response?.data?.error_code === 'LOGIN_SUCCESS') {
-        // Получаем токен из data
-        const receivedToken = response.data?.data?.token
+      if (response?.data?.status === 200 && response?.data?.data?.token) {
+        const receivedToken = response.data.data.token
 
         if (receivedToken) {
-          // Устанавливаем токен в ref
           token.value = receivedToken
-          // Сохраняем в localStorage
           localStorage.setItem('token', receivedToken)
-          // Устанавливаем заголовок авторизации
           api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
           const userStore = useUserStore()
@@ -56,24 +77,28 @@ export const useAuthStore = defineStore('auth', () => {
             return {
               success: true,
               error_code: 'LOGIN_SUCCESS',
-              message: 'Вход выполнен успешно',
+              message: t('auth.api.login_success'),
             }
           }
         }
       }
 
-      // Возвращаем объект с кодом ошибки
+      const errorCode = response?.data?.error_code || 'UNKNOWN_ERROR'
+      const translationKey = `auth.api.${errorCode.toLowerCase()}`
+
       return {
         success: false,
-        error_code: response?.data?.error_code || 'UNKNOWN_ERROR',
-        message: response?.data?.message || 'Неизвестная ошибка при входе',
+        error_code: errorCode,
+        message: t(translationKey, {
+          default: t('auth.api.system_error'),
+        }),
       }
     } catch (err) {
       console.error('Unexpected login error:', err)
       return {
         success: false,
         error_code: 'SYSTEM_ERROR',
-        message: 'Непредвиденная ошибка при входе',
+        message: t('auth.api.system_error'),
       }
     } finally {
       loading.value = false
@@ -82,210 +107,108 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      const currentToken = token.value
+      // Можно добавить запрос к API для логаута на сервере, если требуется
+      // await api.post('/auth/logout')
 
-      // Очищаем состояние
+      // Очищаем локальные данные
       token.value = null
       user.value = null
       localStorage.removeItem('token')
-
-      // Очищаем данные пользователя
-      const userStore = useUserStore()
-      userStore.clearUserData()
-
-      // Очищаем заголовок авторизации
       delete api.defaults.headers.common['Authorization']
-
-      if (currentToken) {
-        try {
-          await api.post(
-            '/auth/logout',
-            {},
-            {
-              headers: { Authorization: `Bearer ${currentToken}` },
-            },
-          )
-        } catch (error) {
-          console.warn('Server logout failed:', error)
-        }
-      }
 
       return {
         success: true,
-        message: 'Выход выполнен успешно',
+        message: t('auth.logout_success'),
       }
     } catch (error) {
+      console.error('Logout error:', error)
       return {
         success: false,
-        message: 'Ошибка при выходе',
-      }
-    }
-  }
-
-  // Проверка аутентификации
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
-
-  // Инициализация состояния при загрузке
-  const initializeAuth = async () => {
-    const savedToken = localStorage.getItem('token')
-    if (savedToken) {
-      token.value = savedToken
-      api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`
-
-      const userStore = useUserStore()
-      try {
-        const result = await userStore.fetchUserData()
-        if (result.success) {
-          user.value = result.data
-        } else {
-          await logout()
-        }
-      } catch (err) {
-        console.error('Failed to fetch user data during initialization:', err)
-        await logout()
+        message: t('auth.logout_error'),
       }
     }
   }
 
   const register = async (userData) => {
-    loading.value = true
-    error.value = null
-
     try {
-      const requestData = {
+      const response = await api.post('/auth/register', {
         name: userData.name,
         email: userData.email,
-        role: userData.role,
         password: userData.password,
-      }
+        role: userData.role,
+      })
 
-      const response = await api
-        .post('/auth/register', requestData)
-        .then((response) => {
-          console.log('Register success response:', response?.data)
-          return response
-        })
-        .catch((error) => {
-          console.log('Register error response:', error.response?.data)
-          // Возвращаем объект ответа из catch для дальнейшей обработки
-          return {
-            data: {
-              success: false,
-              message:
-                error.response?.data?.message ||
-                error.response?.data?.error ||
-                'Ошибка сервера при регистрации. Пожалуйста, попробуйте позже.',
-            },
-          }
-        })
-
-      if (response.data?.success) {
-        toast.success(
-          'Поздравляем с успешной регистрацией! Для завершения процесса, пожалуйста, проверьте вашу электронную почту и перейдите по ссылке для подтверждения email адреса. После подтверждения вы сможете войти в систему.',
-          {
-            autoClose: 8000,
-          },
-        )
+      // Возвращаем статус для обработки в компоненте
+      if (response.status === 400) {
         return {
-          success: true,
-          message: 'Регистрация успешно завершена',
+          success: false,
+          status: 400,
+          error_code: response.data.error_code || 'REGISTRATION_FAILED',
+          message: response.data.message || t('notifications.registration.failed'),
         }
       }
 
-      // Получаем сообщение об ошибке
-      const errorMessage = response.data?.message || 'Ошибка при регистрации'
-      error.value = errorMessage
-      toast.error(errorMessage, {
-        autoClose: 5000,
-      })
+      if (response.status === 200) {
+        return {
+          success: true,
+          message: t('auth.api.registration_success'),
+        }
+      }
 
       return {
         success: false,
-        message: errorMessage,
+        error_code: 'SERVER_ERROR',
+        message: t('notifications.registration.system_error'),
       }
-    } catch (err) {
-      const errorMessage =
-        'Произошла непредвиденная ошибка при регистрации. Пожалуйста, попробуйте позже.'
-      console.error('Registration error:', err)
-      toast.error(errorMessage, {
-        autoClose: 5000,
+    } catch (error) {
+      console.log('Registration error details:', {
+        response: error.response,
+        data: error.response?.data,
+        status: error.response?.status,
       })
+
+      if (!error.response) {
+        return {
+          success: false,
+          error_code: 'NETWORK_ERROR',
+          message: t('notifications.registration.network_error'),
+        }
+      }
 
       return {
         success: false,
-        message: errorMessage,
+        status: error.response.status,
+        error_code: error.response.data.error_code || 'SERVER_ERROR',
+        message: error.response.data.message || t('notifications.registration.system_error'),
       }
-    } finally {
-      loading.value = false
     }
   }
 
   const requestPasswordReset = async (email) => {
     try {
-      const response = await api.post(
-        '/auth/password-reset',
-        {
-          email: email,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      )
-
-      console.log('Password reset response:', response)
+      const response = await api.post('/auth/password-reset', { email })
 
       return {
         success: true,
-        message: 'Инструкции по восстановлению пароля отправлены на ваш email',
+        message: t('auth.api.reset_link_sent'),
       }
     } catch (error) {
-      console.error('Password reset error:', error)
-
-      // Получаем сообщение об ошибке из ответа сервера
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Ошибка при восстановлении пароля'
-
       return {
         success: false,
-        message: errorMessage,
+        message: error.response?.data?.message || t('auth.api.reset_request_error'),
       }
     }
   }
 
   const resetPassword = async ({ token, password }) => {
     try {
-      const response = await api.post('/auth/set-new-password', {
-        password,
-        token,
-      })
-
-      if (response.data?.status === 200) {
-        return {
-          success: true,
-          message: 'Пароль успешно изменен',
-        }
-      }
-
-      return {
-        success: false,
-        message: response.data?.message || 'Ошибка при смене пароля',
-      }
+      const { data } = await api.post('/auth/set-new-password', { token, password })
+      return data // Возвращаем именно data от сервера
     } catch (error) {
-      console.error('Password reset error:', error)
-
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Ошибка при смене пароля. Возможно, ссылка для сброса устарела или недействительна'
-
-      return {
-        success: false,
-        message: errorMessage,
+      if (error.response) {
+        return error.response.data // Возвращаем data из ошибки
       }
+      throw error // Если что-то совсем плохое
     }
   }
 
@@ -293,15 +216,11 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     loading,
-    error,
-    isAdmin,
-    isUser,
-    isBusiness,
     isAuthenticated,
+    initializeAuth,
     login,
     logout,
     register,
-    initializeAuth,
     requestPasswordReset,
     resetPassword,
   }

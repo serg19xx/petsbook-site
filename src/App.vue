@@ -1,12 +1,13 @@
 // Augment: This file is stable. Do not modify.
 <template>
-  <div v-if="isReady"> <!-- Добавляем проверку готовности -->
-    <!-- Верхняя строка меню -->
+  <div v-if="isReady" class="min-h-screen bg-gray-50 overflow-x-hidden">
+    <ConfirmDialog ref="confirmDialogRef" />
+    <!-- Header -->
     <header class="bg-white shadow fixed top-0 left-0 right-0 z-50">
       <div class="container mx-auto">
         <!-- Первая строка: логотип и язык -->
         <div class="px-4 py-3 flex justify-between items-center border-b">
-          <router-link to="/" class="text-3xl font-bold text-green-700">Petsbook</router-link>
+          <router-link to="/" class="text-xl font-bold text-sky-900">Petsbook</router-link>
           <LanguageSwitcher />
         </div>
 
@@ -54,14 +55,7 @@
                   icon="mdi:account-outline"
                   class="w-8 h-8 text-gray-600"
                 />
-                <img
-                  v-else
-                  :src="userAvatar"
-                  :alt="userName"
-                  class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
-                  loading="lazy"
-                  crossorigin="anonymous"
-                />
+                <img v-else :src="userAvatar" alt="User avatar" class="w-8 h-8 rounded-full" />
               </button>
               <!-- Выпадающее меню -->
               <div
@@ -75,14 +69,14 @@
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     @click="isUserMenuOpen = false"
                   >
-                    {{ $t('navigation.user_menu.login') }}
+                    {{ $t('auth.login') }}
                   </router-link>
                   <router-link
                     to="/signup"
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     @click="isUserMenuOpen = false"
                   >
-                    {{ $t('navigation.user_menu.register') }}
+                    {{ $t('auth.register') }}
                   </router-link>
                 </template>
                 <!-- Меню для авторизованного пользователя -->
@@ -96,15 +90,6 @@
                   >
                     {{ $t(`navigation.user_menu.${item.label}`) }}
                   </router-link>
-                  <MenuItem v-if="authStore.isAuthenticated">
-                    <router-link
-                      to="/settings/security"
-                      class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
-                      <i class="pi pi-shield mr-2"></i>
-                      Безопасность
-                    </router-link>
-                  </MenuItem>
                   <button
                     @click="handleLogout"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -119,7 +104,10 @@
       </div>
     </header>
 
-    <!-- Мобильное меню (сайдбар) -->
+    <!-- ScrollBanner -->
+    <ScrollBanner v-show="showBannerScroll" />
+
+    <!-- Mobile menu -->
     <div v-if="isMobileMenuOpen" class="lg:hidden fixed inset-0 z-40">
       <!-- Затемнение фона -->
       <div class="fixed inset-0 bg-black bg-opacity-50" @click="isMobileMenuOpen = false"></div>
@@ -150,9 +138,11 @@
       </div>
     </div>
 
-    <!-- Основной контент с отступом под фиксированное меню -->
-    <div class="pt-[120px]">
-      <router-view />
+    <!-- Main content -->
+    <div :class="{'pt-[120px]': !showBannerScroll, 'pt-[180px]': showBannerScroll}">
+      <router-view
+        @update:showBannerScroll="(value) => showBannerScroll = value"
+      />
     </div>
   </div>
   <div v-else class="flex items-center justify-center min-h-screen">
@@ -164,17 +154,32 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useUserStore } from '@/stores/UserStore'
 import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import ScrollBanner from '@/components/ScrollBanner.vue'
 
 const router = useRouter()
+const { t } = useI18n()
 const authStore = useAuthStore()
 const userStore = useUserStore()
+const confirmDialogRef = ref(null)
 const isUserMenuOpen = ref(false)
 const isMobileMenuOpen = ref(false)
 const isReady = ref(false)
+const showBannerScroll = ref(true)
+
+// Следим за изменениями маршрута
+watch(
+  () => router.currentRoute.value.path,
+  () => {
+    // По умолчанию показываем баннер при смене маршрута
+    showBannerScroll.value = true
+  }
+)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userName = computed(() => userStore.userData?.name || 'User')
@@ -216,10 +221,23 @@ const userMenuItems = [
 ]
 
 const handleLogout = async () => {
-  const result = await authStore.logout()
-  if (result.success) {
-    isUserMenuOpen.value = false // закрываем меню пользователя
-    router.push('/login') // перенаправляем на страницу входа
+  const confirmed = await confirmDialogRef.value.show({
+    title: t('confirm_dialog.logout.title'),
+    message: t('confirm_dialog.logout.message')
+  })
+
+  if (confirmed) {
+    try {
+      const result = await authStore.logout()
+      if (result.success) {
+        isUserMenuOpen.value = false
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  } else {
+    isUserMenuOpen.value = false
   }
 }
 

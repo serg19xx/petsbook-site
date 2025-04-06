@@ -35,6 +35,18 @@
       "invalid_credentials": "Email ou mot de passe invalide",
       "server_error": "Erreur serveur. Veuillez réessayer plus tard"
     },
+    "api": {
+      "missing_credentials": "Veuillez saisir l'email et le mot de passe",
+      "invalid_credentials": "Email ou mot de passe incorrect",
+      "user_not_found": "Utilisateur non trouvé",
+      "account_locked": "Compte bloqué",
+      "email_not_verified": "Email non vérifié",
+      "invalid_token": "Jeton d'autorisation invalide",
+      "token_expired": "Jeton d'autorisation expiré",
+      "login_success": "Connexion réussie",
+      "system_error": "Erreur système inattendue",
+      "unknown_error": "Une erreur inconnue s'est produite"
+    },
     "recovery_title": "Récupération du mot de passe",
     "recovery_description": "Entrez votre email pour recevoir les instructions de réinitialisation",
     "recovery_button": "Envoyer",
@@ -53,9 +65,47 @@
   },
   "validation": {
     "required": "Ce champ est obligatoire",
-    "email": "Veuillez entrer une adresse email valide",
+    "email": "Veuillez entrer une adresse e-mail valide",
+    "general_error": "Veuillez vérifier tous les champs du formulaire",
     "minLength": "Longueur minimale: {min} caractères",
     "maxLength": "Longueur maximale: {max} caractères",
-    "passwordMatch": "Les mots de passe doivent correspondre"
+    "passwordMatch": "Les mots de passe doivent correspondre",
+    "nameLength": "Le nom doit contenir entre {min} et {max} caractères",
+    "phone": "Veuillez entrer un numéro de téléphone valide",
+    "url": "Veuillez entrer une URL valide",
+    "alphaNum": "Seuls les lettres et les chiffres sont autorisés",
+    "integer": "Veuillez entrer un nombre entier",
+    "decimal": "Veuillez entrer un nombre",
+    "date": "Veuillez entrer une date valide"
+  },
+  "errors": {
+    "network": "Erreur réseau. Vérifiez votre connexion internet",
+    "server": "Erreur serveur. Veuillez réessayer plus tard",
+    "unauthorized": "Autorisation requise",
+    "forbidden": "Accès refusé",
+    "notFound": "Ressource non trouvée",
+    "validation": "Veuillez vérifier le formulaire",
+    "unknown": "Une erreur inconnue s'est produite",
+    "unexpected_error": "Une erreur inattendue s'est produite. Veuillez réessayer plus tard"
+  },
+  "notifications": {
+    "welcome": "Bienvenue!",
+    "login_success": "Connexion réussie",
+    "login_error": "Erreur de connexion",
+    "logout_success": "Déconnexion réussie",
+    "unexpected_error": "Une erreur inattendue s'est produite",
+    "form_errors": "Veuillez vérifier le formulaire"
+  },
+  "auth": {
+    "login_success": "Connexion réussie",
+    "api": {
+      "invalid_credentials": "Email ou mot de passe invalide",
+      "user_not_found": "Utilisateur non trouvé",
+      "account_locked": "Compte bloqué",
+      "email_not_verified": "Email non vérifié",
+      "invalid_token": "Jeton d'autorisation invalide",
+      "token_expired": "Jeton d'autorisation expiré",
+      "login_success": "Connexion réussie"
+    }
   }
 }
