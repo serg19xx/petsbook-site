@@ -1,5 +1,6 @@
 // Augment: This file is stable. Do not modify.
 import { createApp } from 'vue'
+import { vMaska as maska } from 'maska'
 import App from './App.vue'
 import router from './router'
 import i18n from './i18n'
@@ -11,6 +12,7 @@ import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
 const app = createApp(App)
+app.directive('maska', maska)
 const pinia = createPinia()
 
 app.use(pinia)

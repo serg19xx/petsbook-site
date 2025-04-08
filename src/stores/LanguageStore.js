@@ -7,15 +7,12 @@ export const useLanguageStore = defineStore('language', () => {
   const isLoading = ref(false)
 
   const initializeLanguage = () => {
-    // Всегда устанавливаем английский как базовый
     currentLanguage.value = 'en'
     i18n.global.locale.value = 'en'
     document.querySelector('html').setAttribute('lang', 'en')
   }
 
-  const setLanguage = async (lang) => {
-    // Пока всегда возвращаемся к английскому
-    console.log(`Language change requested to: ${lang}. Currently only English is supported.`)
+  const setLanguage = async () => {
     currentLanguage.value = 'en'
     i18n.global.locale.value = 'en'
     document.querySelector('html').setAttribute('lang', 'en')

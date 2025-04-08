@@ -8,9 +8,11 @@
         :id="id"
         :type="type"
         :value="modelValue"
-        @input="$emit('update:modelValue', $event.target.value)"
+        @input="handleInput"
         :placeholder="placeholder"
         :disabled="disabled"
+        v-maska
+        :data-maska="mask"
         :class="['input-base', { 'input-error': error }, { 'input-disabled': disabled }, className]"
       />
       <slot name="icon-right" />
@@ -22,6 +24,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { vMaska as maska } from 'maska'
 
 const props = defineProps({
   modelValue: {
@@ -60,7 +63,29 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  mask: {
+    type: String,
+    default: '',
+  },
 })
 
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue'])
+
+const handleInput = (event) => {
+  emit('update:modelValue', event.target.value)
+}
 </script>
+
+<style scoped>
+.input-base {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500;
+}
+
+.input-error {
+  @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+}
+
+.input-disabled {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+</style>

@@ -49,32 +49,21 @@ const router = createRouter({
       path: '/reset-password/:token',
       name: 'reset-password',
       component: () => import('@/views/auth/ResetPasswordView.vue'),
-      meta: { requiresGuest: true }, // Доступно только для неавторизованных пользователей
+      meta: { requiresGuest: true },
     },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),
     },
+    // Profile edit routes
+    {
+      path: '/profile/edit',
+      name: 'profile-edit',
+      component: () => import('@/views/Profile/EditProfileView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
-})
-
-// Navigation guard
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  const isAuthenticated = authStore.isAuthenticated
-
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'login', query: { redirect: to.fullPath } })
-    return
-  }
-
-  if (to.meta.requiresGuest && isAuthenticated) {
-    next({ name: 'home' })
-    return
-  }
-
-  next()
 })
 
 export default router

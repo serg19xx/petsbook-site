@@ -13,10 +13,13 @@
   "dependencies": {
     "@iconify-json/flag": "^1.2.5",
     "@iconify/vue": "^4.1.1",
+    "@mapbox/mapbox-gl-geocoder": "^5.0.0",
+    "@mapbox/search-js-web": "^1.0.0-beta.18",
     "@vuelidate/core": "^2.0.0",
     "@vuelidate/validators": "^2.0.0",
     "axios": "^1.8.1",
     "jwt-decode": "^4.0.0",
+    "maska": "^2.1.10",
     "pinia": "^3.0.1",
     "tailwindcss": "3.4.13",
     "vue": "^3.5.13",

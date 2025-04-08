@@ -5,15 +5,29 @@ const { t } = i18n.global
 
 export const withI18nMessage = (validator, messageKey, messageData = {}) => {
   return helpers.withMessage((props) => {
-    // Добавляем префикс validation только здесь
     return t(`validation.${messageKey}`, { ...messageData, ...props })
   }, validator)
+}
+
+export const normalizeUrl = (url) => {
+  if (!url) return ''
+
+  let normalizedUrl = url.trim()
+  normalizedUrl = normalizedUrl.replace(/^(https?:\/\/)+(www\.)?/, '')
+  normalizedUrl = normalizedUrl.replace(/^www\./, '')
+
+  if (!normalizedUrl.startsWith('https://')) {
+    normalizedUrl = 'https://' + normalizedUrl
+  }
+
+  return normalizedUrl
 }
 
 export const customValidators = {
   required: (value) => !!value && (!Array.isArray(value) || value.length > 0),
   email: (value) => {
-    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
+    // Более строгая валидация email
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     return !value || emailRegex.test(value)
   },
   minLength: (min) => (value) => !value || value.length >= min,
@@ -23,12 +37,10 @@ export const customValidators = {
     return !value || phoneRegex.test(value)
   },
   url: (value) => {
-    try {
-      new URL(value)
-      return true
-    } catch {
-      return false
-    }
+    if (!value) return true
+    // Более простая валидация URL - проверяем только наличие домена и расширения
+    const urlRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+/
+    return urlRegex.test(value.replace(/^(https?:\/\/)?(www\.)?/, ''))
   },
   passwordMatch: (password) => (value) => !value || value === password,
   alphaNum: (value) => !value || /^[a-zA-Z0-9]*$/.test(value),
