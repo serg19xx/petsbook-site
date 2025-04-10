@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "data": {
+    "user": {
+      "id": "required",
+      "email": "required"
+      // другие поля пользователя
+    }
+  }
+}

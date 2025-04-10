@@ -1,0 +1,6 @@
+{
+  "status": 500, // или другой код ошибки
+  "error_code": "SYSTEM_ERROR", // код ошибки из API_RESPONSE_CODES
+  "message": "Error message", // сообщение об ошибке
+  "data": null // опционально
+}
