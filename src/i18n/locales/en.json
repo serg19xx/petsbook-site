@@ -18,6 +18,11 @@
       "register": "Sign Up"
     }
   },
+  "location": {
+    "unit_placeholder": "Apt/Suite #",
+    "address_placeholder": "Enter address",
+    "search_placeholder": "Search location"
+  },
   "auth": {
     "login": "Sign In",
     "register": "Sign Up",
