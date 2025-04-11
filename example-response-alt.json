@@ -1,8 +1,0 @@
-{
-  "status": 200,
-  "user": {
-    "id": "required",
-    "email": "required"
-    // другие поля пользователя
-  }
-}
