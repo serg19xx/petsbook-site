@@ -7,8 +7,7 @@ fullName: "asD" websitePrivate: false
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
         <p class="mt-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-          All profile information is used for analytics and service improvement. You can control the
-          visibility of each field to other users by marking it as "Private". Please note that your
+          All profile information is used for analytics and service improvement. Please note that your
           profile name always remains public.
         </p>
       </div>
@@ -16,7 +15,6 @@ fullName: "asD" websitePrivate: false
       <form @submit.prevent="handleSubmit">
         <!-- Basic Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
-          <!-- Removed shadow, added border -->
           <h2 class="text-lg font-semibold mb-4">Basic Information</h2>
           <div class="grid grid-cols-1 gap-6">
             <!-- Nickname first -->
@@ -38,114 +36,83 @@ fullName: "asD" websitePrivate: false
             />
 
             <!-- Gender -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <Select
-                  v-model="formData.gender"
-                  label="Gender *"
-                  :options="[
-                    { value: 'male', label: 'Male' },
-                    { value: 'female', label: 'Female' },
-                    { value: 'other', label: 'Other' },
-                  ]"
-                  :error="getFieldError('gender')"
-                  @blur="validateField('gender')"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.genderPrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <Select
+                v-model="formData.gender"
+                label="Gender *"
+                :options="[
+                  { value: 'male', label: 'Male' },
+                  { value: 'female', label: 'Female' },
+                  { value: 'other', label: 'Other' },
+                ]"
+                :error="getFieldError('gender')"
+                @blur="validateField('gender')"
+              />
             </div>
 
             <!-- Birth Date -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <Input
-                  v-model="formData.birthDate"
-                  type="date"
-                  label="Date of Birth *"
-                  :error="getFieldError('birthDate')"
-                  @blur="validateField('birthDate')"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.birthDatePrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <Input
+                v-model="formData.birthDate"
+                type="date"
+                label="Date of Birth *"
+                :error="getFieldError('birthDate')"
+                @blur="validateField('birthDate')"
+              />
             </div>
 
             <!-- Location -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <LocationInput
-                  v-model="formData.location"
-                  label="Location *"
-                  placeholder="Start typing your location..."
-                  :error="getFieldError('location')"
-                  @location-selected="handleLocationSelected"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.locationPrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <LocationInput
+                v-model="formData.location"
+                label="Location *"
+                placeholder="Start typing your location..."
+                :error="getFieldError('location')"
+                @location-selected="handleLocationSelected"
+              />
             </div>
           </div>
         </div>
 
         <!-- Contact Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
-          <!-- Removed shadow, added border -->
           <h2 class="text-lg font-semibold mb-4">Contact Information</h2>
           <div class="grid grid-cols-1 gap-6">
             <!-- Email -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <Input
-                  v-model="formData.email"
-                  type="email"
-                  label="Email *"
-                  placeholder="your@email.com"
-                  :error="getFieldError('email')"
-                  @blur="validateField('email')"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.emailPrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <Input
+                v-model="formData.email"
+                type="email"
+                label="Email *"
+                placeholder="your@email.com"
+                :error="getFieldError('email')"
+                @blur="validateField('email')"
+              />
             </div>
 
             <!-- Phone -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <Input
-                  v-model="formData.phone"
-                  type="tel"
-                  label="Phone *"
-                  placeholder="+1 (234) 567-8900"
-                  :error="getFieldError('phone')"
-                  @blur="validateField('phone')"
-                  mask="+#(###)###-####"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.phonePrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <Input
+                v-model="formData.phone"
+                type="tel"
+                label="Phone *"
+                placeholder="+1 (234) 567-8900"
+                :error="getFieldError('phone')"
+                @blur="validateField('phone')"
+                mask="+#(###)###-####"
+              />
             </div>
 
             <!-- Website -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-grow">
-                <Input
-                  v-model="formData.website"
-                  type="text"
-                  label="Website *"
-                  placeholder="example.com"
-                  :error="getFieldError('website')"
-                  @blur="handleWebsiteBlur"
-                />
-              </div>
-              <div class="mt-7">
-                <PrivacyToggle v-model="formData.websitePrivate" :showLabels="false" />
-              </div>
+            <div class="flex-grow">
+              <Input
+                v-model="formData.website"
+                type="text"
+                label="Website"
+                placeholder="example.com"
+                :error="getFieldError('website')"
+                @blur="handleWebsiteBlur"
+              />
             </div>
           </div>
         </div>
@@ -183,7 +150,6 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import LocationInput from '@/components/ui/LocationInput.vue'
-import PrivacyToggle from '@/components/ui/PrivacyToggle.vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -191,20 +157,13 @@ const { t } = useI18n()
 const formData = ref({
   fullName: '',
   nickname: '',
-  nicknamePrivate: false,
   gender: '',
-  genderPrivate: false,
   birthDate: '',
-  birthDatePrivate: false,
   location: '',
-  locationData: null, // Будет хранить полные данные о местоположении
-  locationPrivate: false,
+  locationData: null,
   email: '',
-  emailPrivate: false,
   phone: '',
-  phonePrivate: false,
-  website: '',
-  websitePrivate: false,
+  website: ''
 })
 
 // Добавляем валидатор для телефона
@@ -234,9 +193,8 @@ const rules = computed(() => ({
     validFormat: withI18nMessage(phoneValidator, 'phoneFormat'),
   },
   website: {
-    required: withI18nMessage(required, 'required'),
     url: withI18nMessage((value) => {
-      // Проверяем URL после нормализации
+      if (!value) return true // Пустое значение разрешено
       const normalizedUrl = normalizeUrl(value)
       return customValidators.url(normalizedUrl)
     }, 'url'),
@@ -248,14 +206,18 @@ const v$ = useVuelidate(rules, formData)
 // Validate single field
 const validateField = async (fieldName) => {
   if (fieldName === 'location') {
+    console.log('Validating location:', formData.value.location)
     // Проверяем наличие значения перед валидацией
     if (!formData.value.location || formData.value.location.trim() === '') {
+      console.log('Location is empty')
       v$.value[fieldName].$touch()
       return false
     }
   }
   await v$.value[fieldName].$touch()
-  return !v$.value[fieldName].$error
+  const result = !v$.value[fieldName].$error
+  console.log(`Validation result for ${fieldName}:`, result)
+  return result
 }
 
 // Get field error message
@@ -275,19 +237,38 @@ const handleWebsiteBlur = () => {
 }
 
 const handleLocationSelected = (locationData) => {
-  // Устанавливаем значение в поле location
-  formData.value.location = locationData.fullAddress || locationData.display_name
+  console.log('Location changed:', locationData)
 
-  // Сохраняем дополнительные данные о местоположении, если они нужны
+  // Формируем полный адрес из компонентов
+  const addressParts = [
+    // Объединяем номер дома и улицу без запятой между ними
+    `${locationData.components.houseNumber} ${locationData.components.street}`,
+    locationData.components.city,
+    locationData.components.district,
+    locationData.components.region,
+    locationData.components.postcode,
+    locationData.components.country
+  ].filter(Boolean).join(', ')
+
+  console.log('Formatted address:', addressParts)
+
+  // Устанавливаем значение в поле location
+  formData.value.location = addressParts
+
+  // Сохраняем полные данные о местоположении
   formData.value.locationData = {
-    coordinates: locationData.coordinates,
-    components: locationData.components,
-    placeType: locationData.placeType,
-    bbox: locationData.bbox,
+    fullAddress: addressParts,
+    coordinates: {
+      lat: locationData.coordinates.lat,
+      lng: locationData.coordinates.lng
+    },
+    components: locationData.components
   }
 
-  // Валидируем поле после выбора
-  validateField('location')
+  console.log('Updated formData:', {
+    location: formData.value.location,
+    locationData: formData.value.locationData
+  })
 }
 
 // Добавим watch для отладки, если нужно
@@ -310,27 +291,17 @@ const handleSubmit = async () => {
   }
 
   try {
-    // Формируем данные для отправки в правильном формате
-    const dataToSubmit = {
+    // Преобразуем данные в чистый объект для отправки
+    const dataToSubmit = JSON.parse(JSON.stringify({
       fullName: formData.value.fullName,
       nickname: formData.value.nickname,
-      nicknamePrivate: formData.value.nicknamePrivate,
       gender: formData.value.gender,
-      genderPrivate: formData.value.genderPrivate,
       birthDate: formData.value.birthDate,
-      birthDatePrivate: formData.value.birthDatePrivate,
       email: formData.value.email,
-      emailPrivate: formData.value.emailPrivate,
       phone: formData.value.phone,
-      phonePrivate: formData.value.phonePrivate,
       website: formData.value.website,
-      websitePrivate: formData.value.websitePrivate,
-      location: {
-        fullAddress: formData.value.location,
-        ...formData.value.locationData,
-        isPrivate: formData.value.locationPrivate,
-      },
-    }
+      location: formData.value.locationData
+    }))
 
     console.log('Form data to submit:', dataToSubmit)
     // TODO: Implement API call to update profile
