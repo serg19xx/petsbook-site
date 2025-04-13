@@ -3,7 +3,7 @@ fullName: "asD" websitePrivate: false
 
 <template>
   <MainLayout>
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-3xl mx-auto px-4">
       <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
         <p class="mt-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
@@ -16,16 +16,15 @@ fullName: "asD" websitePrivate: false
         <!-- Basic Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
           <h2 class="text-lg font-semibold mb-4">Basic Information</h2>
-          <div class="grid grid-cols-1 gap-6">
-            <!-- Nickname first -->
+
+          <!-- Name Fields Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Input
               v-model="formData.nickname"
               label="Nickname *"
               :error="getFieldError('nickname')"
               @blur="validateField('nickname')"
             />
-
-            <!-- Full Name second -->
             <Input
               v-model="formData.fullName"
               type="text"
@@ -34,43 +33,92 @@ fullName: "asD" websitePrivate: false
               :error="getFieldError('fullName')"
               @blur="validateField('fullName')"
             />
+          </div>
 
-            <!-- Gender -->
-            <div class="flex-grow">
-              <Select
-                v-model="formData.gender"
-                label="Gender *"
-                :options="[
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                  { value: 'other', label: 'Other' },
-                ]"
-                :error="getFieldError('gender')"
-                @blur="validateField('gender')"
-              />
+          <!-- Gender and Birth Date Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Select
+              v-model="formData.gender"
+              label="Gender *"
+              :options="[
+                { value: 'male', label: 'Male' },
+                { value: 'female', label: 'Female' },
+                { value: 'other', label: 'Other' },
+              ]"
+              :error="getFieldError('gender')"
+              @blur="validateField('gender')"
+            />
+            <Input
+              v-model="formData.birthDate"
+              type="date"
+              label="Date of Birth *"
+              :error="getFieldError('birthDate')"
+              @blur="validateField('birthDate')"
+            />
+          </div>
+
+          <!-- About Me Field -->
+          <div class="mb-6 relative">
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              About Me
+            </label>
+            <div class="relative">
+              <textarea
+                v-model="formData.aboutMe"
+                rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                :class="{ 'border-red-500': getFieldError('aboutMe') }"
+                placeholder="Tell us about yourself..."
+                maxlength="500"
+                @blur="validateField('aboutMe')"
+              ></textarea>
+              <button
+                type="button"
+                @click.prevent="toggleEmojiPicker"
+                class="absolute right-2 bottom-2 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+              >
+                <Icon icon="mdi:emoji-outline" class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="mt-1 flex justify-between">
+              <p v-if="getFieldError('aboutMe')" class="text-sm text-red-500">
+                {{ getFieldError('aboutMe') }}
+              </p>
+              <p class="text-sm text-gray-500">
+                {{ formData.aboutMe?.length || 0 }}/500
+              </p>
             </div>
 
-            <!-- Birth Date -->
-            <div class="flex-grow">
-              <Input
-                v-model="formData.birthDate"
-                type="date"
-                label="Date of Birth *"
-                :error="getFieldError('birthDate')"
-                @blur="validateField('birthDate')"
-              />
+            <!-- Emoji Picker -->
+            <div
+              v-show="showEmojiPicker"
+              class="absolute right-0 bottom-full mb-2 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+            >
+              <div class="p-2">
+                <div class="grid grid-cols-8 gap-1">
+                  <button
+                    v-for="emoji in commonEmojis"
+                    :key="emoji"
+                    type="button"
+                    @click.prevent="onEmojiSelect(emoji)"
+                    class="p-1 hover:bg-gray-100 rounded text-xl"
+                  >
+                    {{ emoji }}
+                  </button>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <!-- Location -->
-            <div class="flex-grow">
-              <LocationInput
-                v-model="formData.location"
-                label="Location *"
-                placeholder="Start typing your location..."
-                :error="getFieldError('location')"
-                @location-selected="handleLocationSelected"
-              />
-            </div>
+          <!-- Location Field -->
+          <div class="mb-6">
+            <LocationInput
+              v-model="formData.location"
+              label="Location *"
+              placeholder="Start typing your location..."
+              :error="getFieldError('location')"
+              @location-selected="handleLocationSelected"
+            />
           </div>
         </div>
 
@@ -139,7 +187,7 @@ fullName: "asD" websitePrivate: false
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -150,6 +198,7 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import LocationInput from '@/components/ui/LocationInput.vue'
+import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -159,6 +208,7 @@ const formData = ref({
   nickname: '',
   gender: '',
   birthDate: '',
+  aboutMe: '', // Добавляем новое поле
   location: '',
   locationData: null,
   email: '',
@@ -198,6 +248,13 @@ const rules = computed(() => ({
       const normalizedUrl = normalizeUrl(value)
       return customValidators.url(normalizedUrl)
     }, 'url'),
+  },
+  aboutMe: {
+    maxLength: withI18nMessage(
+      (value) => !value || value.length <= 500,
+      'maxLength',
+      { max: 500 }
+    )
   },
 }))
 
@@ -326,4 +383,73 @@ watch(
     }
   },
 )
+
+// Массив часто используемых эмодзи
+const commonEmojis = [
+  '😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊',
+  '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘',
+  '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪',
+  '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒',
+  '❤️', '💕', '💞', '💓', '💗', '💖', '💘', '💝',
+  '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '🤙'
+]
+
+const showEmojiPicker = ref(false)
+
+const toggleEmojiPicker = () => {
+  showEmojiPicker.value = !showEmojiPicker.value
+  console.log('Toggle emoji picker:', showEmojiPicker.value) // Для отладки
+}
+
+const onEmojiSelect = (emoji) => {
+  const textarea = document.querySelector('textarea')
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+
+  formData.value.aboutMe =
+    formData.value.aboutMe.substring(0, start) +
+    emoji +
+    formData.value.aboutMe.substring(end)
+
+  showEmojiPicker.value = false
+}
+
+// Добавляем обработчик клика вне пикера
+const handleClickOutside = (event) => {
+  const picker = document.querySelector('.emoji-picker')
+  const button = document.querySelector('.emoji-button')
+  if (showEmojiPicker.value && picker && !picker.contains(event.target) && !button?.contains(event.target)) {
+    showEmojiPicker.value = false
+  }
+}
+
+// Добавляем и удаляем слушатель при монтировании/размонтировании компонента
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+}) // Исправлена закрывающая скобка
 </script>
+
+<style scoped>
+/* Добавляем стили для textarea при фокусе */
+textarea:focus {
+  @apply outline-none ring-2 ring-blue-500 border-blue-500;
+}
+
+/* Добавляем стили для эмодзи */
+.emoji-picker {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.emoji-picker button {
+  transition: all 0.2s;
+}
+
+.emoji-picker button:hover {
+  transform: scale(1.1);
+}
+</style>
