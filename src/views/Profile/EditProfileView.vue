@@ -194,6 +194,7 @@ import { required } from '@vuelidate/validators'
 import { withI18nMessage, customValidators, normalizeUrl } from '@/utils/validation'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
+import { profileApi } from '@/api/profile' // Добавляем импорт profileApi
 import MainLayout from '@/layouts/MainLayout.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
@@ -348,25 +349,42 @@ const handleSubmit = async () => {
   }
 
   try {
-    // Преобразуем данные в чистый объект для отправки
-    const dataToSubmit = JSON.parse(JSON.stringify({
+    // Проверяем наличие токена
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error(t('notifications.auth.token_required'))
+      router.push('/login')
+      return
+    }
+
+    const dataToSubmit = {
       fullName: formData.value.fullName,
       nickname: formData.value.nickname,
       gender: formData.value.gender,
       birthDate: formData.value.birthDate,
-      email: formData.value.email,
+      aboutMe: formData.value.aboutMe,
+      contactEmail: formData.value.email,
       phone: formData.value.phone,
       website: formData.value.website,
       location: formData.value.locationData
-    }))
+    }
 
-    console.log('Form data to submit:', dataToSubmit)
-    // TODO: Implement API call to update profile
-    toast.success(t('notifications.profile.update_success'))
-    router.push('/profile')
+    const response = await profileApi.updateProfile(dataToSubmit)
+
+    if (response.status === 200) {
+      toast.success(t('notifications.profile.update_success'))
+      router.push('/profile')
+    } else {
+      throw new Error(response.message || 'Failed to update profile')
+    }
   } catch (error) {
     console.error('Error updating profile:', error)
-    toast.error(t('notifications.profile.update_error'))
+    if (error.message === 'Authorization token is required') {
+      toast.error(t('notifications.auth.token_required'))
+      router.push('/login')
+    } else {
+      toast.error(t('notifications.profile.update_error'))
+    }
   }
 }
 

@@ -35,7 +35,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import api from '@/api'
 
 const route = useRoute()
 const loading = ref(true)
@@ -45,7 +45,7 @@ const errorMessage = ref('Ошибка при подтверждении email')
 onMounted(async () => {
   try {
     const token = route.params.token
-    const response = await axios.get(
+    const response = await api.get(
       `${import.meta.env.VITE_API_URL}/api/auth/verify-email/${token}`,
     )
 

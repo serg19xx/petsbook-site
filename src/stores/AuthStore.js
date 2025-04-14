@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/api/axios'
+import api, { apiService } from '@/api' // Updated import
 import { useUserStore } from './UserStore'
 import i18n from '@/i18n'
 
