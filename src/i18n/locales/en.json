@@ -175,5 +175,37 @@
       "confirm": "Yes",
       "cancel": "No"
     }
+  },
+  "profile": {
+    "joined": "Joined",
+    "update_success": "Profile updated successfully",
+    "update_error": "Error updating profile",
+    "edit": "Edit Profile",
+    "pets": "My Pets",
+    "galleries": "Galleries",
+    "companies": "My Companies",
+    "services": "Services",
+    "agency": "My Agency",
+    "castings": "Castings",
+    "stats": "Profile Statistics",
+    "views": "Views",
+    "followers": "Followers",
+    "posts": "Posts"
+  },
+  "roles": {
+    "petowner": "Pet Owner",
+    "business": "Business",
+    "producer": "Producer",
+    "user": "User"
+  },
+  "photoUploader": {
+    "dragOrClick": "Drag and drop a photo here or click to select",
+    "supportedFormats": "Supported formats: JPG, PNG, GIF",
+    "invalidFormat": "Unsupported file format",
+    "fileTooLarge": "File is too large (maximum 5MB)",
+    "upload": "Upload photo",
+    "uploading": "Uploading...",
+    "uploadAvatar": "Upload avatar",
+    "uploadCover": "Upload cover"
   }
 }
