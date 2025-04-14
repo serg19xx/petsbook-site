@@ -41,9 +41,9 @@ fullName: "asD" websitePrivate: false
               v-model="formData.gender"
               label="Gender *"
               :options="[
-                { value: 'male', label: 'Male' },
-                { value: 'female', label: 'Female' },
-                { value: 'other', label: 'Other' },
+                { value: 'Male', label: 'Male' },
+                { value: 'Female', label: 'Female' },
+                { value: 'Other', label: 'Other' },
               ]"
               :error="getFieldError('gender')"
               @blur="validateField('gender')"
@@ -194,7 +194,7 @@ import { required } from '@vuelidate/validators'
 import { withI18nMessage, customValidators, normalizeUrl } from '@/utils/validation'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
-import { profileApi } from '@/api/profile' // Добавляем импорт profileApi
+import { useUserStore } from '@/stores/UserStore'
 import MainLayout from '@/layouts/MainLayout.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
@@ -203,18 +203,19 @@ import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 const { t } = useI18n()
+const userStore = useUserStore()
 
 const formData = ref({
-  fullName: '',
-  nickname: '',
-  gender: '',
-  birthDate: '',
-  aboutMe: '', // Добавляем новое поле
-  location: '',
-  locationData: null,
-  email: '',
-  phone: '',
-  website: ''
+  fullName: userStore.userData?.fullName || '',
+  nickname: userStore.userData?.nickname || '',
+  gender: userStore.userData?.gender || '',
+  birthDate: userStore.userData?.birthDate || '',
+  aboutMe: userStore.userData?.aboutMe || '',
+  location: userStore.userData?.location?.fullAddress || '',
+  locationData: userStore.userData?.location || null,
+  email: userStore.userData?.contactEmail || '',
+  phone: userStore.userData?.phone || '',
+  website: userStore.userData?.website || ''
 })
 
 // Добавляем валидатор для телефона
@@ -297,29 +298,13 @@ const handleWebsiteBlur = () => {
 const handleLocationSelected = (locationData) => {
   console.log('Location changed:', locationData)
 
-  // Формируем полный адрес из компонентов
-  const addressParts = [
-    // Объединяем номер дома и улицу без запятой между ними
-    `${locationData.components.houseNumber} ${locationData.components.street}`,
-    locationData.components.city,
-    locationData.components.district,
-    locationData.components.region,
-    locationData.components.postcode,
-    locationData.components.country
-  ].filter(Boolean).join(', ')
-
-  console.log('Formatted address:', addressParts)
-
-  // Устанавливаем значение в поле location
-  formData.value.location = addressParts
+  // Сохраняем полный адрес как есть
+  formData.value.location = locationData.fullAddress
 
   // Сохраняем полные данные о местоположении
   formData.value.locationData = {
-    fullAddress: addressParts,
-    coordinates: {
-      lat: locationData.coordinates.lat,
-      lng: locationData.coordinates.lng
-    },
+    fullAddress: locationData.fullAddress,
+    coordinates: locationData.coordinates,
     components: locationData.components
   }
 
@@ -338,53 +323,41 @@ watch(
 )
 
 const handleSubmit = async () => {
-  if (formData.value.website) {
-    formData.value.website = normalizeUrl(formData.value.website)
-  }
-
-  const isFormCorrect = await v$.value.$validate()
-  if (!isFormCorrect) {
+  const isValid = await v$.value.$validate()
+  if (!isValid) {
     toast.error(t('validation.general_error'))
     return
   }
 
   try {
-    // Проверяем наличие токена
-    const token = localStorage.getItem('token')
-    if (!token) {
-      toast.error(t('notifications.auth.token_required'))
-      router.push('/login')
-      return
-    }
-
-    const dataToSubmit = {
+    // Подготавливаем данные для отправки в нужном формате
+    const updateData = {
       fullName: formData.value.fullName,
       nickname: formData.value.nickname,
-      gender: formData.value.gender,
+      gender: formData.value.gender.toLowerCase(),
       birthDate: formData.value.birthDate,
       aboutMe: formData.value.aboutMe,
       contactEmail: formData.value.email,
       phone: formData.value.phone,
       website: formData.value.website,
-      location: formData.value.locationData
+      location: {
+        fullAddress: formData.value.location,
+        coordinates: formData.value.locationData?.coordinates || null,
+        components: formData.value.locationData?.components || null
+      }
     }
 
-    const response = await profileApi.updateProfile(dataToSubmit)
+    const result = await userStore.updateUserData(updateData)
 
-    if (response.status === 200) {
-      toast.success(t('notifications.profile.update_success'))
+    if (result.success) {
+      toast.success(t('profile.update_success'))
       router.push('/profile')
     } else {
-      throw new Error(response.message || 'Failed to update profile')
+      toast.error(result.error || t('profile.update_error'))
     }
   } catch (error) {
-    console.error('Error updating profile:', error)
-    if (error.message === 'Authorization token is required') {
-      toast.error(t('notifications.auth.token_required'))
-      router.push('/login')
-    } else {
-      toast.error(t('notifications.profile.update_error'))
-    }
+    console.error('Update error:', error)
+    toast.error(t('profile.update_error'))
   }
 }
 
@@ -441,14 +414,30 @@ const handleClickOutside = (event) => {
   }
 }
 
-// Добавляем и удаляем слушатель при монтировании/размонтировании компонента
-onMounted(() => {
+// Инициализация данных при монтировании компонента
+onMounted(async () => {
+  if (!userStore.userData) {
+    await userStore.fetchUserData()
+  }
+  // Обновляем formData после получения данных
+  formData.value = {
+    fullName: userStore.userData?.fullName || '',
+    nickname: userStore.userData?.nickname || '',
+    gender: userStore.userData?.gender || '',
+    birthDate: userStore.userData?.birthDate || '',
+    aboutMe: userStore.userData?.aboutMe || '',
+    location: userStore.userData?.location?.fullAddress || '',
+    locationData: userStore.userData?.location || null,
+    email: userStore.userData?.contactEmail || '',
+    phone: userStore.userData?.phone || '',
+    website: userStore.userData?.website || ''
+  }
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
-}) // Исправлена закрывающая скобка
+})
 </script>
 
 <style scoped>
