@@ -117,27 +117,16 @@ const handleSubmit = async () => {
       password: formData.password
     })
 
-    if (response.success) {
-      toast.success(t('notifications.login_success')) // Используем правильный ключ перевода
-      const redirectPath = router.currentRoute.value.query.redirect || '/'
-      router.push(redirectPath)
-    } else {
-      let errorMessage = ''
-
-      if (response.error_code) {
-        const translationKey = `auth.errors.${response.error_code.toLowerCase()}`
-        errorMessage = t(translationKey)
-
-        if (errorMessage === translationKey) {
-          errorMessage = response.message || t('errors.unexpected_error')
-        }
-      } else {
-        errorMessage = response.message || t('errors.unexpected_error')
-      }
-
-      error.value = errorMessage
-      toast.error(errorMessage)
+    if (!response.success) {
+      error.value = response.message
+      toast.error(response.message)
+      return
     }
+
+    toast.success(t('notifications.login_success'))
+    const redirectPath = router.currentRoute.value.query.redirect || '/'
+    router.push(redirectPath)
+
   } catch (err) {
     const errorMessage = t('errors.unexpected_error')
     error.value = errorMessage

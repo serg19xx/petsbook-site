@@ -45,60 +45,44 @@ export const useAuthStore = defineStore('auth', () => {
       if (!loginData.email || !loginData.password) {
         return {
           success: false,
-          error_code: 'MISSING_CREDENTIALS',
           message: t('auth.api.missing_credentials'),
         }
       }
 
-      const response = await api
-        .post('/auth/login', loginData)
-        .then((response) => {
-          console.log('Login success response:', response?.data)
-          return response
-        })
-        .catch((error) => {
-          console.log('Login error response:', error.response?.data)
-          return error.response
-        })
+      const response = await api.post('/auth/login', loginData)
 
-      if (response?.data?.status === 200 && response?.data?.data?.token) {
+      // Если успешный вход
+      if (response?.data?.success && response?.data?.data?.token) {
         const receivedToken = response.data.data.token
 
-        if (receivedToken) {
-          token.value = receivedToken
-          localStorage.setItem('token', receivedToken)
-          api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
+        token.value = receivedToken
+        localStorage.setItem('token', receivedToken)
+        api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
-          const userStore = useUserStore()
-          const userDataResult = await userStore.fetchUserData()
+        // Получаем данные пользователя через единую функцию
+        const userStore = useUserStore()
+        const userDataResult = await userStore.fetchUserData()
 
-          if (userDataResult.success) {
-            user.value = userDataResult.data
-            return {
-              success: true,
-              error_code: 'LOGIN_SUCCESS',
-              message: t('auth.api.login_success'),
-            }
-          }
+        if (!userDataResult.success) {
+          throw new Error('Failed to fetch user data')
+        }
+
+        return {
+          success: true,
+          message: response.data.message,
         }
       }
 
-      const errorCode = response?.data?.error_code || 'UNKNOWN_ERROR'
-      const translationKey = `auth.api.${errorCode.toLowerCase()}`
-
       return {
         success: false,
-        error_code: errorCode,
-        message: t(translationKey, {
-          default: t('auth.api.system_error'),
-        }),
+        message: response.data.message || t('auth.api.login_error'),
       }
+
     } catch (err) {
-      console.error('Unexpected login error:', err)
+      console.error('Login error:', err.response?.data || err)
       return {
         success: false,
-        error_code: 'SYSTEM_ERROR',
-        message: t('auth.api.system_error'),
+        message: err.response?.data?.message || t('auth.api.system_error'),
       }
     } finally {
       loading.value = false
