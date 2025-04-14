@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import api from '@/api'
 
 export const useUserStore = defineStore('user', () => {
-  const userData = ref(JSON.parse(localStorage.getItem('userData')) || null)
+  const userData = ref(null)
   const loading = ref(false)
   const error = ref(null)
 
@@ -18,20 +18,49 @@ export const useUserStore = defineStore('user', () => {
 
       // Проверяем структуру ответа и наличие данных
       if (response?.data?.status === 200 && response?.data?.data?.user) {
+        // Сохраняем данные пользователя
         userData.value = response.data.data.user
-        localStorage.setItem('userData', JSON.stringify(response.data.data.user))
+        console.log('User data received:', userData.value)
         return {
           success: true,
-          data: response.data.data.user,
+          data: userData.value,
         }
       }
 
       // Если структура ответа не соответствует ожидаемой
       throw new Error('Invalid response structure')
     } catch (err) {
-      console.error('Error fetching user data:', err)
       error.value = err.response?.data?.message || 'Failed to fetch user data'
+      return {
+        success: false,
+        error: error.value,
+      }
+    } finally {
+      loading.value = false
+    }
+  }
 
+  const updateUserData = async (updateData) => {
+    if (loading.value) return
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await api.put('/user/update', updateData)
+
+      if (response?.data?.status === 200 && response?.data?.data?.user) {
+        // Обновляем данные пользователя в сторе
+        userData.value = response.data.data.user
+        return {
+          success: true,
+          data: userData.value,
+        }
+      }
+
+      throw new Error('Invalid response structure')
+    } catch (err) {
+      error.value = err.response?.data?.message || 'Failed to update user data'
       return {
         success: false,
         error: error.value,
@@ -43,7 +72,6 @@ export const useUserStore = defineStore('user', () => {
 
   const clearUserData = () => {
     userData.value = null
-    localStorage.removeItem('userData')
     error.value = null
   }
 
@@ -52,6 +80,7 @@ export const useUserStore = defineStore('user', () => {
     loading,
     error,
     fetchUserData,
+    updateUserData,
     clearUserData,
   }
 })

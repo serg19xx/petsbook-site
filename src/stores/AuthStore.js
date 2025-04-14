@@ -16,6 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Добавляем функцию инициализации
   const initializeAuth = async () => {
     const storedToken = localStorage.getItem('token')
+
     if (storedToken) {
       token.value = storedToken
       api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`

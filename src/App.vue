@@ -183,7 +183,7 @@ watch(
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userName = computed(() => userStore.userData?.name || 'User')
-const userAvatar = computed(() => userStore.userData?.avatar)
+const userAvatar = computed(() => userStore.userData?.avatar || '/default-avatar.png')
 
 // Инициализация данных
 const initializeData = async () => {
@@ -191,6 +191,8 @@ const initializeData = async () => {
     if (isAuthenticated.value && !userStore.userData) {
       await userStore.fetchUserData()
     }
+  } catch (error) {
+    console.error('Error initializing data:', error)
   } finally {
     isReady.value = true
   }

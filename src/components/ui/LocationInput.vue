@@ -59,7 +59,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { mapboxService } from '@/services/MapboxService'
 import { getAlpha3RegionCode } from '@/utils/regionCodes'
@@ -105,6 +105,8 @@ const currentLocation = ref({
 })
 
 const handleInput = async () => {
+  console.log('handleInput called with query:', searchQuery.value)
+
   if (debounceTimeout) clearTimeout(debounceTimeout)
 
   if (searchQuery.value.length >= 2) {
@@ -113,8 +115,11 @@ const handleInput = async () => {
 
     debounceTimeout = setTimeout(async () => {
       try {
+        console.log('Searching for location:', searchQuery.value)
         const result = await mapboxService.searchLocation(searchQuery.value)
+        console.log('Search result:', result)
         suggestions.value = result.features || []
+        console.log('Suggestions updated:', suggestions.value)
       } catch (error) {
         console.error('Search error:', error)
         suggestions.value = []
@@ -130,42 +135,53 @@ const handleInput = async () => {
 }
 
 const handleSelect = (suggestion) => {
-  searchQuery.value = suggestion.place_name
+  console.log('handleSelect called with suggestion:', suggestion)
+
+  // Сохраняем оригинальный place_name
+  const fullAddress = suggestion.place_name
+  searchQuery.value = fullAddress
 
   // Разбираем данные из suggestion
   const context = suggestion.context || []
+  console.log('Context items:', context.map(item => ({
+    id: item.id,
+    text: item.text,
+    short_code: item.short_code
+  })))
 
-  // Получаем коды стран и региона
-  const countryContext = context.find(item => item.id.includes('country'))
-  const regionContext = context.find(item => item.id.includes('region'))
+  // Получаем коды стран и региона по id
+  const countryContext = context.find(item => item.id.startsWith('country.'))
+  const regionContext = context.find(item => item.id.startsWith('region.'))
+  const placeContext = context.find(item => item.id.startsWith('place.'))
+  const postcodeContext = context.find(item => item.id.startsWith('postcode.'))
+  const districtContext = context.find(item => item.id.startsWith('district.'))
 
-  // Извлекаем country_code2 из свойства short_code контекста страны (например, 'au' -> 'AU')
+  // Извлекаем country_code2 из свойства short_code контекста страны
   const country_code2 = (countryContext?.short_code || '').toUpperCase()
 
-  // Получаем region_code из short_code региона (например, 'AU-QLD')
-  const region_code = regionContext?.short_code || ''
+  // Получаем region_code из short_code региона
+  let region_code = regionContext?.short_code || ''
 
-  const address = {
-    street: suggestion.text || '',
-    houseNumber: suggestion.address || '',
-    city: context.find(item => item.id.includes('place'))?.text || '',
-    region: regionContext?.text || '',
-    country: countryContext?.text || '',
-    postcode: context.find(item => item.id.includes('postcode'))?.text || '',
-    // Оставляем только основные коды
-    country_code2: country_code2,
-    region_code: region_code
+  // Формируем код региона в формате ISO 3166-2
+  if (region_code) {
+    const regionShortCode = region_code.split('-')[1]?.toUpperCase() || ''
+    if (regionShortCode) {
+      region_code = `${country_code2}-${regionShortCode}`
+    }
   }
 
-  // Формируем полный адрес
-  const fullAddress = [
-    address.houseNumber,
-    address.street,
-    address.city,
-    address.region,
-    address.postcode,
-    address.country
-  ].filter(Boolean).join(', ')
+  const address = {
+    streetName: suggestion.text || '',
+    streetNumber: suggestion.address || '',
+    city: placeContext?.text || '',
+    district: districtContext?.text || '',
+    region: regionContext?.text || '',
+    regionCode: region_code,
+    country: countryContext?.text || '',
+    countryCode: country_code2,
+    postcode: postcodeContext?.text || '',
+    unitNumber: unitNumber.value || ''
+  }
 
   // Обновляем текущую локацию
   currentLocation.value = {
@@ -174,10 +190,7 @@ const handleSelect = (suggestion) => {
       lat: suggestion.center[1],
       lng: suggestion.center[0]
     },
-    components: {
-      ...address,
-      unitNumb: unitNumber.value || ''
-    }
+    components: address
   }
 
   emit('update:modelValue', fullAddress)
@@ -196,7 +209,7 @@ const handleUnitChange = () => {
     ...currentLocation.value,
     components: {
       ...currentLocation.value.components,
-      unitNumb: unitNumber.value || ''
+      unitNumber: unitNumber.value || ''
     }
   }
 
@@ -213,7 +226,42 @@ watch(searchQuery, (newValue) => {
         lng: 0
       },
       components: {
-        unitNumb: unitNumber.value || ''
+        streetName: '',
+        streetNumber: '',
+        city: '',
+        district: '',
+        region: '',
+        regionCode: '',
+        country: '',
+        countryCode: '',
+        postcode: '',
+        unitNumber: unitNumber.value || ''
+      }
+    }
+  }
+})
+
+// Инициализация при монтировании компонента
+onMounted(() => {
+  if (props.modelValue) {
+    searchQuery.value = props.modelValue
+    currentLocation.value = {
+      fullAddress: props.modelValue,
+      coordinates: {
+        lat: 0,
+        lng: 0
+      },
+      components: {
+        streetName: '',
+        streetNumber: '',
+        city: '',
+        district: '',
+        region: '',
+        regionCode: '',
+        country: '',
+        countryCode: '',
+        postcode: '',
+        unitNumber: unitNumber.value || ''
       }
     }
   }
