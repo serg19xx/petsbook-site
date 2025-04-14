@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import api from '@/api/axios'
+import api from '@/api'
 
 export const useUserStore = defineStore('user', () => {
   const userData = ref(JSON.parse(localStorage.getItem('userData')) || null)

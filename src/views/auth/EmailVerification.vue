@@ -51,7 +51,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api from '@/api/axios'
+import api from '@/api' // Updated import
 import { toast } from 'vue3-toastify'
 import { AUTH_ERROR_CODES } from '@/constants/authCodes'
 
