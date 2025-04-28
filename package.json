@@ -8,7 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "dev:ngrok": "node scripts/dev-ngrok.js",
+    "dev:vite-ngrok": "npx dotenv -e .env.ngrok -- vite",
+    "dev:all": "npm-run-all --parallel dev:vite-ngrok dev:ngrok",
+    "dev:tunnel": "concurrently \"npm run dev\" \"npm run ngrok\"",
+    "ngrok": "ngrok http 5173"
   },
   "dependencies": {
     "@iconify-json/flag": "^1.2.5",
@@ -37,8 +42,12 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^9.1.2",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9.21.0",
     "eslint-plugin-vue": "~10.0.0",
+    "ngrok": "^5.0.0-beta.2",
+    "npm-run-all": "^4.1.5",
     "postcss": "^8.4.31",
     "prettier": "3.5.3",
     "vite": "^6.2.1"

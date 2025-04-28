@@ -147,6 +147,9 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
+import { useUserStore } from '@/stores/UserStore'
+
+const userStore = useUserStore()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -155,7 +158,7 @@ const isMobileMenuOpen = ref(false)
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const userName = computed(() => authStore.user?.name || 'User')
-const userAvatar = computed(() => authStore.user?.avatar || '/default-avatar.png')
+const userAvatar = computed(() => userStore.userData?.avatar || '/default-avatar.png')
 
 const menuItems = [
   { path: '/', label: 'home' },
