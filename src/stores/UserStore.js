@@ -8,29 +8,30 @@ export const useUserStore = defineStore('user', () => {
   const error = ref(null)
 
   const fetchUserData = async () => {
-    if (loading.value) return
+    if (loading.value) return { success: false, error: 'Already loading' }
 
     loading.value = true
     error.value = null
 
     try {
       const response = await api.get('/user/getuser')
+      const fetchedUser = response.data?.data?.user
 
-      // Проверяем структуру ответа и наличие данных
-      if (response?.data?.status === 200 && response?.data?.data?.user) {
-        // Сохраняем данные пользователя
-        userData.value = response.data.data.user
-        console.log('User data received:', userData.value)
-        return {
-          success: true,
-          data: userData.value,
-        }
+      if (!fetchedUser) {
+        throw new Error('Invalid response structure')
       }
 
-      // Если структура ответа не соответствует ожидаемой
-      throw new Error('Invalid response structure')
+      userData.value = fetchedUser
+      console.log('User data received:', fetchedUser)
+      localStorage.setItem('userData', JSON.stringify(fetchedUser))
+
+      return {
+        success: true,
+        data: fetchedUser,
+      }
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to fetch user data'
+      console.error('Fetch user data error:', err)
       return {
         success: false,
         error: error.value,
@@ -41,7 +42,9 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const updateUserData = async (updateData) => {
-    if (loading.value) return
+    if (loading.value) {
+      return { success: false, error: 'Already loading' }
+    }
 
     loading.value = true
     error.value = null
@@ -49,18 +52,21 @@ export const useUserStore = defineStore('user', () => {
     try {
       const response = await api.put('/user/update', updateData)
 
-      if (response?.data?.status === 200 && response?.data?.data?.user) {
-        // Обновляем данные пользователя в сторе
-        userData.value = response.data.data.user
-        return {
-          success: true,
-          data: userData.value,
-        }
+      // Обновляем данные в любом случае, если получили ответ от сервера
+      const currentData = userData.value || {}
+      userData.value = {
+        ...currentData,
+        ...updateData,
       }
 
-      throw new Error('Invalid response structure')
+      // Всегда возвращаем успех, если получили ответ
+      return {
+        success: true,
+        message: response.data?.message || 'Profile updated successfully',
+      }
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to update user data'
+      console.error('Error updating user data:', err)
       return {
         success: false,
         error: error.value,

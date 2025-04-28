@@ -1,23 +1,28 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-      <div>
-        <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">
+  <div class="reset-password-container min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="reset-password-card max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
+      <div class="reset-password-header">
+        <h1 class="reset-password-title text-2xl font-bold text-center text-gray-900 mb-2">
           {{ t('auth.reset_password.title') }}
         </h1>
-        <p class="text-center text-gray-600 text-sm">
+        <p class="reset-password-subtitle text-center text-gray-600 text-sm">
           {{ t('auth.reset_password.subtitle') }}
         </p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="space-y-6" autocomplete="off">
+      <form @submit.prevent="handleSubmit" class="reset-password-form space-y-6" autocomplete="off">
         <Input
           v-model="formData.password"
           type="password"
           :label="t('auth.reset_password.new_password')"
           :error="v$.password.$errors[0]?.$message"
           @blur="v$.password.$touch()"
-        />
+          class="reset-password-input"
+        >
+          <template #icon-right>
+            <Icon icon="mdi:lock" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
+          </template>
+        </Input>
 
         <Input
           v-model="formData.confirmPassword"
@@ -25,15 +30,27 @@
           :label="t('auth.reset_password.confirm_password')"
           :error="v$.confirmPassword.$errors[0]?.$message"
           @blur="v$.confirmPassword.$touch()"
-        />
+          class="reset-password-input"
+        >
+          <template #icon-right>
+            <Icon icon="mdi:lock-check" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
+          </template>
+        </Input>
 
-        <div class="text-xs text-gray-600 mt-2">
+        <div class="reset-password-requirements text-xs text-gray-700 mt-2 transition-opacity duration-200">
           {{ t('auth.reset_password.requirements.title') }}
-          <ul class="list-disc list-inside mt-1">
-            <li>{{ t('auth.reset_password.requirements.length') }}</li>
-            <li>{{ t('auth.reset_password.requirements.uppercase') }}</li>
-            <li>{{ t('auth.reset_password.requirements.lowercase') }}</li>
-            <li>{{ t('auth.reset_password.requirements.number') }}</li>
+          <ul class="reset-password-requirements-list list-disc list-inside mt-1 space-y-1">
+            <li
+              v-for="(requirement, index) in requirements"
+              :key="index"
+              class="reset-password-requirement transition-colors duration-200"
+              :class="{
+                'text-green-600': requirement.valid,
+                'text-gray-600': !requirement.valid
+              }"
+            >
+              {{ requirement.text }}
+            </li>
           </ul>
         </div>
 
@@ -43,10 +60,14 @@
           :label="loading ? t('auth.reset_password.submitting') : t('auth.reset_password.submit')"
           severity="primary"
           fluid
+          class="transition-all duration-200"
         />
 
-        <div class="text-center mt-4">
-          <router-link to="/login" class="text-sm text-primary-600 hover:text-primary-500">
+        <div class="reset-password-footer text-center mt-4">
+          <router-link
+            to="/login"
+            class="reset-password-link text-sm text-indigo-600 hover:text-indigo-500 font-medium transition-colors duration-200"
+          >
             {{ t('auth.reset_password.back_to_login') }}
           </router-link>
         </div>
@@ -56,13 +77,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useVuelidate } from '@vuelidate/core'
 import { required, helpers } from '@vuelidate/validators'
 import { toast } from 'vue3-toastify'
 import { useI18n } from 'vue-i18n'
+import { Icon } from '@iconify/vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 import { API_RESPONSE_CODES } from '@/constants/apiResponseCodes'
@@ -78,6 +101,17 @@ const formData = ref({
 })
 
 const resetToken = route.params.token
+
+// Добавляем проверку токена при монтировании компонента
+onMounted(async () => {
+  if (!resetToken) {
+    toast.error(t('auth.reset_password.errors.invalid_token'))
+    router.push('/recovery')
+    return
+  }
+
+  await validateToken()
+})
 
 // Password validation
 const passwordValidator = (value) => {
@@ -101,6 +135,28 @@ const confirmPasswordValidator = (value) => {
   return true
 }
 
+const requirements = computed(() => {
+  const password = formData.value.password
+  return [
+    {
+      text: t('auth.reset_password.requirements.length'),
+      valid: password.length >= 8
+    },
+    {
+      text: t('auth.reset_password.requirements.uppercase'),
+      valid: /[A-Z]/.test(password)
+    },
+    {
+      text: t('auth.reset_password.requirements.lowercase'),
+      valid: /[a-z]/.test(password)
+    },
+    {
+      text: t('auth.reset_password.requirements.number'),
+      valid: /\d/.test(password)
+    }
+  ]
+})
+
 const rules = computed(() => ({
   password: {
     required: helpers.withMessage(t('auth.validation.password_required'), required),
@@ -118,12 +174,27 @@ const error = ref('')
 const tokenError = ref(false)
 
 const clearForm = () => {
+  console.log('Clearing form data')
   formData.value = {
     password: '',
     confirmPassword: '',
   }
   v$.value.$reset()
+  console.log('Form cleared:', formData.value)
 }
+
+// Добавляем навигационный guard
+const beforeRouteLeave = (to, from, next) => {
+  console.log('Navigation guard triggered:', {
+    to: to.path,
+    from: from.path,
+    formData: formData.value
+  })
+  next()
+}
+
+// Регистрируем guard
+onBeforeRouteLeave(beforeRouteLeave)
 
 const getErrorMessage = (errorCode) => {
   const errorKeys = {
@@ -141,11 +212,12 @@ const validateToken = async () => {
   try {
     const response = await authStore.validateResetToken(resetToken)
     if (!response.success) {
-      const errorMessage = getErrorMessage('INVALID_TOKEN')
+      const errorMessage = getErrorMessage(response.error_code || 'INVALID_TOKEN')
       toast.error(errorMessage)
       router.push('/recovery')
     }
   } catch (error) {
+    console.error('Token validation error:', error)
     const errorMessage = getErrorMessage('INVALID_TOKEN')
     toast.error(errorMessage)
     router.push('/recovery')
@@ -155,54 +227,259 @@ const validateToken = async () => {
 const handleSubmit = async () => {
   const result = await v$.value.$validate()
   if (!result) {
-    toast.error(t('auth.reset_password.errors.form_validation'))
+    console.log('Form validation failed')
+    toast.error(t('auth.reset_password.errors.form_validation'), {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored"
+    })
     return
   }
 
   loading.value = true
+  console.log('Form state before submit:', {
+    password: formData.value.password,
+    confirmPassword: formData.value.confirmPassword,
+    loading: loading.value,
+    token: resetToken
+  })
 
   try {
     const response = await authStore.resetPassword({
       token: resetToken,
       password: formData.value.password
     })
+    console.log('AuthStore response:', response)
 
-    // Проверяем точно в том виде, в котором приходит с сервера
-    if (response.status === 200 && response.error_code === 'PASSWORD_RESET_SUCCESS') {
-      toast.success(t('auth.reset_password.success.password_changed'))
-      router.push('/login')
+    if (response.success) {
+      console.log('Password reset successful, showing success message:', response.message)
+      // Очищаем форму
+      clearForm()
+
+      // Показываем сообщение об успехе
+      toast.success(response.message, {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored"
+      })
+
+      // Ждем, пока сообщение будет показано, затем редирект
+      setTimeout(() => {
+        console.log('Form state before redirect:', formData.value)
+        console.log('Redirecting to login page')
+        router.replace('/login')
+      }, 2000)
       return
     }
 
-    // В противном случае считаем что это ошибка
-    toast.error(t('auth.reset_password.errors.token_expired'))
-    router.push('/recovery')
+    console.log('Password reset failed:', response.message)
+    toast.error(response.message || t('auth.reset_password.errors.default'), {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored"
+    })
+    router.replace('/recovery')
 
   } catch (error) {
-    toast.error(t('auth.reset_password.errors.token_expired'))
-    router.push('/recovery')
+    console.error('Password reset error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response,
+      data: error.response?.data
+    })
+    toast.error(t('auth.reset_password.errors.default'), {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored"
+    })
+    router.replace('/recovery')
   } finally {
     loading.value = false
+    console.log('Form state after submit:', {
+      password: formData.value.password,
+      confirmPassword: formData.value.confirmPassword,
+      loading: loading.value
+    })
   }
 }
 </script>
 
 <style scoped>
+.reset-password-container {
+  background-color: #f9fafb !important;
+}
+
+.reset-password-card {
+  background-color: white !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(0) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.reset-password-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.reset-password-title {
+  color: #111827 !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+}
+
+.reset-password-subtitle {
+  color: #4b5563 !important;
+  font-size: 0.875rem !important;
+}
+
+.reset-password-form {
+  color: #374151 !important;
+}
+
+:deep(.reset-password-input) {
+  position: relative !important;
+  width: 100% !important;
+}
+
+:deep(.reset-password-input .p-inputtext) {
+  width: 100% !important;
+  padding: 0.5rem 0.75rem !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  background-color: white !important;
+  color: #374151 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease !important;
+}
+
+:deep(.reset-password-input .p-inputtext:focus) {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1) !important;
+  outline: none !important;
+}
+
+:deep(.reset-password-input .p-inputtext.p-invalid) {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.1) !important;
+}
+
+:deep(.reset-password-input label) {
+  color: #374151 !important;
+  font-weight: 500 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+:deep(.reset-password-input input) {
+  padding-right: 2.5rem !important;
+}
+
+:deep(.reset-password-input .icon) {
+  pointer-events: none !important;
+}
+
+.reset-password-requirements {
+  color: #374151 !important;
+  opacity: 1 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.reset-password-requirements.hidden {
+  opacity: 0 !important;
+}
+
+.reset-password-requirements-list {
+  color: #374151 !important;
+}
+
+.reset-password-requirement {
+  transition: color 0.2s ease !important;
+}
+
+.reset-password-link {
+  color: #4f46e5 !important;
+  font-weight: 500 !important;
+  transition: color 0.2s ease !important;
+}
+
+.reset-password-link:hover {
+  color: #4338ca !important;
+}
+
 :deep(.p-button) {
-  background-color: #4f46e5;
-  border: none;
-  font-weight: 500;
+  background-color: #4f46e5 !important;
+  border: none !important;
+  font-weight: 500 !important;
+  color: white !important;
+  transition: all 0.2s ease !important;
 }
 
 :deep(.p-button:enabled:hover) {
-  background-color: #4338ca;
+  background-color: #4338ca !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
 }
 
 :deep(.p-button:enabled:active) {
-  background-color: #3730a3;
+  background-color: #3730a3 !important;
+  color: white !important;
+  transform: translateY(0) !important;
 }
 
 :deep(.p-button.p-button-loading) {
-  background-color: #6366f1;
+  background-color: #6366f1 !important;
+  color: white !important;
+}
+
+:deep(.error-message) {
+  color: #dc2626 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both !important;
+}
+
+:deep(.success-message) {
+  color: #059669 !important;
+  font-size: 0.875rem !important;
+  margin-top: 0.25rem !important;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-1px, 0, 0);
+  }
+
+  20%, 80% {
+    transform: translate3d(2px, 0, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-4px, 0, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(4px, 0, 0);
+  }
 }
 </style>

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/UserStore'
+import api from '@/api'
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -8,14 +9,17 @@ export const PhotoService = {
     try {
       const formData = new FormData()
       formData.append('photo', file)
-      formData.append('type', type)
 
-      const response = await axios.post(`${API_URL}/photos/upload`, formData, {
+      const endpoint = type === 'avatar' ? '/user/avatar' : '/user/cover'
+
+      const response = await api.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${useUserStore().token}`,
         },
       })
+
+      console.log('Server response:', response.data) // Добавим лог
 
       return response.data
     } catch (error) {

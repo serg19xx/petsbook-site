@@ -99,7 +99,12 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = null
       user.value = null
       localStorage.removeItem('token')
+      localStorage.removeItem('userData') // Добавляем очистку userData
       delete api.defaults.headers.common['Authorization']
+
+      // Очищаем данные в UserStore
+      //const userStore = useUserStore()
+      //userStore.userData.value = null
 
       return {
         success: true,
@@ -187,13 +192,73 @@ export const useAuthStore = defineStore('auth', () => {
 
   const resetPassword = async ({ token, password }) => {
     try {
-      const { data } = await api.post('/auth/set-new-password', { token, password })
-      return data // Возвращаем именно data от сервера
-    } catch (error) {
-      if (error.response) {
-        return error.response.data // Возвращаем data из ошибки
+      console.log('Sending reset password request with token:', token)
+      const response = await api.post('/auth/set-new-password', { token, password })
+      console.log('Raw server response:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers,
+      })
+
+      // Проверяем успешный ответ
+      if (response.status === 200 && response.data.success) {
+        console.log('Password reset successful, returning:', {
+          success: true,
+          message: response.data.message,
+        })
+        return {
+          success: true,
+          message: response.data.message,
+        }
       }
-      throw error // Если что-то совсем плохое
+
+      console.log('Password reset failed, returning:', {
+        success: false,
+        message: response.data.message || t('auth.api.password_reset_error'),
+      })
+      return {
+        success: false,
+        message: response.data.message || t('auth.api.password_reset_error'),
+      }
+    } catch (error) {
+      console.error('Password reset error:', error)
+      console.error('Error response:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers,
+      })
+      return {
+        success: false,
+        message: error.response?.data?.message || t('auth.api.password_reset_error'),
+      }
+    }
+  }
+
+  const validateResetToken = async (token) => {
+    try {
+      const response = await api.post('/auth/validate-reset-token', { token })
+
+      if (response.status === 200 && response.data.error_code === 'TOKEN_VALID') {
+        return {
+          success: true,
+          error_code: 'TOKEN_VALID',
+        }
+      }
+
+      return {
+        success: false,
+        error_code: response.data.error_code || 'INVALID_TOKEN',
+        message: response.data.message || t('auth.api.invalid_token'),
+      }
+    } catch (error) {
+      console.error('Token validation error:', error)
+      return {
+        success: false,
+        error_code: error.response?.data?.error_code || 'INVALID_TOKEN',
+        message: error.response?.data?.message || t('auth.api.invalid_token'),
+      }
     }
   }
 
@@ -208,5 +273,6 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     requestPasswordReset,
     resetPassword,
+    validateResetToken,
   }
 })

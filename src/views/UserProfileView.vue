@@ -212,8 +212,17 @@ onMounted(async () => {
 
   if (!userStore.userData) {
     console.log('- загрузка данных пользователя...')
-    await userStore.fetchUserData()
-    console.log('- данные загружены:', userStore.userData)
+    try{
+      await userStore.fetchUserData()
+      console.log('- данные загружены:', userStore.userData)
+    } catch (error) {
+      if (error.response?.status === 401) {
+        console.error('Error fetching user data:', error)
+        router.push('/login')
+      }else{
+        console.error('Error fetching user data:', error)
+      }
+    }
   }
 })
 

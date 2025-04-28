@@ -9,7 +9,9 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  base: './',
   server: {
+    host: true,
     port: 5173,
     proxy: {
       '/api': {
@@ -18,5 +20,10 @@ export default defineConfig({
         secure: false,
       },
     },
+    allowedHosts: ['localhost', '.loca.lt', '.ngrok-free.app'],
+  },
+  preview: {
+    host: true,
+    allowedHosts: ['.loca.lt'], // Также для preview, если вы его используете
   },
 })

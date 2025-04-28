@@ -55,4 +55,27 @@ export const profileApi = {
       }
     }
   },
+
+  // Загрузка подложки
+  uploadCover: async (file) => {
+    try {
+      const formData = new FormData()
+      formData.append('cover', file)
+
+      const response = await api.post('/user/cover', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      return {
+        success: true,
+        data: response.data.data.cover,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to upload cover',
+      }
+    }
+  },
 }

@@ -6,8 +6,8 @@
         <!-- Simple gray background by default -->
         <div class="absolute inset-0 bg-gray-100">
           <img
-            v-if="userData?.coverPhoto || tempCover"
-            :src="tempCover || userData?.coverPhoto"
+            v-if="userData?.cover || tempCover"
+            :src="tempCover || userData?.cover"
             alt="Cover"
             class="w-full h-full object-cover"
           />
@@ -49,76 +49,184 @@
           </div>
         </div>
 
-        <!-- Profile Header -->
-        <div class="pt-14">
-          <div class="flex items-center justify-between mb-4">
-            <div>
+        <!-- Profile Content - разделяем на две колонки -->
+        <div class="pt-14 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Левая колонка (2/3) с информацией -->
+          <div class="md:col-span-2">
+            <!-- Имя без кнопки Edit -->
+            <div class="mb-4">
               <h1 class="text-2xl font-bold text-gray-900">
-                {{ userData?.fullName || userData?.nickname || 'Loading...' }}
+                {{ userData?.fullName || userData?.nickname || userData?.email || 'Loading...' }}
               </h1>
               <p class="text-gray-600">{{ roleLabels[userData?.role] || 'User' }}</p>
             </div>
-            <div class="flex gap-2">
+
+            <!-- Bio -->
+            <div class="mb-4">
+              <h3 class="text-sm font-medium text-gray-500 mb-1">About Me</h3>
+              <p class="text-gray-700">{{ userData?.aboutMe || 'No bio available' }}</p>
+            </div>
+
+            <!-- Контактная информация -->
+            <div class="flex flex-col gap-2 text-gray-600 mb-6">
+              <!-- Login Email -->
+              <div v-if="userData?.email" class="flex items-center gap-2">
+                <Icon icon="mdi:account" class="w-5 h-5" />
+                <span class="flex items-center gap-1">
+                  <span class="text-sm text-gray-500">Login:</span>
+                  {{ userData.email }}
+                </span>
+              </div>
+
+              <!-- Contact Email -->
+              <div v-if="userData?.contactEmail" class="flex items-center gap-2">
+                <Icon icon="mdi:email" class="w-5 h-5" />
+                <span class="flex items-center gap-1">
+                  <span class="text-sm text-gray-500">Contact:</span>
+                  {{ userData.contactEmail }}
+                </span>
+              </div>
+
+              <!-- Location -->
+              <div v-if="formattedAddress" class="flex items-center gap-2">
+                <Icon icon="mdi:map-marker" class="w-5 h-5" />
+                <span>{{ formattedAddress }}</span>
+              </div>
+
+              <!-- Website -->
+              <div v-if="userData?.website" class="flex items-center gap-2">
+                <Icon icon="mdi:link-variant" class="w-5 h-5" />
+                <a :href="userData.website" target="_blank" class="text-blue-600 hover:underline">
+                  {{ userData.website }}
+                </a>
+              </div>
+
+              <!-- Phone -->
+              <div v-if="userData?.phone" class="flex items-center gap-2">
+                <Icon icon="mdi:phone" class="w-5 h-5" />
+                <span>{{ userData.phone }}</span>
+              </div>
+
+              <!-- Join Date -->
+              <div class="flex items-center gap-2">
+                <Icon icon="mdi:calendar" class="w-5 h-5" />
+                <span>{{ $t('profile.joined') }} {{ formatDate(userData?.dateCreated) }}</span>
+              </div>
+            </div>
+
+            <!-- Кнопка Edit Profile -->
+            <div v-if="props.isOwnProfile" class="mt-4">
               <button
-                v-if="props.isOwnProfile"
                 @click="handleEdit"
-                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
+                <Icon icon="mdi:pencil" class="w-4 h-4" />
                 Edit Profile
               </button>
             </div>
           </div>
 
-          <!-- Bio/About Me -->
-          <div class="mb-4">
-            <h3 class="text-sm font-medium text-gray-500 mb-1">About Me</h3>
-            <p class="text-gray-700">{{ userData?.aboutMe || 'No bio available' }}</p>
-          </div>
-
-          <!-- Additional Info -->
-          <div class="flex flex-col gap-2 text-gray-600">
-            <!-- Login Email -->
-            <div v-if="userData?.email" class="flex items-center gap-2">
-              <Icon icon="mdi:account" class="w-5 h-5" />
-              <span class="flex items-center gap-1">
-                <span class="text-sm text-gray-500">Login:</span>
-                {{ userData.email }}
-              </span>
+          <!-- Правая колонка (1/3) со статистикой -->
+          <div class="md:col-span-1">
+            <!-- PetPoints Balance -->
+            <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-lg p-4 mb-4 transition-all hover:shadow-md">
+              <div class="flex items-center gap-2 mb-2">
+                <Icon icon="mdi:currency-coin" class="w-6 h-6 text-amber-500" />
+                <span class="text-amber-700 font-medium">PetPoints</span>
+              </div>
+              <div class="text-2xl font-bold text-amber-600">
+                {{ formatNumber(userData?.stats?.points || 0) }}
+                <span class="text-sm text-amber-500">PP</span>
+              </div>
+              <div class="text-sm text-amber-700 mt-1 flex items-center gap-1">
+                <Icon icon="mdi:trending-up" class="w-4 h-4" />
+                +{{ formatNumber(userData?.stats?.pointsLastMonth || 0) }} last month
+              </div>
             </div>
 
-            <!-- Contact Email -->
-            <div v-if="userData?.contactEmail" class="flex items-center gap-2">
-              <Icon icon="mdi:email" class="w-5 h-5" />
-              <span class="flex items-center gap-1">
-                <span class="text-sm text-gray-500">Contact:</span>
-                {{ userData.contactEmail }}
-              </span>
+            <!-- Статистика в компактных блоках -->
+            <div class="space-y-3">
+              <!-- Просмотры -->
+              <div class="bg-blue-50 rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-md">
+                <div class="flex items-center gap-2">
+                  <Icon icon="mdi:eye" class="w-5 h-5 text-blue-500" />
+                  <span class="text-sm font-medium text-blue-700">Profile Views</span>
+                </div>
+                <div class="text-xl font-bold text-blue-600">
+                  {{ formatNumber(userData?.stats?.viewsCount || 0) }}
+                </div>
+              </div>
+
+              <!-- Лайки -->
+              <div class="bg-red-50 rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-md">
+                <div class="flex items-center gap-2">
+                  <Icon icon="mdi:heart" class="w-5 h-5 text-red-500" />
+                  <span class="text-sm font-medium text-red-700">Received Likes</span>
+                </div>
+                <div class="text-xl font-bold text-red-600">
+                  {{ formatNumber(userData?.stats?.likesCount || 0) }}
+                </div>
+              </div>
+
+              <!-- Посты -->
+              <div class="bg-green-50 rounded-lg p-3 flex items-center justify-between transition-all hover:shadow-md">
+                <div class="flex items-center gap-2">
+                  <Icon icon="mdi:post-outline" class="w-5 h-5 text-green-500" />
+                  <span class="text-sm font-medium text-green-700">Posts</span>
+                </div>
+                <div class="text-xl font-bold text-green-600">
+                  {{ formatNumber(userData?.stats?.postsCount || 0) }}
+                </div>
+              </div>
             </div>
 
-            <!-- Location -->
-            <div v-if="formattedAddress" class="flex items-center gap-2">
-              <Icon icon="mdi:map-marker" class="w-5 h-5" />
-              <span>{{ formattedAddress }}</span>
-            </div>
-
-            <!-- Website -->
-            <div v-if="userData?.website" class="flex items-center gap-2">
-              <Icon icon="mdi:link-variant" class="w-5 h-5" />
-              <a :href="userData.website" target="_blank" class="text-blue-600 hover:underline">
-                {{ userData.website }}
+            <!-- Социальные сети -->
+            <div class="mt-6 flex items-center justify-end gap-3">
+              <a
+                v-if="userData?.social?.youtube"
+                :href="userData.social.youtube"
+                target="_blank"
+                class="text-gray-500 hover:text-red-600 transition-colors"
+                title="YouTube"
+              >
+                <Icon icon="mdi:youtube" class="w-6 h-6" />
               </a>
-            </div>
-
-            <!-- Phone -->
-            <div v-if="userData?.phone" class="flex items-center gap-2">
-              <Icon icon="mdi:phone" class="w-5 h-5" />
-              <span>{{ userData.phone }}</span>
-            </div>
-
-            <!-- Join Date -->
-            <div class="flex items-center gap-2">
-              <Icon icon="mdi:calendar" class="w-5 h-5" />
-              <span>{{ $t('profile.joined') }} {{ formatDate(userData?.dateCreated) }}</span>
+              <a
+                v-if="userData?.social?.facebook"
+                :href="userData.social.facebook"
+                target="_blank"
+                class="text-gray-500 hover:text-blue-600 transition-colors"
+                title="Facebook"
+              >
+                <Icon icon="mdi:facebook" class="w-6 h-6" />
+              </a>
+              <a
+                v-if="userData?.social?.instagram"
+                :href="userData.social.instagram"
+                target="_blank"
+                class="text-gray-500 hover:text-pink-600 transition-colors"
+                title="Instagram"
+              >
+                <Icon icon="mdi:instagram" class="w-6 h-6" />
+              </a>
+              <a
+                v-if="userData?.social?.tiktok"
+                :href="userData.social.tiktok"
+                target="_blank"
+                class="text-gray-500 hover:text-black transition-colors"
+                title="TikTok"
+              >
+                <Icon icon="mdi:tiktok" class="w-6 h-6" />
+              </a>
+              <a
+                v-if="userData?.social?.telegram"
+                :href="userData.social.telegram"
+                target="_blank"
+                class="text-gray-500 hover:text-blue-500 transition-colors"
+                title="Telegram"
+              >
+                <Icon icon="mdi:telegram" class="w-6 h-6" />
+              </a>
             </div>
           </div>
         </div>
@@ -261,7 +369,7 @@ const formatDate = (dateString) => {
 
 const handleAvatarSave = async (file) => {
   try {
-    // Сохраняем в состоянии компонента для предпросмотра
+    // Временный предпросмотр
     const reader = new FileReader()
     reader.onload = (e) => {
       tempAvatar.value = e.target.result
@@ -270,9 +378,13 @@ const handleAvatarSave = async (file) => {
 
     // Загружаем на сервер
     const response = await PhotoService.uploadPhoto(file, 'avatar')
+    console.log('Ответ сервера при загрузке:', response)
+
     if (response.success) {
-      // Обновляем аватар в UserStore с URL
-      await userStore.updateUserData({ avatar: response.url })
+      // Формируем полный URL для аватара
+      const fullAvatarUrl = `http://localhost:8080${response.path}`
+      // Обновляем в store, что обновит аватар везде
+      await userStore.updateUserData({ avatar: fullAvatarUrl })
     }
 
     // Закрываем диалог
@@ -282,23 +394,21 @@ const handleAvatarSave = async (file) => {
   }
 }
 
+// И аналогично для обложки
 const handleCoverSave = async (file) => {
   try {
-    // Сохраняем в состоянии компонента для предпросмотра
     const reader = new FileReader()
     reader.onload = (e) => {
       tempCover.value = e.target.result
     }
     reader.readAsDataURL(file)
 
-    // Загружаем на сервер
     const response = await PhotoService.uploadPhoto(file, 'cover')
     if (response.success) {
-      // Обновляем обложку в UserStore с URL
-      await userStore.updateUserData({ coverPhoto: response.url })
+      const fullCoverUrl = `http://localhost:8080${response.path}`
+      await userStore.updateUserData({ cover: fullCoverUrl })
     }
 
-    // Закрываем диалог
     showCoverDialog.value = false
   } catch (error) {
     console.error('Error handling cover:', error)
@@ -334,6 +444,18 @@ watch(() => props.isOwnProfile, (newVal) => {
 watch(() => userStore.userData, (newVal) => {
   console.log('UserProfileCard - userData изменился:', newVal)
 }, { deep: true })
+
+// В script setup добавляем
+const formatNumber = (num) => {
+  if (!num) return '0'
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M'
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K'
+  }
+  return num.toString()
+}
 </script>
 
 <style scoped>

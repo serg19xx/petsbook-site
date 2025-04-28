@@ -152,6 +152,7 @@
 </template>
 
 <script setup>
+import { useTrackVisit } from '@/composables/useTrackVisit'
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -161,6 +162,9 @@ import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ScrollBanner from '@/components/ScrollBanner.vue'
+
+
+useTrackVisit()
 
 const router = useRouter()
 const { t } = useI18n()
@@ -258,4 +262,5 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
 </script>
