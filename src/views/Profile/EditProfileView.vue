@@ -1,6 +1,3 @@
-birthDate: "2025-04-08" birthDatePrivate: false email: "serg.kostyuk@gmail.com" emailPrivate: false
-fullName: "asD" websitePrivate: false
-
 <template>
   <MainLayout>
     <div class="max-w-3xl mx-auto px-4">
@@ -171,15 +168,13 @@ fullName: "asD" websitePrivate: false
             type="button"
             @click="handleCancel"
             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Cancel
-          </button>
+          >{{ t('common.cancel') }}</button>
+
           <button
             type="submit"
+            :disabled="loading"
             class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          >
-            Save Changes
-          </button>
+          >{{ loading ? t('common.saving') : t('common.save') }}</button>
         </div>
       </form>
     </div>
@@ -204,6 +199,8 @@ import { Icon } from '@iconify/vue'
 const router = useRouter()
 const { t } = useI18n()
 const userStore = useUserStore()
+
+const loading = ref(false)
 
 const formData = ref({
   fullName: userStore.userData?.fullName || '',
@@ -323,18 +320,21 @@ watch(
 )
 
 const handleSubmit = async () => {
-  const isValid = await v$.value.$validate()
-  if (!isValid) {
-    toast.error(t('validation.general_error'))
-    return
-  }
+  if (loading.value) return
+
+  loading.value = true
 
   try {
-    // Подготавливаем данные для отправки в нужном формате
+    const isValid = await v$.value.$validate()
+    if (!isValid) {
+      toast.error(t('validation.general_error'))
+      return
+    }
+
     const updateData = {
       fullName: formData.value.fullName,
       nickname: formData.value.nickname,
-      gender: formData.value.gender.toLowerCase(),
+      gender: formData.value.gender,
       birthDate: formData.value.birthDate,
       aboutMe: formData.value.aboutMe,
       contactEmail: formData.value.email,
@@ -347,17 +347,20 @@ const handleSubmit = async () => {
       }
     }
 
-    const result = await userStore.updateUserData(updateData)
+    console.log('Sending gender:', formData.value.gender)
 
-    if (result.success) {
-      toast.success(t('profile.update_success'))
+    const result = await userStore.updateUserData(updateData)
+    if (result?.success) {
+      toast.success(result.message || t('profile.update_success'))
       router.push('/profile')
     } else {
-      toast.error(result.error || t('profile.update_error'))
+      toast.error(result?.error || t('profile.update_error'))
     }
   } catch (error) {
     console.error('Update error:', error)
     toast.error(t('profile.update_error'))
+  } finally {
+    loading.value = false
   }
 }
 
