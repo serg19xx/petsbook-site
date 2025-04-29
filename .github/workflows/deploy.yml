@@ -27,7 +27,7 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /site.petsbook.ca/   # <-- путь к папке фронта на сервере
+          server-dir: ./   # <-- путь к папке фронта на сервере
           local-dir: ./dist/          # <-- деплоим только собранный фронт
           exclude: |
             **/.git*
