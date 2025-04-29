@@ -60,7 +60,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/AuthStore'
-import { useToast } from 'primevue/usetoast'
 
 const authStore = useAuthStore()
 const toast = useToast()
