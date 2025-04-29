@@ -239,8 +239,10 @@ export const useAuthStore = defineStore('auth', () => {
   const validateResetToken = async (token) => {
     try {
       const response = await api.post('/auth/validate-reset-token', { token })
+      console.log('Token validation response:', response.data) // для отладки
 
-      if (response.status === 200 && response.data.error_code === 'TOKEN_VALID') {
+      // Исправленная проверка
+      if (response.data.status === 200 && response.data.error_code === 'TOKEN_VALID') {
         return {
           success: true,
           error_code: 'TOKEN_VALID',
