@@ -26,4 +26,5 @@ export default defineConfig({
     host: true,
     allowedHosts: ['.loca.lt'], // Также для preview, если вы его используете
   },
+  esbuild: { drop: [] },
 })
