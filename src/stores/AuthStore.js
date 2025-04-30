@@ -49,21 +49,22 @@ export const useAuthStore = defineStore('auth', () => {
           message: t('auth.api.missing_credentials'),
         }
       }
-
+      console.log('AV 1: Start:', loginData)
       const response = await api.post('/auth/login', loginData)
-
+      console.log('AV 2: Response:', response)
       // Если успешный вход
       if (response?.data?.success && response?.data?.data?.token) {
         const receivedToken = response.data.data.token
 
         token.value = receivedToken
         localStorage.setItem('token', receivedToken)
+        console.log('AV 3: Token to save:', receivedToken)
         api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
         // Получаем данные пользователя через единую функцию
         const userStore = useUserStore()
         const userDataResult = await userStore.fetchUserData()
-
+        console.log('AV 4: User data result:', userDataResult)
         if (!userDataResult.success) {
           throw new Error('Failed to fetch user data')
         }

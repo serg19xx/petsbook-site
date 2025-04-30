@@ -112,10 +112,14 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
+    console.log('LV 1: Login attempt:', formData.email, formData.password)
+
     const response = await authStore.login({
       email: formData.email,
       password: formData.password
     })
+
+    console.log('LV 2: Login response:', response)
 
     if (!response.success) {
       error.value = response.message
