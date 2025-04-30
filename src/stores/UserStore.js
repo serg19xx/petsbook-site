@@ -9,20 +9,20 @@ export const useUserStore = defineStore('user', () => {
 
   const fetchUserData = async () => {
     if (loading.value) return { success: false, error: 'Already loading' }
-
+    console.log('US 1: Fetching user data')
     loading.value = true
     error.value = null
 
     try {
       const response = await api.get('/user/getuser')
       const fetchedUser = response.data?.data?.user
-
+      console.log('US 2: Fetched user data:', fetchedUser)
       if (!fetchedUser) {
         throw new Error('Invalid response structure')
       }
 
       userData.value = fetchedUser
-      console.log('User data received:', fetchedUser)
+      console.log('US 3: User data received:', userData)
       localStorage.setItem('userData', JSON.stringify(fetchedUser))
 
       return {
