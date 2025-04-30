@@ -57,9 +57,9 @@ export const useAuthStore = defineStore('auth', () => {
         const receivedToken = response.data.data.token
 
         token.value = receivedToken
-        console.log('AV 333: Сщхраняем:', receivedToken)
+        console.log('AV 3333: Сщхраняем:', receivedToken)
         localStorage.setItem('token', receivedToken)
-        console.log('AV 444: Читаем:', localStorage.getItem('token'))
+        console.log('AV 4444: Читаем:', localStorage.getItem('token'))
         api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
         // Получаем данные пользователя через единую функцию
