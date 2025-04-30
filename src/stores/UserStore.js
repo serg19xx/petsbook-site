@@ -12,7 +12,7 @@ export const useUserStore = defineStore('user', () => {
     console.log('US 1: Fetching user data')
     loading.value = true
     error.value = null
-
+    console.log('US 2: BEARER', api.defaults.headers.common['Authorization'])
     try {
       const response = await api.get('/user/getuser')
       const fetchedUser = response.data?.data?.user
