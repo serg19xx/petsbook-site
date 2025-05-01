@@ -15,7 +15,6 @@ export const PhotoService = {
       const response = await api.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${useUserStore().token}`,
         },
       })
 
@@ -30,11 +29,7 @@ export const PhotoService = {
 
   async deletePhoto(photoId) {
     try {
-      const response = await axios.delete(`${API_URL}/photos/${photoId}`, {
-        headers: {
-          Authorization: `Bearer ${useUserStore().token}`,
-        },
-      })
+      const response = await axios.delete(`${API_URL}/photos/${photoId}`)
 
       return response.data
     } catch (error) {
@@ -45,11 +40,7 @@ export const PhotoService = {
 
   async getPhotos(userId) {
     try {
-      const response = await axios.get(`${API_URL}/photos/user/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${useUserStore().token}`,
-        },
-      })
+      const response = await axios.get(`${API_URL}/photos/user/${userId}`)
 
       return response.data
     } catch (error) {

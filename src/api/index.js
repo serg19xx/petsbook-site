@@ -16,7 +16,7 @@ import { useAuthStore } from '@/stores/AuthStore'
    (config) => {
      const token = localStorage.getItem('token')
      if (token) {
-       config.headers.Authorization = `Bearer ${token}`
+       //config.headers.Authorization = `Bearer ${token}`
      }
 
      if (import.meta.env.DEV) {
