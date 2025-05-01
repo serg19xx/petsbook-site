@@ -63,6 +63,12 @@ export const useAuthStore = defineStore('auth', () => {
         api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
         // Получаем данные пользователя через единую функцию
+
+        await login() // логин
+        setTimeout(() => {
+          userStore.fetchUserData()
+        }, 300)
+
         const userStore = useUserStore()
         const userDataResult = await userStore.fetchUserData()
         console.log('AV 4: User data result:', userDataResult)
