@@ -2,14 +2,16 @@ import axios from 'axios'
 import router from '@/router'
 import { useAuthStore } from '@/stores/AuthStore'
 
- const api = axios.create({
-   baseURL: `${import.meta.env.VITE_API_URL}/api`,
-   headers: {
-     'Content-Type': 'application/json',
-     Accept: 'application/json',
-   },
-   timeout: 10000,
- })
+axios.defaults.withCredentials = true
+
+const api = axios.create({
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  timeout: 10000,
+})
 
  // Request interceptor
  api.interceptors.request.use(
