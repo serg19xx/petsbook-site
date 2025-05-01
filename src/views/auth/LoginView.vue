@@ -72,6 +72,8 @@ import { toast } from 'vue3-toastify'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 
+console.log('LoginView mounted', Date.now())
+
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -99,6 +101,7 @@ const validateField = async (field) => {
 }
 
 const handleSubmit = async () => {
+  console.log('handleSubmit called', Date.now());
   error.value = ''
   const isValid = await v$.value.$validate()
 

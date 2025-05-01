@@ -8,6 +8,8 @@ export const useUserStore = defineStore('user', () => {
   const error = ref(null)
 
   const fetchUserData = async () => {
+    if (loading.value || userData.value) return
+    console.log('fetchUserData', Date.now())
     if (loading.value) return { success: false, error: 'Already loading' }
     console.log('US 1: Fetching user data')
     loading.value = true
