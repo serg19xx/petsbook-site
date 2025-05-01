@@ -106,6 +106,8 @@ import { Icon } from '@iconify/vue'
 import { useRoute } from 'vue-router'
 
 const userStore = useUserStore()
+const user = computed(() => userStore.userData)
+
 const route = useRoute()
 
 const avatarInput = ref(null)
@@ -117,8 +119,8 @@ const isOwnProfile = computed(() => {
 })
 
 onMounted(async () => {
-  await userStore.fetchUserData()
-  await userStore.fetchProfileData()
+  //await userStore.fetchUserData()
+ // await userStore.fetchProfileData()
 })
 
 // Методы для загрузки файлов
