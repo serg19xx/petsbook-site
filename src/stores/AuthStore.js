@@ -19,7 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     if (storedToken) {
       token.value = storedToken
-      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
+      //api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`
 
       // Получаем данные пользователя при инициализации
       const userStore = useUserStore()
@@ -60,7 +60,7 @@ export const useAuthStore = defineStore('auth', () => {
         console.log('AV 3333: Сщхраняем:', receivedToken)
         localStorage.setItem('token', receivedToken)
         console.log('AV 4444: Читаем:', localStorage.getItem('token'))
-        api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
+        //api.defaults.headers.common['Authorization'] = `Bearer ${receivedToken}`
 
         // Получаем данные пользователя через единую функцию
 
@@ -86,7 +86,6 @@ export const useAuthStore = defineStore('auth', () => {
         success: false,
         message: response.data.message || t('auth.api.login_error'),
       }
-
     } catch (err) {
       console.error('Login error:', err.response?.data || err)
       return {
@@ -108,7 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = null
       localStorage.removeItem('token')
       localStorage.removeItem('userData') // Добавляем очистку userData
-      delete api.defaults.headers.common['Authorization']
+      //delete api.defaults.headers.common['Authorization']
 
       // Очищаем данные в UserStore
       //const userStore = useUserStore()
