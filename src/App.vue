@@ -193,7 +193,7 @@ const userAvatar = computed(() => userStore.userData?.avatar || '/default-avatar
 const initializeData = async () => {
   try {
     if (isAuthenticated.value && !userStore.userData) {
-      await userStore.fetchUserData()
+      //await userStore.fetchUserData()
     }
   } catch (error) {
     console.error('Error initializing data:', error)
