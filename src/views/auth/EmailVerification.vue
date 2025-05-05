@@ -91,7 +91,9 @@ const getErrorDescription = (code) => {
 const handleResendVerification = async () => {
   resendLoading.value = true
   try {
-    const response = await api.post('/auth/resend-verification')
+    const response = await api.post('/auth/resend-verification',{},{
+      withCredentials:true
+    })
     if (response.data.success) {
       toast.success('Новое письмо с подтверждением отправлено на ваш email', {
         autoClose: 5000,
@@ -114,7 +116,9 @@ const handleResendVerification = async () => {
 onMounted(async () => {
   try {
     const token = route.params.token
-    const response = await api.get(`/auth/verify-email/${token}`)
+    const response = await api.get(`/auth/verify-email/${token}`, {
+      withCredentials: true,
+    })
 
     if (response.data.success) {
       success.value = true

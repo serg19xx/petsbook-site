@@ -34,7 +34,7 @@ export const useAuthStore = defineStore(
           return { success: false, message: t('auth.api.missing_credentials') }
         }
 
-        const response = await api.post('/auth/login', loginData)
+        const response = await api.post('/auth/login', loginData, { withCredentials: true })
 
         if (response.data.success) {
           loginInfo.value = response.data.user
@@ -74,12 +74,16 @@ export const useAuthStore = defineStore(
 
     const register = async (userData) => {
       try {
-        const response = await api.post('/auth/register', {
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          role: userData.role,
-        })
+        const response = await api.post(
+          '/auth/register',
+          {
+            name: userData.name,
+            email: userData.email,
+            password: userData.password,
+            role: userData.role,
+          },
+          { withCredentials: true },
+        )
 
         // Возвращаем статус для обработки в компоненте
         if (response.status === 400) {
@@ -129,7 +133,11 @@ export const useAuthStore = defineStore(
 
     const requestPasswordReset = async (email) => {
       try {
-        const response = await api.post('/auth/password-reset', { email })
+        const response = await api.post(
+          '/auth/password-reset',
+          { email },
+          { withCredentials: true },
+        )
 
         return {
           success: true,
@@ -146,7 +154,11 @@ export const useAuthStore = defineStore(
     const resetPassword = async ({ password }) => {
       try {
         //console.log('Sending reset password request with token:', token)
-        const response = await api.post('/auth/set-new-password', { token, password })
+        const response = await api.post(
+          '/auth/set-new-password',
+          { token, password },
+          { withCredentials: true },
+        )
 
         // Проверяем успешный ответ
         if (response.status === 200 && response.data.success) {
