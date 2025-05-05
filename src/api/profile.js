@@ -4,7 +4,7 @@ export const profileApi = {
   // Получение данных профиля
   getProfile: async () => {
     try {
-      const response = await api.get('/user/getuser')
+      const response = await api.get('/user/getuser', { withCredentials: true })
       return {
         success: true,
         data: response.data.data.user,
@@ -20,7 +20,7 @@ export const profileApi = {
   // Обновление данных профиля
   updateProfile: async (profileData) => {
     try {
-      const response = await api.put('/user/update', profileData)
+      const response = await api.put('/user/update', profileData, { withCredentials: true })
       return {
         success: true,
         data: response.data.data,
@@ -39,11 +39,16 @@ export const profileApi = {
       const formData = new FormData()
       formData.append('avatar', file)
 
-      const response = await api.post('/user/upload-avatar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const response = await api.post(
+        '/user/upload-avatar',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      })
+        { withCredentials: true },
+      )
       return {
         success: true,
         data: response.data.data.avatar,
@@ -62,11 +67,16 @@ export const profileApi = {
       const formData = new FormData()
       formData.append('cover', file)
 
-      const response = await api.post('/user/cover', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
+      const response = await api.post(
+        '/user/cover',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
         },
-      })
+        { withCredentials: true },
+      )
       return {
         success: true,
         data: response.data.data.cover,
