@@ -57,14 +57,14 @@
     <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
   </div>
 </template>
-
+<!-- eslint-disable no-undef -->
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+//import { useI18n } from 'vue-i18n'
 import { mapboxService } from '@/services/MapboxService'
-import { getAlpha3RegionCode } from '@/utils/regionCodes'
+///import { getAlpha3RegionCode } from '@/utils/regionCodes'
 
-const { t } = useI18n()
+//const { t } = useI18n()
 
 const props = defineProps({
   modelValue: {
@@ -105,8 +105,6 @@ const currentLocation = ref({
 })
 
 const handleInput = async () => {
-  console.log('handleInput called with query:', searchQuery.value)
-
   if (debounceTimeout) clearTimeout(debounceTimeout)
 
   if (searchQuery.value.length >= 2) {
@@ -115,13 +113,10 @@ const handleInput = async () => {
 
     debounceTimeout = setTimeout(async () => {
       try {
-        console.log('Searching for location:', searchQuery.value)
         const result = await mapboxService.searchLocation(searchQuery.value)
-        console.log('Search result:', result)
         suggestions.value = result.features || []
-        console.log('Suggestions updated:', suggestions.value)
       } catch (error) {
-        console.error('Search error:', error)
+        console.error('Error searching location:', error)
         suggestions.value = []
       } finally {
         isLoading.value = false
@@ -135,34 +130,21 @@ const handleInput = async () => {
 }
 
 const handleSelect = (suggestion) => {
-  console.log('handleSelect called with suggestion:', suggestion)
-
-  // Сохраняем оригинальный place_name
   const fullAddress = suggestion.place_name
   searchQuery.value = fullAddress
 
-  // Разбираем данные из suggestion
   const context = suggestion.context || []
-  console.log('Context items:', context.map(item => ({
-    id: item.id,
-    text: item.text,
-    short_code: item.short_code
-  })))
 
-  // Получаем коды стран и региона по id
   const countryContext = context.find(item => item.id.startsWith('country.'))
   const regionContext = context.find(item => item.id.startsWith('region.'))
   const placeContext = context.find(item => item.id.startsWith('place.'))
   const postcodeContext = context.find(item => item.id.startsWith('postcode.'))
   const districtContext = context.find(item => item.id.startsWith('district.'))
 
-  // Извлекаем country_code2 из свойства short_code контекста страны
   const country_code2 = (countryContext?.short_code || '').toUpperCase()
 
-  // Получаем region_code из short_code региона
   let region_code = regionContext?.short_code || ''
 
-  // Формируем код региона в формате ISO 3166-2
   if (region_code) {
     const regionShortCode = region_code.split('-')[1]?.toUpperCase() || ''
     if (regionShortCode) {
@@ -183,7 +165,6 @@ const handleSelect = (suggestion) => {
     unitNumber: unitNumber.value || ''
   }
 
-  // Обновляем текущую локацию
   currentLocation.value = {
     fullAddress: fullAddress,
     coordinates: {
@@ -216,7 +197,6 @@ const handleUnitChange = () => {
   emit('location-selected', locationData)
 }
 
-// Сброс данных при очистке поля поиска
 watch(searchQuery, (newValue) => {
   if (!newValue) {
     currentLocation.value = {
@@ -241,7 +221,6 @@ watch(searchQuery, (newValue) => {
   }
 })
 
-// Инициализация при монтировании компонента
 onMounted(() => {
   if (props.modelValue) {
     searchQuery.value = props.modelValue

@@ -18,8 +18,6 @@ export const PhotoService = {
         },
       })
 
-      console.log('Server response:', response.data) // Добавим лог
-
       return response.data
     } catch (error) {
       console.error('Error uploading photo:', error)

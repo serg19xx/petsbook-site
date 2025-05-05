@@ -262,12 +262,13 @@
     </Dialog>
   </div>
 </template>
-
+<!-- eslint-disable no-undef -->
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/UserStore'
+import { useAuthStore } from '@/stores/AuthStore'
 import { useI18n } from 'vue-i18n'
 import { formatInTimeZone } from 'date-fns-tz'
 import { format } from 'date-fns'
@@ -286,33 +287,8 @@ const props = defineProps({
 
 const router = useRouter()
 const userStore = useUserStore()
+const authStore = useAuthStore()
 const { t } = useI18n()
-
-// Расширенное логирование
-console.log('UserProfileCard - Инициализация компонента')
-console.log('- props.isOwnProfile:', props.isOwnProfile)
-console.log('- userStore.userData:', userStore.userData)
-console.log('- userStore состояние:', {
-  loading: userStore.loading,
-  error: userStore.error,
-  isAuthenticated: userStore.isAuthenticated
-})
-
-const showPhotoDialog = ref(false)
-const showCoverDialog = ref(false)
-const tempCover = ref(null)
-const tempAvatar = ref(null)
-
-// Добавляем watch для отладки
-watch(showPhotoDialog, (newVal) => {
-  console.log('showPhotoDialog changed:', newVal)
-  console.log('Dialog element exists:', document.querySelector('.dialog-content'))
-})
-
-watch(showCoverDialog, (newVal) => {
-  console.log('showCoverDialog changed:', newVal)
-  console.log('Dialog element exists:', document.querySelector('.dialog-content'))
-})
 
 // Получаем данные из UserStore
 const userData = computed(() => userStore.userData)
@@ -367,6 +343,23 @@ const formatDate = (dateString) => {
   }
 }
 
+const showPhotoDialog = ref(false)
+const showCoverDialog = ref(false)
+const tempCover = ref(null)
+const tempAvatar = ref(null)
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+console.log('=====-----API_BASE_URL',API_BASE_URL)
+
+// Добавляем обработчики для кнопок
+const handleCoverClick = () => {
+  showCoverDialog.value = true
+}
+
+const handleAvatarClick = () => {
+  showPhotoDialog.value = true
+}
+
 const handleAvatarSave = async (file) => {
   try {
     // Временный предпросмотр
@@ -378,13 +371,24 @@ const handleAvatarSave = async (file) => {
 
     // Загружаем на сервер
     const response = await PhotoService.uploadPhoto(file, 'avatar')
-    console.log('Ответ сервера при загрузке:', response)
-
+console.log('-----response',response)
+console.log('-----API_BASE_URL',API_BASE_URL)
     if (response.success) {
       // Формируем полный URL для аватара
-      const fullAvatarUrl = `http://localhost:8080${response.path}`
+      const fullAvatarUrl = response.path.startsWith('http')
+        ? response.path
+        : `${API_BASE_URL}${response.path}`
       // Обновляем в store, что обновит аватар везде
       await userStore.updateUserData({ avatar: fullAvatarUrl })
+
+      const avatarUrlWithCacheBusting = `${fullAvatarUrl}?t=${Date.now()}`
+      authStore.loginInfo = {
+        ...authStore.loginInfo,
+        avatar: avatarUrlWithCacheBusting
+      }
+
+      console.log('fullAvatarUrl',authStore.loginInfo)
+
     }
 
     // Закрываем диалог
@@ -405,7 +409,9 @@ const handleCoverSave = async (file) => {
 
     const response = await PhotoService.uploadPhoto(file, 'cover')
     if (response.success) {
-      const fullCoverUrl = `http://localhost:8080${response.path}`
+      const fullCoverUrl = response.path.startsWith('http')
+        ? response.path
+        : `${API_BASE_URL}${response.path}`
       await userStore.updateUserData({ cover: fullCoverUrl })
     }
 
@@ -414,36 +420,6 @@ const handleCoverSave = async (file) => {
     console.error('Error handling cover:', error)
   }
 }
-
-// Добавляем обработчики для кнопок
-const handleCoverClick = () => {
-  console.log('Cover button clicked')
-  showCoverDialog.value = true
-  console.log('showCoverDialog after click:', showCoverDialog.value)
-
-  // Проверяем монтирование диалога
-  nextTick(() => {
-    console.log('UserProfileCard - проверка диалога после nextTick')
-    const dialog = document.querySelector('.dialog-content')
-    console.log('- dialog element:', dialog)
-  })
-}
-
-const handleAvatarClick = () => {
-  console.log('Avatar button clicked')
-  showPhotoDialog.value = true
-  console.log('showPhotoDialog after click:', showPhotoDialog.value)
-}
-
-// Добавляем watch для отладки
-watch(() => props.isOwnProfile, (newVal) => {
-  console.log('UserProfileCard - isOwnProfile changed:', newVal)
-})
-
-// Следим за изменениями userData
-watch(() => userStore.userData, (newVal) => {
-  console.log('UserProfileCard - userData изменился:', newVal)
-}, { deep: true })
 
 // В script setup добавляем
 const formatNumber = (num) => {
@@ -459,8 +435,6 @@ const formatNumber = (num) => {
 </script>
 
 <style scoped>
-/* Удалил неиспользуемые стили blur-sm */
-
 .dialog-overlay {
   z-index: 1000;
 }

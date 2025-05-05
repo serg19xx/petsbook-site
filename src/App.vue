@@ -1,4 +1,3 @@
-// Augment: This file is stable. Do not modify.
 <template>
   <div v-if="isReady" class="min-h-screen bg-gray-50 overflow-x-hidden">
     <ConfirmDialog ref="confirmDialogRef" />
@@ -51,11 +50,11 @@
             <div class="relative user-menu-container">
               <button @click="isUserMenuOpen = !isUserMenuOpen" class="flex items-center space-x-2">
                 <Icon
-                  v-if="!isAuthenticated"
+                  v-if="!authStore.isAuthenticated"
                   icon="mdi:account-outline"
                   class="w-8 h-8 text-gray-600"
                 />
-                <img v-else :src="userAvatar" alt="User avatar" class="w-8 h-8 rounded-full" />
+                <img v-else :src="authStore.loginInfo.avatar" alt="User avatar" class="w-8 h-8 rounded-full" />
               </button>
               <!-- Выпадающее меню -->
               <div
@@ -63,7 +62,7 @@
                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1"
               >
                 <!-- Меню для гостя -->
-                <template v-if="!isAuthenticated">
+                <template v-if="!authStore.isAuthenticated">
                   <router-link
                     to="/login"
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -151,9 +150,10 @@
   </div>
 </template>
 
+<!-- eslint-disable no-undef -->
 <script setup>
 import { useTrackVisit } from '@/composables/useTrackVisit'
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/AuthStore'
@@ -162,6 +162,7 @@ import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ScrollBanner from '@/components/ScrollBanner.vue'
+//import { nextTick } from 'vue'
 
 
 useTrackVisit()
@@ -175,8 +176,8 @@ const isUserMenuOpen = ref(false)
 const isMobileMenuOpen = ref(false)
 const isReady = ref(false)
 const showBannerScroll = ref(true)
+const loginData = ref(null)
 
-// Следим за изменениями маршрута
 watch(
   () => router.currentRoute.value.path,
   () => {
@@ -185,33 +186,26 @@ watch(
   }
 )
 
-const isAuthenticated = computed(() => authStore.isAuthenticated)
-const userName = computed(() => userStore.userData?.name || 'User')
-const userAvatar = computed(() => userStore.userData?.avatar || '/default-avatar.png')
-
-// Инициализация данных
-const initializeData = async () => {
-  try {
-    if (isAuthenticated.value && !userStore.userData) {
-      //await userStore.fetchUserData()
-    }
-  } catch (error) {
-    console.error('Error initializing data:', error)
-  } finally {
-    isReady.value = true
-  }
-}
-
 onMounted(async () => {
-  await initializeData()
+  //const loginData = JSON.parse(localStorage.getItem('loginData'))
+  //if (loginData) {
+    //const result = await userStore.fetchUserData()
+    //authStore.isAuthenticated = true
+  //}else{
+  //  authStore.isAuthenticated = false
+  //}
+  isReady.value = true
 })
 
 // Следим за изменением статуса аутентификации
 watch(() => authStore.isAuthenticated, async (newValue) => {
-  if (newValue && !userStore.userData) {
-    await userStore.fetchUserData()
+  console.log('WATCH  authStore.isAuthenticated',newValue)
+  if (newValue) {
+    const result = await userStore.fetchUserData()
+    console.log('WATCH  fetchUserData result:', result)
   }
 })
+
 
 const menuItems = [
   { path: '/', label: 'home' },
@@ -235,9 +229,14 @@ const handleLogout = async () => {
   if (confirmed) {
     try {
       const result = await authStore.logout()
+console.log('handleLogout result',result)
+      //authStore.isAuthenticated.value = false
+      //loginData.value = null
       if (result.success) {
+        //authStore.$reset()
+        localStorage.removeItem('auth')
         isUserMenuOpen.value = false
-        router.push('/login')
+        router.push('/')
       }
     } catch (error) {
       console.error('Logout error:', error)

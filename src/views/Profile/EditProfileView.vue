@@ -262,17 +262,12 @@ const v$ = useVuelidate(rules, formData)
 // Validate single field
 const validateField = async (fieldName) => {
   if (fieldName === 'location') {
-    console.log('Validating location:', formData.value.location)
-    // Проверяем наличие значения перед валидацией
-    if (!formData.value.location || formData.value.location.trim() === '') {
-      console.log('Location is empty')
-      v$.value[fieldName].$touch()
-      return false
-    }
+    await v$.value[fieldName].$touch()
+    const result = !v$.value[fieldName].$error
+    return result
   }
   await v$.value[fieldName].$touch()
   const result = !v$.value[fieldName].$error
-  console.log(`Validation result for ${fieldName}:`, result)
   return result
 }
 
@@ -288,36 +283,17 @@ const getFieldError = (fieldName) => {
 const handleWebsiteBlur = () => {
   if (formData.value.website && typeof formData.value.website === 'string') {
     formData.value.website = normalizeUrl(formData.value.website)
-    console.log('Website normalized:', formData.value.website)
   }
 }
 
 const handleLocationSelected = (locationData) => {
-  console.log('Location changed:', locationData)
-
-  // Сохраняем полный адрес как есть
   formData.value.location = locationData.fullAddress
-
-  // Сохраняем полные данные о местоположении
   formData.value.locationData = {
     fullAddress: locationData.fullAddress,
     coordinates: locationData.coordinates,
     components: locationData.components
   }
-
-  console.log('Updated formData:', {
-    location: formData.value.location,
-    locationData: formData.value.locationData
-  })
 }
-
-// Добавим watch для отладки, если нужно
-watch(
-  () => formData.value.location,
-  (newValue) => {
-    console.log('Location changed:', newValue)
-  },
-)
 
 const handleSubmit = async () => {
   if (loading.value) return
@@ -347,8 +323,6 @@ const handleSubmit = async () => {
       }
     }
 
-    console.log('Sending gender:', formData.value.gender)
-
     const result = await userStore.updateUserData(updateData)
     if (result?.success) {
       toast.success(result.message || t('profile.update_success'))
@@ -357,7 +331,6 @@ const handleSubmit = async () => {
       toast.error(result?.error || t('profile.update_error'))
     }
   } catch (error) {
-    console.error('Update error:', error)
     toast.error(t('profile.update_error'))
   } finally {
     loading.value = false
@@ -367,16 +340,6 @@ const handleSubmit = async () => {
 const handleCancel = () => {
   router.push('/profile')
 }
-
-// Добавляем наблюдение за изменениями website
-watch(
-  () => formData.value.website,
-  (newValue) => {
-    if (typeof newValue === 'string') {
-      console.log('Website changed:', newValue)
-    }
-  },
-)
 
 // Массив часто используемых эмодзи
 const commonEmojis = [
@@ -392,7 +355,6 @@ const showEmojiPicker = ref(false)
 
 const toggleEmojiPicker = () => {
   showEmojiPicker.value = !showEmojiPicker.value
-  console.log('Toggle emoji picker:', showEmojiPicker.value) // Для отладки
 }
 
 const onEmojiSelect = (emoji) => {
