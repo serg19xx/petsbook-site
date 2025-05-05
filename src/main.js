@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 // Augment: This file is stable. Do not modify.
 import { createApp } from 'vue'
 import { vMaska as maska } from 'maska'
@@ -7,9 +8,9 @@ import i18n from './i18n'
 import './assets/main.css'
 import { createPinia } from 'pinia'
 import { useLanguageStore } from './stores/LanguageStore'
-import { useAuthStore } from './stores/AuthStore'
 import Vue3Toastify, { toast } from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 // Глобальная функция для тестирования уведомлений
 window.showToast = () => {
@@ -20,12 +21,12 @@ const initApp = async () => {
   const app = createApp(App)
   app.directive('maska', maska)
   const pinia = createPinia()
+  pinia.use(piniaPluginPersistedstate)
 
   app.use(pinia)
 
-  // Инициализируем авторизацию перед монтированием приложения
-  const authStore = useAuthStore()
-  await authStore.initializeAuth()
+  //const authStore = useAuthStore()
+  //const userStore = useUserStore()
 
   app.use(router)
   app.use(i18n)

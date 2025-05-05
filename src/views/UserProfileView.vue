@@ -135,21 +135,24 @@
     </template>
   </MainLayout>
 </template>
-
+<!-- eslint-disable no-undef -->
+ <!-- eslint-disable no-unused-vars -->
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/UserStore'
+import { useAuthStore } from '@/stores/AuthStore'
 import { Icon } from '@iconify/vue'
 import MainLayout from '@/layouts/MainLayout.vue'
 import UserProfileCard from '@/components/Profile/UserProfileCard.vue'
 import { useI18n } from 'vue-i18n'
-import PhotoUploader from '@/components/Profile/PhotoUploader.vue'
+//import PhotoUploader from '@/components/Profile/PhotoUploader.vue'
 import { PhotoService } from '@/services/PhotoService'
 import { optimizeAvatar, optimizeCoverPhoto } from '@/utils/imageUtils'
-import Dialog from '@/components/ui/Dialog.vue'
+//import Dialog from '@/components/ui/Dialog.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 const userStore = useUserStore()
 const { t } = useI18n()
 
@@ -177,16 +180,7 @@ const getRoleLabel = computed(() => {
 })
 
 const isOwnProfile = computed(() => {
-  console.log('UserProfileView - Вычисление isOwnProfile:')
-  console.log('- route.params:', route.params)
-  console.log('- userStore.userData:', userStore.userData)
-  console.log('- userStore состояние:', {
-    loading: userStore.loading,
-    error: userStore.error,
-    isAuthenticated: userStore.isAuthenticated
-  })
   const result = !route.params.id || route.params.id === userStore.userData?.id
-  console.log('- результат:', result)
   return result
 })
 
@@ -203,35 +197,19 @@ const isActiveRoute = (path) => {
 
 // Загрузка данных при монтировании компонента
 onMounted(async () => {
-  console.log('UserProfileView - Монтирование компонента')
-  console.log('- начальное состояние userStore:', {
-    userData: userStore.userData,
-    loading: userStore.loading,
-    error: userStore.error
-  })
-
   if (!userStore.userData) {
-    console.log('- загрузка данных пользователя...')
     try{
       await userStore.fetchUserData()
-      console.log('- данные загружены:', userStore.userData)
     } catch (error) {
       if (error.response?.status === 401) {
-        console.error('Error fetching user data:', error)
         router.push('/login')
-      }else{
-        console.error('Error fetching user data:', error)
       }
     }
   }
 })
 
-// Следим за изменениями userData
-watch(() => userStore.userData, (newVal) => {
-  console.log('UserProfileView - userData изменился:', newVal)
-}, { deep: true })
 
-const userAvatar = computed(() => userStore.userData?.avatar)
+//const userAvatar = computed(() => userStore.userData?.avatar)
 
 const showAvatarDialog = ref(false)
 const showCoverPhotoDialog = ref(false)
@@ -245,6 +223,7 @@ const handleAvatarUpload = async (file) => {
     if (response.success) {
       userStore.updateUserData({ avatar: response.data.url })
       showAvatarDialog.value = false
+      authStore.userAvatar.value = response.data.url
     }
   } catch (error) {
     console.error('Error uploading avatar:', error)

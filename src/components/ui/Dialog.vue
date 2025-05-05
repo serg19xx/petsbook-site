@@ -85,7 +85,6 @@ const { t } = useI18n()
 
 // Следим за изменениями modelValue
 watch(() => props.modelValue, (newVal) => {
-  console.log('Dialog - modelValue изменился:', newVal)
   if (newVal) {
     nextTick(() => {
       document.body.style.overflow = 'hidden'
@@ -96,11 +95,9 @@ watch(() => props.modelValue, (newVal) => {
 })
 
 onMounted(() => {
-  console.log('Dialog - компонент смонтирован')
 })
 
 const close = () => {
-  console.log('Dialog - вызвана функция close')
   emit('update:modelValue', false)
   emit('close')
 }

@@ -23,7 +23,7 @@ export const profileApi = {
       const response = await api.put('/user/update', profileData)
       return {
         success: true,
-        data: response.data.data.user,
+        data: response.data.data,
       }
     } catch (error) {
       return {

@@ -88,7 +88,7 @@ import { useI18n } from 'vue-i18n'
 import { Icon } from '@iconify/vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
-import { API_RESPONSE_CODES } from '@/constants/apiResponseCodes'
+//import { API_RESPONSE_CODES } from '@/constants/apiResponseCodes'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -170,26 +170,19 @@ const rules = computed(() => ({
 
 const v$ = useVuelidate(rules, formData)
 const loading = ref(false)
-const error = ref('')
-const tokenError = ref(false)
+//const error = ref('')
+//const tokenError = ref(false)
 
 const clearForm = () => {
-  console.log('Clearing form data')
   formData.value = {
     password: '',
     confirmPassword: '',
   }
   v$.value.$reset()
-  console.log('Form cleared:', formData.value)
 }
 
 // Добавляем навигационный guard
 const beforeRouteLeave = (to, from, next) => {
-  console.log('Navigation guard triggered:', {
-    to: to.path,
-    from: from.path,
-    formData: formData.value
-  })
   next()
 }
 
@@ -217,7 +210,6 @@ const validateToken = async () => {
       router.push('/recovery')
     }
   } catch (error) {
-    console.error('Token validation error:', error)
     const errorMessage = getErrorMessage('INVALID_TOKEN')
     toast.error(errorMessage)
     router.push('/recovery')
@@ -227,7 +219,6 @@ const validateToken = async () => {
 const handleSubmit = async () => {
   const result = await v$.value.$validate()
   if (!result) {
-    console.log('Form validation failed')
     toast.error(t('auth.reset_password.errors.form_validation'), {
       position: "top-right",
       autoClose: 2000,
@@ -242,26 +233,16 @@ const handleSubmit = async () => {
   }
 
   loading.value = true
-  console.log('Form state before submit:', {
-    password: formData.value.password,
-    confirmPassword: formData.value.confirmPassword,
-    loading: loading.value,
-    token: resetToken
-  })
 
   try {
     const response = await authStore.resetPassword({
       token: resetToken,
       password: formData.value.password
     })
-    console.log('AuthStore response:', response)
 
     if (response.success) {
-      console.log('Password reset successful, showing success message:', response.message)
-      // Очищаем форму
       clearForm()
 
-      // Показываем сообщение об успехе
       toast.success(response.message, {
         position: "top-right",
         autoClose: 2000,
@@ -273,16 +254,12 @@ const handleSubmit = async () => {
         theme: "colored"
       })
 
-      // Ждем, пока сообщение будет показано, затем редирект
       setTimeout(() => {
-        console.log('Form state before redirect:', formData.value)
-        console.log('Redirecting to login page')
         router.replace('/login')
       }, 2000)
       return
     }
 
-    console.log('Password reset failed:', response.message)
     toast.error(response.message || t('auth.reset_password.errors.default'), {
       position: "top-right",
       autoClose: 2000,
@@ -296,12 +273,6 @@ const handleSubmit = async () => {
     router.replace('/recovery')
 
   } catch (error) {
-    console.error('Password reset error:', error)
-    console.error('Error details:', {
-      message: error.message,
-      response: error.response,
-      data: error.response?.data
-    })
     toast.error(t('auth.reset_password.errors.default'), {
       position: "top-right",
       autoClose: 2000,
@@ -315,11 +286,6 @@ const handleSubmit = async () => {
     router.replace('/recovery')
   } finally {
     loading.value = false
-    console.log('Form state after submit:', {
-      password: formData.value.password,
-      confirmPassword: formData.value.confirmPassword,
-      loading: loading.value
-    })
   }
 }
 </script>

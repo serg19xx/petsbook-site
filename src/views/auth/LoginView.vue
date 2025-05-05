@@ -60,10 +60,12 @@
   </div>
 </template>
 
+<!-- eslint-disable no-undef -->
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
+import { useUserStore } from '@/stores/UserStore'
 import { useVuelidate } from '@vuelidate/core'
 import { required, email } from '@vuelidate/validators'
 import { withI18nMessage } from '@/utils/validation'
@@ -72,11 +74,10 @@ import { toast } from 'vue3-toastify'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 
-console.log('LoginView mounted', Date.now())
-
 const { t } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
+const userStore = useUserStore()
 const loading = ref(false)
 const error = ref('')
 const formData = reactive({
@@ -101,7 +102,6 @@ const validateField = async (field) => {
 }
 
 const handleSubmit = async () => {
-  console.log('handleSubmit called', Date.now());
   error.value = ''
   const isValid = await v$.value.$validate()
 
@@ -114,35 +114,34 @@ const handleSubmit = async () => {
 
   loading.value = true
 
-  try {
-    console.log('LV 1 : Login attempt:', formData.email, formData.password)
-
+  try{
     const response = await authStore.login({
       email: formData.email,
       password: formData.password
     })
-
-    console.log('LV 2: Login response:', response)
-
+console.log('LoginView handleSubmit',response)
     if (!response.success) {
       error.value = response.message
       toast.error(response.message)
       return
     }
 
+    //getUserData()
+    //userStore.userData = response.user
+    userStore.fetchUserData()
+
     toast.success(t('notifications.login_success'))
     const redirectPath = router.currentRoute.value.query.redirect || '/'
     router.push(redirectPath)
 
   } catch (err) {
+    console.error('Error logging in:', err)
     const errorMessage = t('errors.unexpected_error')
     error.value = errorMessage
     toast.error(errorMessage)
-    console.error('Login error:', err)
   } finally {
     loading.value = false
   }
 }
-
 
 </script>

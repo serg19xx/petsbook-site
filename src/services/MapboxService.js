@@ -31,7 +31,6 @@ export const mapboxService = {
       }
 
       const data = await response.json()
-      console.log('Mapbox API Response:', JSON.stringify(data, null, 2))
       return data
     } catch (error) {
       console.error('Error in searchLocation:', error)
