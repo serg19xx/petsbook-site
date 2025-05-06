@@ -197,7 +197,7 @@ onMounted(async () => {
   isReady.value = true
 })
 
-// Следим за изменением статуса аутентификации
+// Следим за изменением статуса аутентификации ывапв
 watch(() => authStore.isAuthenticated, async (newValue) => {
   console.log('WATCH  authStore.isAuthenticated',newValue)
   if (newValue) {
