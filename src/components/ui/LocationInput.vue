@@ -197,10 +197,11 @@ const handleUnitChange = () => {
   emit('location-selected', locationData)
 }
 
-watch(searchQuery, (newValue) => {
-  if (!newValue) {
+watch(() => props.modelValue, (newValue) => {
+  if (newValue) {
+    searchQuery.value = newValue
     currentLocation.value = {
-      fullAddress: '',
+      fullAddress: newValue,
       coordinates: {
         lat: 0,
         lng: 0
@@ -219,7 +220,7 @@ watch(searchQuery, (newValue) => {
       }
     }
   }
-})
+}, { immediate: true })
 
 onMounted(() => {
   if (props.modelValue) {
@@ -247,7 +248,7 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="postcss">
 .input-base {
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500

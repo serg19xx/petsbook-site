@@ -22,14 +22,19 @@ export const useUserStore = defineStore('user', () => {
       const response = await api.get('/user/getuser', { withCredentials: true })
       const fetchedUser = response.data?.data.user
 
-      // console.log('fetchedUser:', fetchedUser)
+      console.log(
+        '========Server response in fetchUserData:',
+        JSON.parse(JSON.stringify(response.data)),
+      ) // Добавляем лог
+
+      console.log('========fetchedUser:', JSON.parse(JSON.stringify(fetchedUser)))
 
       if (!fetchedUser) {
         throw new Error('Invalid response structure')
       }
 
       userData.value = fetchedUser
-
+      console.log('========Updated userData in store:', JSON.parse(JSON.stringify(userData.value))) // Добавляем лог
       return {
         success: true,
         data: fetchedUser,
@@ -58,28 +63,40 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
 
     try {
+      //console.log('BEFORE API:')
       const response = await api.put('/user/update', updateData, {
         withCredentials: true,
       })
+      //console.log('========Server response:', response.data) // Добавляем лог
 
       // Проверяем успешность ответа сервера
-      if (response.data?.success) {
+      if (response.status === 200 || response.data?.status === 200) {
+        // Сначала обновляем локальные данные
         userData.value = {
           ...userData.value,
           ...updateData,
+          avatar: updateData.avatar || userData.value.avatar,
+          cover: updateData.cover || userData.value.cover,
         }
+
+        await fetchUserData()
+
+        //console.log('Returning success response') // Добавляем лог
         return {
           success: true,
           message: response.data?.message || 'Profile updated successfully',
         }
       } else {
-        throw new Error(response.data?.message || 'Failed to update user data')
+        //console.log('Returning error response') // Добавляем лог
+        return {
+          // Изменено здесь
+          success: false,
+          error: response.data?.message || 'Failed to update user data',
+        }
       }
     } catch (err) {
+      //console.error('Update error:', err) // Добавляем лог
       error.value = err.response?.data?.message || 'Failed to update user data'
-      if (err.response?.status !== 401) {
-        // console.error('Error updating user data:', err)
-      }
       return {
         success: false,
         error: error.value,
