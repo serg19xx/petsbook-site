@@ -111,6 +111,7 @@
           <div class="mb-6">
             <LocationInput
               v-model="formData.location"
+              :initial-value="formData.location"
               label="Location *"
               placeholder="Start typing your location..."
               :error="getFieldError('location')"
@@ -182,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted ,nextTick} from 'vue'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
 import { required } from '@vuelidate/validators'
@@ -322,15 +323,22 @@ const handleSubmit = async () => {
         components: formData.value.locationData?.components || null
       }
     }
-
+    //console.log('Before updateUserData call') // Добавляем лог перед вызовом
     const result = await userStore.updateUserData(updateData)
-    if (result?.success) {
+
+    //console.log('After updateUserData call:', result.success, typeof result.success) // Добавляем лог
+
+
+
+    if (result.success) {
+      await userStore.fetchUserData()
       toast.success(result.message || t('profile.update_success'))
-      router.push('/profile')
+      //router.push('/profile')
     } else {
       toast.error(result?.error || t('profile.update_error'))
     }
   } catch (error) {
+    //console.error('Error updating profile:', error)
     toast.error(t('profile.update_error'))
   } finally {
     loading.value = false
@@ -381,22 +389,28 @@ const handleClickOutside = (event) => {
 
 // Инициализация данных при монтировании компонента
 onMounted(async () => {
-  if (!userStore.userData) {
+  //if (!userStore.userData) {
     await userStore.fetchUserData()
-  }
+  //}
+
+  const userData = JSON.parse(JSON.stringify(userStore.userData))
+  console.log('User data in component:', userData)
+
   // Обновляем formData после получения данных
   formData.value = {
-    fullName: userStore.userData?.fullName || '',
-    nickname: userStore.userData?.nickname || '',
-    gender: userStore.userData?.gender || '',
-    birthDate: userStore.userData?.birthDate || '',
-    aboutMe: userStore.userData?.aboutMe || '',
-    location: userStore.userData?.location?.fullAddress || '',
-    locationData: userStore.userData?.location || null,
-    email: userStore.userData?.contactEmail || '',
-    phone: userStore.userData?.phone || '',
-    website: userStore.userData?.website || ''
+    fullName: userData.fullName || '',
+      nickname: userData.nickname || '',
+      gender: userData.gender || '',
+      birthDate: userData.birthDate || '',
+      aboutMe: userData.aboutMe || '',
+      location: userData.location?.fullAddress || '',
+      locationData: userData.location || null,
+      email: userData.contactEmail || '',
+      phone: userData.phone || '',
+      website: userData.website || ''
   }
+  await nextTick()
+  console.log('Ю---------------Form data after update:', formData.value)
   document.addEventListener('click', handleClickOutside)
 })
 
@@ -405,7 +419,7 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="postcss">
 /* Добавляем стили для textarea при фокусе */
 textarea:focus {
   @apply outline-none ring-2 ring-blue-500 border-blue-500;

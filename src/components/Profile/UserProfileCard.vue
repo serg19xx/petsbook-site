@@ -6,8 +6,8 @@
         <!-- Simple gray background by default -->
         <div class="absolute inset-0 bg-gray-100">
           <img
-            v-if="userData?.cover || tempCover"
-            :src="tempCover || userData?.cover"
+            v-if="userData?.cover"
+            :src="userData?.cover + '?t=' + Date.now()"
             alt="Cover"
             class="w-full h-full object-cover"
           />
@@ -30,8 +30,8 @@
           <div class="relative">
             <div class="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-200">
               <img
-                v-if="userData?.avatar || tempAvatar"
-                :src="tempAvatar || userData?.avatar"
+                v-if="userData?.avatar"
+                :src="userData?.avatar + '?t=' + Date.now()"
                 alt="Profile picture"
                 class="w-full h-full object-cover"
               />
@@ -349,7 +349,7 @@ const tempCover = ref(null)
 const tempAvatar = ref(null)
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-console.log('=====-----API_BASE_URL',API_BASE_URL)
+//console.log('=====-----API_BASE_URL',API_BASE_URL)
 
 // Добавляем обработчики для кнопок
 const handleCoverClick = () => {
@@ -363,30 +363,35 @@ const handleAvatarClick = () => {
 const handleAvatarSave = async (file) => {
   try {
     // Временный предпросмотр
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      tempAvatar.value = e.target.result
-    }
-    reader.readAsDataURL(file)
+    //const reader = new FileReader()
+    //reader.onload = (e) => {
+    //  tempAvatar.value = e.target.result
+    //}
+    //reader.readAsDataURL(file)
 
     // Загружаем на сервер
     const response = await PhotoService.uploadPhoto(file, 'avatar')
-console.log('-----response',response)
-console.log('-----API_BASE_URL',API_BASE_URL)
+
     if (response.success) {
       // Формируем полный URL для аватара
       const fullAvatarUrl = response.path.startsWith('http')
         ? response.path
         : `${API_BASE_URL}${response.path}`
       // Обновляем в store, что обновит аватар везде
-      await userStore.updateUserData({ avatar: fullAvatarUrl })
+            // Обновляем в store
+            /*
+      await userStore.updateUserData({
+        avatar: fullAvatarUrl,
 
-      const avatarUrlWithCacheBusting = `${fullAvatarUrl}?t=${Date.now()}`
+        _timestamp: Date.now()
+      })
+*/
+      //const avatarUrlWithCacheBusting = `${fullAvatarUrl}?t=${Date.now()}`
       authStore.loginInfo = {
         ...authStore.loginInfo,
-        avatar: avatarUrlWithCacheBusting
+        avatar: `${fullAvatarUrl}?t=${Date.now()}`
       }
-
+      await userStore.fetchUserData()
       console.log('fullAvatarUrl',authStore.loginInfo)
 
     }
@@ -401,18 +406,28 @@ console.log('-----API_BASE_URL',API_BASE_URL)
 // И аналогично для обложки
 const handleCoverSave = async (file) => {
   try {
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      tempCover.value = e.target.result
-    }
-    reader.readAsDataURL(file)
+    //const reader = new FileReader()
+    //reader.onload = (e) => {
+    //  tempCover.value = e.target.result
+    //}
+    //reader.readAsDataURL(file)
 
     const response = await PhotoService.uploadPhoto(file, 'cover')
     if (response.success) {
       const fullCoverUrl = response.path.startsWith('http')
         ? response.path
         : `${API_BASE_URL}${response.path}`
-      await userStore.updateUserData({ cover: fullCoverUrl })
+
+        //tempCover.value = `${fullCoverUrl}?t=${Date.now()}`
+
+        /*
+      await userStore.updateUserData({
+        cover: fullCoverUrl,
+
+        _timestamp: Date.now()
+      })
+        */
+      await userStore.fetchUserData()
     }
 
     showCoverDialog.value = false

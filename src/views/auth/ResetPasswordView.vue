@@ -235,15 +235,11 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    const response = await authStore.resetPassword({
-      token: resetToken,
-      password: formData.value.password
-    })
+    const success = await authStore.resetPassword(resetToken, formData.value.password)
 
-    if (response.success) {
+    if (success) {
       clearForm()
-
-      toast.success(response.message, {
+      toast.success(t('auth.reset_password.success'), {
         position: "top-right",
         autoClose: 2000,
         hideProgressBar: false,
@@ -253,27 +249,22 @@ const handleSubmit = async () => {
         progress: undefined,
         theme: "colored"
       })
-
-      setTimeout(() => {
-        router.replace('/login')
-      }, 2000)
-      return
+      router.push('/login')
+    } else {
+      toast.error(authStore.resetPasswordError || t('auth.reset_password.error'), {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored"
+      })
     }
-
-    toast.error(response.message || t('auth.reset_password.errors.default'), {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored"
-    })
-    router.replace('/recovery')
-
   } catch (error) {
-    toast.error(t('auth.reset_password.errors.default'), {
+    console.error('Reset password error:', error)
+    toast.error(t('auth.reset_password.error'), {
       position: "top-right",
       autoClose: 2000,
       hideProgressBar: false,
@@ -283,7 +274,6 @@ const handleSubmit = async () => {
       progress: undefined,
       theme: "colored"
     })
-    router.replace('/recovery')
   } finally {
     loading.value = false
   }
