@@ -120,7 +120,7 @@ onMounted(async () => {
       withCredentials: true,
     })
 
-    if (response.data.success) {
+    if (response.data.status === 200) {
       success.value = true
       toast.success('Email успешно подтвержден!', {
         autoClose: 3000,
