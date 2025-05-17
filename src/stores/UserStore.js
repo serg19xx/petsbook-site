@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import api from '@/api'
+import { useAuthStore } from './AuthStore'
 
 export const useUserStore = defineStore('user', () => {
   // console.log('fetchUserData called')
@@ -9,6 +10,7 @@ export const useUserStore = defineStore('user', () => {
   const userData = ref(null)
   const loading = ref(false)
   const error = ref(null)
+  const authStore = useAuthStore()
 
   const isAuthenticated = computed(() => !!userData.value && !!userData.value.id)
 
@@ -20,8 +22,16 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const response = await api.get('/user/getuser', { withCredentials: true })
-      const fetchedUser = response.data?.data.user
-
+      //const fetchedUser = response.data?.data.user
+      let fetchedUser = null
+      if (response.data?.data?.user) {
+        fetchedUser = response.data.data.user
+      } else if (response.data?.data) {
+        fetchedUser = response.data.data
+      } else if (response.data?.user) {
+        fetchedUser = response.data.user
+      }
+      console.log('@@@@@@ fetchedUser @@@@@@', fetchedUser)
       console.log(
         '========Server response in fetchUserData:',
         JSON.parse(JSON.stringify(response.data)),
@@ -34,6 +44,7 @@ export const useUserStore = defineStore('user', () => {
       }
 
       userData.value = fetchedUser
+      authStore.loginInfo.avatar = fetchedUser.avatar
       console.log('========Updated userData in store:', JSON.parse(JSON.stringify(userData.value))) // Добавляем лог
       return {
         success: true,
