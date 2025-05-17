@@ -130,7 +130,7 @@ const handleSubmit = async () => {
 
     //getUserData()
     //userStore.userData = response.user
-    await userStore.fetchUserData()
+    userStore.fetchUserData()
 
     const avatar = userStore.userData.avatar
     authStore.loginInfo.avatar = avatar
