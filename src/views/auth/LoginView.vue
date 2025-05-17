@@ -131,8 +131,9 @@ const handleSubmit = async () => {
     //getUserData()
     //userStore.userData = response.user
     userStore.fetchUserData()
+    console.log('FETCH  >>>>>  userData:', userStore.userData)
 
-    const avatar = userStore.userData.avatar
+    const avatar = userStore.userData?.avatar || userStore.userData?.value?.avatar || null
     authStore.loginInfo.avatar = avatar
 
     //console.log('=========================',avatar);
