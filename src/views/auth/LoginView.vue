@@ -131,10 +131,13 @@ const handleSubmit = async () => {
     //getUserData()
     //userStore.userData = response.user
     await userStore.fetchUserData()
-    console.log('FETCH  >>>>>  userData:', userStore.userData.value)
 
+  if (userStore.userData.value && userStore.userData.value.avatar) {
     const avatar = userStore.userData?.value?.avatar || null
     authStore.loginInfo.avatar = avatar
+  }
+
+
 
     console.log('11 =========================',avatar);
     console.log('22 =========================',authStore.loginInfo.avatar);
