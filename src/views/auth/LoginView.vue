@@ -136,7 +136,8 @@ const handleSubmit = async () => {
     const avatar = userStore.userData?.avatar || userStore.userData?.value?.avatar || null
     authStore.loginInfo.avatar = avatar
 
-    //console.log('=========================',avatar);
+    console.log('11 =========================',avatar);
+    console.log('22 =========================',authStore.loginInfo.avatar);
     //authStore.loginInfo.avatar = userStore.userData.avatar
 
     //toast.success(t('notifications.login_success'))
