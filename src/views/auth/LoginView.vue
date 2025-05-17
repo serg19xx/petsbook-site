@@ -85,6 +85,8 @@ const formData = reactive({
   password: ''
 })
 
+const userData = userStore.userData
+
 const rules = {
   email: {
     required: withI18nMessage(required, 'required'),
@@ -119,7 +121,7 @@ const handleSubmit = async () => {
       email: formData.email,
       password: formData.password
     })
-console.log('LoginView handleSubmit',response)
+//console.log('LoginView handleSubmit',response)
     if (!response.success) {
       error.value = response.message
       toast.error(response.message)
@@ -128,9 +130,15 @@ console.log('LoginView handleSubmit',response)
 
     //getUserData()
     //userStore.userData = response.user
-    userStore.fetchUserData()
+    await userStore.fetchUserData()
 
-    toast.success(t('notifications.login_success'))
+    const avatar = userStore.userData.avatar
+    authStore.loginInfo.avatar = avatar
+
+    //console.log('=========================',avatar);
+    //authStore.loginInfo.avatar = userStore.userData.avatar
+
+    //toast.success(t('notifications.login_success'))
     const redirectPath = router.currentRoute.value.query.redirect || '/'
     router.push(redirectPath)
 
