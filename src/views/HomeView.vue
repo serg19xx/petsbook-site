@@ -2,17 +2,7 @@
   <MainLayout>
     <!-- Left Sidebar Content -->
     <template #left-sidebar>
-      <nav class="space-y-1">
-        <a
-          href="#"
-          v-for="item in menuItems"
-          :key="item.id"
-          class="flex items-center px-3 py-2 text-sm font-medium rounded-lg hover:bg-gray-100"
-        >
-          <Icon :icon="item.icon" class="w-6 h-6 mr-2 text-gray-600" />
-          <span>{{ item.title }}</span>
-        </a>
-      </nav>
+
     </template>
 
     <!-- Main Content -->
@@ -58,13 +48,7 @@
 
     <!-- Right Sidebar Content -->
     <template #right-sidebar>
-      <div class="bg-white rounded-lg shadow p-4">
-        <h3 class="font-semibold mb-4">Рекомендации</h3>
-        <div class="space-y-4">
-          <div class="h-32 bg-gray-100 rounded-lg"></div>
-          <div class="h-32 bg-gray-100 rounded-lg"></div>
-        </div>
-      </div>
+
     </template>
   </MainLayout>
 </template>
@@ -73,12 +57,6 @@
 import { ref } from 'vue'
 import MainLayout from '../layouts/MainLayout.vue'
 import { Icon } from '@iconify/vue'
-
-const menuItems = ref([
-  { id: 1, title: 'Новости', icon: 'mdi:newspaper' },
-  { id: 2, title: 'Сообщения', icon: 'mdi:message' },
-  { id: 3, title: 'Друзья', icon: 'mdi:account-group' },
-])
 
 const posts = ref([
   {

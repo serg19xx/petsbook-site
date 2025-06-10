@@ -5,7 +5,7 @@ const { t } = i18n.global
 
 export const withI18nMessage = (validator, messageKey, messageData = {}) => {
   return helpers.withMessage((props) => {
-    return t(`validation.${messageKey}`, { ...messageData, ...props })
+    return t(messageKey, { ...messageData, ...props })
   }, validator)
 }
 

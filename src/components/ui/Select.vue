@@ -1,22 +1,21 @@
 <template>
   <div>
     <label v-if="label" :for="id" class="block text-sm font-medium text-gray-700 mb-1">
-      {{ label }}
+      {{ $t(label) }}
     </label>
     <select
       :id="id"
       :value="modelValue"
-      @input="$emit('update:modelValue', $event.target.value)"
+      @input="handleInput"
       :disabled="disabled"
-      :class="[
-        'select-base',
-        { 'select-error': error },
-        { 'select-disabled': disabled },
-        className,
-      ]"
+      :class="['select-base', { 'select-error': error }, { 'select-disabled': disabled }]"
     >
-      <option v-if="placeholder" value="" disabled selected>{{ placeholder }}</option>
-      <option v-for="option in options" :key="option.value" :value="option.value">
+      <option v-if="placeholder" value="" disabled>{{ placeholder }}</option>
+      <option
+        v-for="option in options"
+        :key="option.value"
+        :value="option.value"
+      >
         {{ option.label }}
       </option>
     </select>
@@ -26,6 +25,8 @@
 </template>
 
 <script setup>
+import { onMounted } from 'vue'
+
 const props = defineProps({
   modelValue: {
     type: [String, Number],
@@ -36,7 +37,7 @@ const props = defineProps({
     default: () => [],
   },
   label: {
-    type: String,
+    type: [String, Function],
     default: '',
   },
   placeholder: {
@@ -65,5 +66,32 @@ const props = defineProps({
   },
 })
 
-defineEmits(['update:modelValue'])
+onMounted(() => {
+  console.log('Select component mounted')
+  console.log('Label:', props.label)
+  console.log('Label type:', typeof props.label)
+  console.log('Options:', props.options)
+  console.log('Select label:', props.label)
+  console.log('Select label type:', typeof props.label)
+})
+
+const emit = defineEmits(['update:modelValue'])
+
+const handleInput = (event) => {
+  emit('update:modelValue', event.target.value)
+}
 </script>
+
+<style scoped>
+.select-base {
+  @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500;
+}
+
+.select-error {
+  @apply border-red-500 focus:ring-red-500 focus:border-red-500;
+}
+
+.select-disabled {
+  @apply bg-gray-100 cursor-not-allowed;
+}
+</style>

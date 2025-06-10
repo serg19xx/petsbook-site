@@ -58,13 +58,15 @@
               <h1 class="text-2xl font-bold text-gray-900">
                 {{ userData?.fullName || userData?.nickname || userData?.email || 'Loading...' }}
               </h1>
-              <p class="text-gray-600">{{ roleLabels[userData?.role] || 'User' }}</p>
+              <div class="role-badge">
+                {{ $t(`UI.roles.${userData?.role}`) }}
+              </div>
             </div>
 
             <!-- Bio -->
             <div class="mb-4">
-              <h3 class="text-sm font-medium text-gray-500 mb-1">About Me</h3>
-              <p class="text-gray-700">{{ userData?.aboutMe || 'No bio available' }}</p>
+              <h3 class="text-sm font-medium text-gray-500 mb-1">{{ $t('UI.usercard.about_me') }}</h3>
+              <p class="text-gray-700">{{ userData?.aboutMe || $t('UI.usercard.no_bio') }}</p>
             </div>
 
             <!-- Контактная информация -->
@@ -73,7 +75,7 @@
               <div v-if="userData?.email" class="flex items-center gap-2">
                 <Icon icon="mdi:account" class="w-5 h-5" />
                 <span class="flex items-center gap-1">
-                  <span class="text-sm text-gray-500">Login:</span>
+                  <span class="text-sm text-gray-500">{{ $t('UI.usercard.email') }}:</span>
                   {{ userData.email }}
                 </span>
               </div>
@@ -82,7 +84,7 @@
               <div v-if="userData?.contactEmail" class="flex items-center gap-2">
                 <Icon icon="mdi:email" class="w-5 h-5" />
                 <span class="flex items-center gap-1">
-                  <span class="text-sm text-gray-500">Contact:</span>
+                  <span class="text-sm text-gray-500">{{ $t('UI.usercard.contact_info') }}:</span>
                   {{ userData.contactEmail }}
                 </span>
               </div>
@@ -121,7 +123,7 @@
                 class="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Icon icon="mdi:pencil" class="w-4 h-4" />
-                Edit Profile
+                {{ $t('UI.usercard.edit_profile') }}
               </button>
             </div>
           </div>
@@ -236,7 +238,7 @@
     <!-- Диалог редактирования аватара -->
     <Dialog
       :modelValue="showPhotoDialog"
-      :title="t('profile.editAvatar')"
+      :title="t('UI.profilecard.dialog.edit_avatar')"
       size="lg"
       @update:modelValue="showPhotoDialog = $event"
       @close="showPhotoDialog = false"
@@ -249,15 +251,15 @@
 
     <!-- Диалог редактирования подложки -->
     <Dialog
-      :modelValue="showCoverDialog"
-      :title="t('profile.editCover')"
+      :modelValue="showCoverPhotoDialog"
+      :title="t('UI.profilecard.dialog.edit_cover')"
       size="lg"
-      @update:modelValue="showCoverDialog = $event"
-      @close="showCoverDialog = false"
+      @update:modelValue="showCoverPhotoDialog = $event"
+      @close="showCoverPhotoDialog = false"
     >
       <CoverEditor
-        @save="handleCoverSave"
-        @cancel="showCoverDialog = false"
+        @save="handleCoverPhotoSave"
+        @cancel="showCoverPhotoDialog = false"
       />
     </Dialog>
   </div>
@@ -344,7 +346,7 @@ const formatDate = (dateString) => {
 }
 
 const showPhotoDialog = ref(false)
-const showCoverDialog = ref(false)
+const showCoverPhotoDialog = ref(false)
 const tempCover = ref(null)
 const tempAvatar = ref(null)
 
@@ -353,7 +355,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // Добавляем обработчики для кнопок
 const handleCoverClick = () => {
-  showCoverDialog.value = true
+  showCoverPhotoDialog.value = true
 }
 
 const handleAvatarClick = () => {
@@ -404,7 +406,7 @@ const handleAvatarSave = async (file) => {
 }
 
 // И аналогично для обложки
-const handleCoverSave = async (file) => {
+const handleCoverPhotoSave = async (file) => {
   try {
     //const reader = new FileReader()
     //reader.onload = (e) => {
@@ -430,7 +432,7 @@ const handleCoverSave = async (file) => {
       await userStore.fetchUserData()
     }
 
-    showCoverDialog.value = false
+    showCoverPhotoDialog.value = false
   } catch (error) {
     console.error('Error handling cover:', error)
   }

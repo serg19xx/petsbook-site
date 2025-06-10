@@ -13,7 +13,7 @@
       class="ml-2 block text-sm text-gray-700 cursor-pointer"
       :class="{ 'opacity-50': disabled }"
     >
-      {{ label }}
+      {{ $t(label) }}
     </label>
   </div>
 </template>

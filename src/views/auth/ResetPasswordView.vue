@@ -1,74 +1,55 @@
 <template>
-  <div class="reset-password-container min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="reset-password-card max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md transition-all duration-300 hover:shadow-lg">
-      <div class="reset-password-header">
-        <h1 class="reset-password-title text-2xl font-bold text-center text-gray-900 mb-2">
-          {{ t('auth.reset_password.title') }}
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+      <div>
+        <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">
+          {{ $t('UI.resetpasswordview.h1.title') }}
         </h1>
-        <p class="reset-password-subtitle text-center text-gray-600 text-sm">
-          {{ t('auth.reset_password.subtitle') }}
+        <p class="text-center text-gray-600 text-sm">
+          {{ $t('UI.resetpasswordview.p.subtitle') }}
         </p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="reset-password-form space-y-6" autocomplete="off">
+      <form @submit.prevent="handleSubmit" class="space-y-6" autocomplete="off">
         <Input
           v-model="formData.password"
           type="password"
-          :label="t('auth.reset_password.new_password')"
-          :error="v$.password.$errors[0]?.$message"
-          @blur="v$.password.$touch()"
-          class="reset-password-input"
-        >
-          <template #icon-right>
-            <Icon icon="mdi:lock" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
-          </template>
-        </Input>
+          :label="'UI.resetpasswordview.input.label.new_password'"
+          :error="v$.password.$error ? v$.password.$errors[0].$message : ''"
+          @blur="validateField('password')"
+        />
 
         <Input
           v-model="formData.confirmPassword"
           type="password"
-          :label="t('auth.reset_password.confirm_password')"
-          :error="v$.confirmPassword.$errors[0]?.$message"
-          @blur="v$.confirmPassword.$touch()"
-          class="reset-password-input"
-        >
-          <template #icon-right>
-            <Icon icon="mdi:lock-check" class="w-5 h-5 text-gray-400 absolute right-3 top-1/2 transform -translate-y-1/2" />
-          </template>
-        </Input>
-
-        <div class="reset-password-requirements text-xs text-gray-700 mt-2 transition-opacity duration-200">
-          {{ t('auth.reset_password.requirements.title') }}
-          <ul class="reset-password-requirements-list list-disc list-inside mt-1 space-y-1">
-            <li
-              v-for="(requirement, index) in requirements"
-              :key="index"
-              class="reset-password-requirement transition-colors duration-200"
-              :class="{
-                'text-green-600': requirement.valid,
-                'text-gray-600': !requirement.valid
-              }"
-            >
-              {{ requirement.text }}
-            </li>
-          </ul>
-        </div>
+          :label="'UI.resetpasswordview.input.label.confirm_password'"
+          :error="v$.confirmPassword.$error ? v$.confirmPassword.$errors[0].$message : ''"
+          @blur="validateField('confirmPassword')"
+        />
 
         <Button
           type="submit"
           :loading="loading"
-          :label="loading ? t('auth.reset_password.submitting') : t('auth.reset_password.submit')"
+          :label="loading ? $t('UI.resetpasswordview.button.submitting') : $t('UI.resetpasswordview.button.submit')"
           severity="primary"
           fluid
-          class="transition-all duration-200"
         />
 
-        <div class="reset-password-footer text-center mt-4">
-          <router-link
-            to="/login"
-            class="reset-password-link text-sm text-indigo-600 hover:text-indigo-500 font-medium transition-colors duration-200"
-          >
-            {{ t('auth.reset_password.back_to_login') }}
+        <div
+          v-if="message"
+          :class="[
+            'mt-4 p-4 rounded-lg text-sm',
+            isError
+              ? 'bg-red-50 text-red-700 border border-red-200'
+              : 'bg-green-50 text-green-700 border border-green-200',
+          ]"
+        >
+          {{ message }}
+        </div>
+
+        <div class="text-center mt-4">
+          <router-link to="/login" class="text-sm text-primary-600 hover:text-primary-500">
+            {{ $t('UI.resetpasswordview.rlink.back_to_login') }}
           </router-link>
         </div>
       </form>
@@ -77,18 +58,17 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { onBeforeRouteLeave } from 'vue-router'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useVuelidate } from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
-import { toast } from 'vue3-toastify'
+import { required } from '@vuelidate/validators'
+import { withI18nMessage } from '@/utils/validation'
 import { useI18n } from 'vue-i18n'
-import { Icon } from '@iconify/vue'
+import { toast } from 'vue3-toastify'
+import { useRoute, useRouter } from 'vue-router'
+
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
-//import { API_RESPONSE_CODES } from '@/constants/apiResponseCodes'
 
 const { t } = useI18n()
 const route = useRoute()
@@ -97,183 +77,71 @@ const authStore = useAuthStore()
 
 const formData = ref({
   password: '',
-  confirmPassword: '',
-})
-
-const resetToken = route.params.token
-
-// Добавляем проверку токена при монтировании компонента
-onMounted(async () => {
-  if (!resetToken) {
-    toast.error(t('auth.reset_password.errors.invalid_token'))
-    router.push('/recovery')
-    return
-  }
-
-  await validateToken()
-})
-
-// Password validation
-const passwordValidator = (value) => {
-  if (!value) return true
-  const hasMinLength = value.length >= 8
-  const hasUpperCase = /[A-Z]/.test(value)
-  const hasLowerCase = /[a-z]/.test(value)
-  const hasNumbers = /\d/.test(value)
-
-  if (!hasMinLength) return t('auth.validation.password_length')
-  if (!hasUpperCase) return t('auth.validation.password_uppercase')
-  if (!hasLowerCase) return t('auth.validation.password_lowercase')
-  if (!hasNumbers) return t('auth.validation.password_number')
-
-  return true
-}
-
-const confirmPasswordValidator = (value) => {
-  if (!value) return t('auth.validation.confirm_password_required')
-  if (value !== formData.value.password) return t('auth.validation.password_mismatch')
-  return true
-}
-
-const requirements = computed(() => {
-  const password = formData.value.password
-  return [
-    {
-      text: t('auth.reset_password.requirements.length'),
-      valid: password.length >= 8
-    },
-    {
-      text: t('auth.reset_password.requirements.uppercase'),
-      valid: /[A-Z]/.test(password)
-    },
-    {
-      text: t('auth.reset_password.requirements.lowercase'),
-      valid: /[a-z]/.test(password)
-    },
-    {
-      text: t('auth.reset_password.requirements.number'),
-      valid: /\d/.test(password)
-    }
-  ]
+  confirmPassword: ''
 })
 
 const rules = computed(() => ({
   password: {
-    required: helpers.withMessage(t('auth.validation.password_required'), required),
-    valid: helpers.withMessage(passwordValidator, () => true),
+    required: withI18nMessage(required, 'VALIDATION.resetpasswordview.input.password.required'),
+    minLength: withI18nMessage(
+      (value) => !value || value.length >= 8,
+      'VALIDATION.resetpasswordview.input.password.min_length',
+      { min: 8 }
+    )
   },
   confirmPassword: {
-    required: helpers.withMessage(t('auth.validation.confirm_password_required'), required),
-    valid: helpers.withMessage(confirmPasswordValidator, () => true),
-  },
+    required: withI18nMessage(required, 'VALIDATION.resetpasswordview.input.confirm_password.required'),
+    sameAsPassword: withI18nMessage(
+      (value) => !value || value === formData.value.password,
+      'VALIDATION.resetpasswordview.input.confirm_password.mismatch'
+    )
+  }
 }))
 
 const v$ = useVuelidate(rules, formData)
 const loading = ref(false)
-//const error = ref('')
-//const tokenError = ref(false)
+const message = ref('')
+const isError = ref(false)
 
-const clearForm = () => {
-  formData.value = {
-    password: '',
-    confirmPassword: '',
-  }
-  v$.value.$reset()
-}
-
-// Добавляем навигационный guard
-const beforeRouteLeave = (to, from, next) => {
-  next()
-}
-
-// Регистрируем guard
-onBeforeRouteLeave(beforeRouteLeave)
-
-const getErrorMessage = (errorCode) => {
-  const errorKeys = {
-    'INVALID_TOKEN': 'auth.reset_password.errors.invalid_token',
-    'TOKEN_EXPIRED': 'auth.reset_password.errors.token_expired',
-    'TOKEN_NOT_FOUND': 'auth.reset_password.errors.token_not_found',
-    'PASSWORD_TOO_WEAK': 'auth.reset_password.errors.password_too_weak',
-    'default': 'auth.reset_password.errors.default'
-  }
-
-  return t(errorKeys[errorCode] || errorKeys.default)
-}
-
-const validateToken = async () => {
-  try {
-    const response = await authStore.validateResetToken(resetToken)
-    if (!response.success) {
-      const errorMessage = getErrorMessage(response.error_code || 'INVALID_TOKEN')
-      toast.error(errorMessage)
-      router.push('/recovery')
-    }
-  } catch (error) {
-    const errorMessage = getErrorMessage('INVALID_TOKEN')
-    toast.error(errorMessage)
-    router.push('/recovery')
-  }
+const validateField = async (fieldName) => {
+  await v$.value[fieldName].$touch()
 }
 
 const handleSubmit = async () => {
-  const result = await v$.value.$validate()
-  if (!result) {
-    toast.error(t('auth.reset_password.errors.form_validation'), {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored"
-    })
+  const isValid = await v$.value.$validate()
+  if (!isValid) {
+    message.value = t('MESSAGE.resetpasswordview.error.validation')
+    isError.value = true
     return
   }
 
   loading.value = true
+  message.value = ''
+  isError.value = false
 
   try {
-    const success = await authStore.resetPassword(resetToken, formData.value.password)
+    const response = await authStore.resetPassword({
+      token: route.query.token,
+      password: formData.value.password
+    })
 
-    if (success) {
-      clearForm()
-      toast.success(t('auth.reset_password.success'), {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored"
-      })
-      router.push('/login')
+    if (response.success) {
+      message.value = t('MESSAGE.resetpasswordview.success.password_changed')
+      isError.value = false
+      toast.success(message.value)
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
     } else {
-      toast.error(authStore.resetPasswordError || t('auth.reset_password.error'), {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "colored"
-      })
+      message.value = response.message || t('MESSAGE.resetpasswordview.error.unexpected')
+      isError.value = true
+      toast.error(message.value)
     }
   } catch (error) {
-    console.error('Reset password error:', error)
-    toast.error(t('auth.reset_password.error'), {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored"
-    })
+    message.value = t('MESSAGE.resetpasswordview.error.unexpected')
+    isError.value = true
+    toast.error(message.value)
+    console.error('Password reset error:', error)
   } finally {
     loading.value = false
   }

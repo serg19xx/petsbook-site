@@ -26,7 +26,7 @@
     <slot name="icon" v-else />
 
     <!-- Button Text -->
-    <span v-if="label">{{ label }}</span>
+    <span v-if="label">{{ $t(label) }}</span>
     <slot v-else />
 
     <!-- Right Icon -->

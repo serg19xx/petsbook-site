@@ -3,10 +3,10 @@
     <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
       <div>
         <h1 class="text-2xl font-bold text-center text-gray-900 mb-2">
-          {{ t('auth.forgot_password.title') }}
+          {{ $t('UI.passwordrecoveryview.h1.title') }}
         </h1>
         <p class="text-center text-gray-600 text-sm">
-          {{ t('auth.forgot_password.subtitle') }}
+          {{ $t('UI.passwordrecoveryview.p.subtitle') }}
         </p>
       </div>
 
@@ -14,8 +14,8 @@
         <Input
           v-model="formData.email"
           type="email"
-          :label="t('auth.email')"
-          :placeholder="t('auth.email_placeholder')"
+          :label="'UI.passwordrecoveryview.input.label.email'"
+          :placeholder="$t('UI.passwordrecoveryview.input.placeholder.email')"
           :error="v$.email.$error ? v$.email.$errors[0].$message : ''"
           @blur="validateField('email')"
         />
@@ -23,7 +23,7 @@
         <Button
           type="submit"
           :loading="loading"
-          :label="loading ? t('auth.forgot_password.submitting') : t('auth.forgot_password.submit')"
+          :label="loading ? 'UI.passwordrecoveryview.button.submitting' : 'UI.passwordrecoveryview.button.submit'"
           severity="primary"
           fluid
         />
@@ -42,7 +42,7 @@
 
         <div class="text-center mt-4">
           <router-link to="/login" class="text-sm text-primary-600 hover:text-primary-500">
-            {{ t('auth.forgot_password.back_to_login') }}
+            {{ $t('UI.passwordrecoveryview.rlink.back_to_login') }}
           </router-link>
         </div>
       </form>
@@ -71,8 +71,8 @@ const formData = ref({
 
 const rules = computed(() => ({
   email: {
-    required: withI18nMessage(required, 'required'),
-    email: withI18nMessage(email, 'email'),
+    required: withI18nMessage(required, 'VALIDATION.passwordrecoveryview.input.email.required'),
+    email: withI18nMessage(email, 'VALIDATION.passwordrecoveryview.input.email.invalid'),
   },
 }))
 
@@ -88,7 +88,7 @@ const validateField = async (fieldName) => {
 const handleSubmit = async () => {
   const isValid = await v$.value.$validate()
   if (!isValid) {
-    message.value = t('validation.general_error')
+    message.value = t('MESSAGE.passwordrecoveryview.error.validation')
     isError.value = true
     return
   }
@@ -101,17 +101,17 @@ const handleSubmit = async () => {
     const response = await authStore.requestPasswordReset(formData.value.email)
 
     if (response.success) {
-      message.value = t('auth.forgot_password.email_sent', { email: formData.value.email })
+      message.value = t('MESSAGE.passwordrecoveryview.success.email_sent', { email: formData.value.email })
       isError.value = false
       formData.value.email = ''
       toast.success(message.value)
     } else {
-      message.value = response.message || t('errors.unexpected_error')
+      message.value = response.message || t('MESSAGE.passwordrecoveryview.error.unexpected')
       isError.value = true
       toast.error(message.value)
     }
   } catch (error) {
-    message.value = t('errors.unexpected_error')
+    message.value = t('MESSAGE.passwordrecoveryview.error.unexpected')
     isError.value = true
     toast.error(message.value)
     console.error('Password recovery error:', error)

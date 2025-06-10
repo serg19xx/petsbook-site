@@ -1,20 +1,18 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+
       <div>
-        <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">
-          {{ $t('auth.login_title') }}
-        </h1>
-        <p class="text-center text-gray-600 text-sm">
-          {{ t('auth.login_subtitle') }}
-        </p>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          {{ $t('UI.loginview.h2.title') }}
+        </h2>
       </div>
 
       <form @submit.prevent="handleSubmit" class="space-y-6" autocomplete="off">
         <Input
           v-model="formData.email"
           type="email"
-          :label="$t('auth.email')"
+          :label="'UI.loginview.input.label.email'"
           :error="v$.email.$error ? v$.email.$errors[0].$message : ''"
           @blur="validateField('email')"
         />
@@ -22,37 +20,49 @@
         <Input
           v-model="formData.password"
           type="password"
-          :label="$t('auth.password')"
+          :label="'UI.loginview.input.label.password'"
           :error="v$.password.$error ? v$.password.$errors[0].$message : ''"
           @blur="validateField('password')"
         />
 
-        <div class="flex items-center justify-end">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <input
+              id="remember"
+              v-model="formData.remember"
+              type="checkbox"
+              class="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+            />
+            <label for="remember" class="ml-2 block text-sm text-gray-900">
+              {{ $t('UI.loginview.checkbox.label.remember') }}
+            </label>
+          </div>
+
           <router-link to="/recovery" class="text-sm text-primary-600 hover:text-primary-500">
-            {{ t('auth.forgot_password_link') }}
+            {{ $t('UI.loginview.rlink.forgot') }}
           </router-link>
         </div>
 
         <Button
           type="submit"
           :loading="loading"
-          :label="loading ? t('auth.login_loading') : t('auth.login_button')"
+          :label="loading ? 'UI.loginview.button.submitting' : 'UI.loginview.button.submit'"
           severity="primary"
           class="w-full"
           style="height: 44px"
         />
-
+<!--
         <div
           v-if="error"
           class="mt-4 p-4 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200"
         >
           {{ error }}
         </div>
-
+-->
         <div class="text-center mt-4">
-          <span class="text-sm text-gray-600">{{ t('auth.no_account') }}</span>
+          <span class="text-sm text-gray-600">{{ $t('UI.loginview.span.no_account') }}</span>
           <router-link to="/signup" class="ml-1 text-sm text-primary-600 hover:text-primary-500">
-            {{ t('auth.signup_link') }}
+            {{ $t('UI.loginview.rlink.register') }}
           </router-link>
         </div>
       </form>
@@ -62,7 +72,7 @@
 
 <!-- eslint-disable no-undef -->
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useUserStore } from '@/stores/UserStore'
@@ -73,8 +83,9 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
+import { useLanguageStore } from '@/stores/LanguageStore'
 
-const { t } = useI18n()
+const { t, locale, messages } = useI18n()
 const router = useRouter()
 const authStore = useAuthStore()
 const userStore = useUserStore()
@@ -82,18 +93,24 @@ const loading = ref(false)
 const error = ref('')
 const formData = reactive({
   email: '',
-  password: ''
+  password: '',
+  remember: false
 })
 
 const userData = userStore.userData
 
+const languageStore = useLanguageStore()
+const currentLocale = computed(() => locale.value)
+
+const isDev = ref(process.env.NODE_ENV === 'development')
+
 const rules = {
   email: {
-    required: withI18nMessage(required, 'required'),
-    email: withI18nMessage(email, 'email')
+    required: withI18nMessage(required, 'VALIDATION.loginview.errors.required'),
+    email: withI18nMessage(email, 'VALIDATION.loginview.errors.invalid_email')
   },
   password: {
-    required: withI18nMessage(required, 'required')
+    required: withI18nMessage(required, 'VALIDATION.loginview.errors.required')
   }
 }
 
@@ -108,53 +125,49 @@ const handleSubmit = async () => {
   const isValid = await v$.value.$validate()
 
   if (!isValid) {
-    const errorMessage = t('validation.general_error')
-    error.value = errorMessage
-    toast.error(errorMessage)
+    error.value = t('MESSAGE.loginview.errors.invalid_credentials')
+    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
     return
   }
 
   loading.value = true
 
-  try{
+  try {
     const response = await authStore.login({
       email: formData.email,
-      password: formData.password
+      password: formData.password,
+      remember: formData.remember
     })
-//console.log('LoginView handleSubmit',response)
+
     if (!response.success) {
-      error.value = response.message
-      toast.error(response.message)
+      error.value = t('MESSAGE.loginview.errors.invalid_credentials')
+      toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
       return
     }
 
-    //getUserData()
-    //userStore.userData = response.user
     await userStore.fetchUserData()
-
-  //if (userStore.userData.value && userStore.userData.value.avatar) {
-  //  const avatar = userStore.userData?.value?.avatar || null
-  //  authStore.loginInfo.avatar = avatar
-  //}
-
-
-
-    //console.log('11 =========================',avatar);
-    //console.log('22 =========================',authStore.loginInfo.avatar);
-    //authStore.loginInfo.avatar = userStore.userData.avatar
-
-    //toast.success(t('notifications.login_success'))
     const redirectPath = router.currentRoute.value.query.redirect || '/'
     router.push(redirectPath)
 
   } catch (err) {
     console.error('Error logging in:', err)
-    const errorMessage = t('errors.unexpected_error')
-    error.value = errorMessage
-    toast.error(errorMessage)
+    error.value = t('MESSAGE.loginview.errors.invalid_credentials')
+    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
   } finally {
     loading.value = false
   }
 }
 
+async function toggleLocale() {
+  const newLocale = locale.value === 'ru' ? 'en' : 'ru'
+  await languageStore.setLanguage(newLocale)
+}
+
+onMounted(() => {
+  console.log('Current locale:', locale.value)
+  console.log('Messages:', messages.value)
+  console.log('Login title:', t('loginview.h2.title'))
+})
+
 </script>
+

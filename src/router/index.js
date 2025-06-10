@@ -49,7 +49,7 @@ const router = createRouter({
       path: '/reset-password/:token',
       name: 'reset-password',
       component: () => import('@/views/auth/ResetPasswordView.vue'),
-      meta: { requiresGuest: true },
+      //meta: { requiresGuest: true },
     },
     {
       path: '/:pathMatch(.*)*',

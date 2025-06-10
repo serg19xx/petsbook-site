@@ -2,30 +2,30 @@
   <MainLayout>
     <div class="max-w-3xl mx-auto px-4">
       <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Edit Profile</h1>
+        <h1 class="text-2xl font-bold text-gray-900">{{ $t('UI.editprofile.title') }}</h1>
         <p class="mt-2 text-sm text-gray-600 bg-blue-50 p-4 rounded-lg">
-          All profile information is used for analytics and service improvement. Please note that your
-          profile name always remains public.
+          {{ $t('UI.editprofile.description') }}
         </p>
       </div>
 
       <form @submit.prevent="handleSubmit">
         <!-- Basic Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
-          <h2 class="text-lg font-semibold mb-4">Basic Information</h2>
+          <h2 class="text-lg font-semibold mb-4">{{ $t('UI.editprofile.fields.full_name') }}</h2>
 
           <!-- Name Fields Row -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Input
               v-model="formData.nickname"
-              label="Nickname *"
+              type="text"
+              :label="'UI.editprofile.fields.nickname'"
               :error="getFieldError('nickname')"
               @blur="validateField('nickname')"
             />
             <Input
               v-model="formData.fullName"
               type="text"
-              label="Full Name *"
+              :label="'UI.editprofile.fields.full_name'"
               placeholder="Enter your full name"
               :error="getFieldError('fullName')"
               @blur="validateField('fullName')"
@@ -34,21 +34,23 @@
 
           <!-- Gender and Birth Date Row -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Select
-              v-model="formData.gender"
-              label="Gender *"
-              :options="[
-                { value: 'Male', label: 'Male' },
-                { value: 'Female', label: 'Female' },
-                { value: 'Other', label: 'Other' },
-              ]"
-              :error="getFieldError('gender')"
-              @blur="validateField('gender')"
-            />
+            <div>
+              <Select
+                v-model="formData.gender"
+                :label="'UI.editprofile.fields.gender'"
+                :options="[
+                  { value: 'male', label: $t('UI.editprofile.fields.gender-options.male') },
+                  { value: 'female', label: $t('UI.editprofile.fields.gender-options.female') },
+                  { value: 'prefer_not_to_say', label: $t('UI.editprofile.fields.gender-options.prefer_not_to_say') }
+                ]"
+                :error="getFieldError('gender')"
+                @blur="validateField('gender')"
+              />
+            </div>
             <Input
               v-model="formData.birthDate"
               type="date"
-              label="Date of Birth *"
+              :label="'UI.editprofile.fields.birth_date'"
               :error="getFieldError('birthDate')"
               @blur="validateField('birthDate')"
             />
@@ -57,7 +59,7 @@
           <!-- About Me Field -->
           <div class="mb-6 relative">
             <label class="block text-sm font-medium text-gray-700 mb-1">
-              About Me
+              {{ $t('UI.editprofile.fields.about_me') }}
             </label>
             <div class="relative">
               <textarea
@@ -112,7 +114,7 @@
             <LocationInput
               v-model="formData.location"
               :initial-value="formData.location"
-              label="Location *"
+              :label="'UI.editprofile.fields.location'"
               placeholder="Start typing your location..."
               :error="getFieldError('location')"
               @location-selected="handleLocationSelected"
@@ -122,14 +124,14 @@
 
         <!-- Contact Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
-          <h2 class="text-lg font-semibold mb-4">Contact Information</h2>
+          <h2 class="text-lg font-semibold mb-4">{{ $t('UI.editprofile.fields.email') }}</h2>
           <div class="grid grid-cols-1 gap-6">
             <!-- Email -->
             <div class="flex-grow">
               <Input
                 v-model="formData.email"
                 type="email"
-                label="Email *"
+                :label="'UI.editprofile.fields.contact_email'"
                 placeholder="your@email.com"
                 :error="getFieldError('email')"
                 @blur="validateField('email')"
@@ -141,7 +143,7 @@
               <Input
                 v-model="formData.phone"
                 type="tel"
-                label="Phone *"
+                :label="'UI.editprofile.fields.phone'"
                 placeholder="+1 (234) 567-8900"
                 :error="getFieldError('phone')"
                 @blur="validateField('phone')"
@@ -154,7 +156,7 @@
               <Input
                 v-model="formData.website"
                 type="text"
-                label="Website"
+                :label="'UI.editprofile.fields.website'"
                 placeholder="example.com"
                 :error="getFieldError('website')"
                 @blur="handleWebsiteBlur"
@@ -169,13 +171,14 @@
             type="button"
             @click="handleCancel"
             class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >{{ t('common.cancel') }}</button>
+          >{{ $t('common.cancel') }}</button>
 
-          <button
+          <Button
             type="submit"
-            :disabled="loading"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
-          >{{ loading ? t('common.saving') : t('common.save') }}</button>
+            :loading="loading"
+            :label="loading ? 'UI.editprofile.button.saving' : 'UI.editprofile.button.save'"
+            severity="primary"
+          />
         </div>
       </form>
     </div>
@@ -183,12 +186,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted ,nextTick} from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useVuelidate } from '@vuelidate/core'
-import { required } from '@vuelidate/validators'
+import { required, email } from '@vuelidate/validators'
 import { withI18nMessage, customValidators, normalizeUrl } from '@/utils/validation'
-import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import { useUserStore } from '@/stores/UserStore'
 import MainLayout from '@/layouts/MainLayout.vue'
@@ -196,25 +198,36 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import LocationInput from '@/components/ui/LocationInput.vue'
 import { Icon } from '@iconify/vue'
+import { useI18n } from 'vue-i18n'
+import { useLanguageStore } from '@/stores/LanguageStore'
+import i18n from '@/i18n'
+import Button from '@/components/ui/Button.vue'
 
 const router = useRouter()
-const { t } = useI18n()
 const userStore = useUserStore()
+const { t, messages } = useI18n()
+const languageStore = useLanguageStore()
 
 const loading = ref(false)
 
 const formData = ref({
-  fullName: userStore.userData?.fullName || '',
-  nickname: userStore.userData?.nickname || '',
-  gender: userStore.userData?.gender || '',
-  birthDate: userStore.userData?.birthDate || '',
-  aboutMe: userStore.userData?.aboutMe || '',
-  location: userStore.userData?.location?.fullAddress || '',
-  locationData: userStore.userData?.location || null,
-  email: userStore.userData?.contactEmail || '',
-  phone: userStore.userData?.phone || '',
-  website: userStore.userData?.website || ''
+  nickname: '',
+  fullName: '',
+  aboutMe: '',
+  gender: '',
+  birthDate: '',
+  location: '',
+  contactEmail: '',
+  phone: '',
+  website: ''
 })
+
+const genderLabel = computed(() => t('UI.editprofile.fields.gender'))
+const genderOptions = computed(() => [
+  { value: 'male', label: t('UI.editprofile.fields.gender.male') },
+  { value: 'female', label: t('UI.editprofile.fields.gender.female') },
+  { value: 'prefer_not_to_say', label: t('UI.editprofile.fields.gender.prefer_not_to_say') }
+])
 
 // Добавляем валидатор для телефона
 const phoneValidator = (value) => {
@@ -225,36 +238,39 @@ const phoneValidator = (value) => {
 
 // Validation rules
 const rules = computed(() => ({
-  fullName: { required: withI18nMessage(required, 'required') },
-  nickname: { required: withI18nMessage(required, 'required') },
-  gender: { required: withI18nMessage(required, 'required') },
-  birthDate: { required: withI18nMessage(required, 'required') },
+  fullName: { required: (value) => required(value) || t('VALIDATION.required') },
+  nickname: { required: (value) => required(value) || t('VALIDATION.required') },
+  gender: { required: (value) => required(value) || t('VALIDATION.required') },
+  birthDate: { required: (value) => required(value) || t('VALIDATION.required') },
   location: {
-    required: withI18nMessage((value) => {
-      return value && value.trim().length > 0
-    }, 'required'),
+    required: (value) => {
+      return value && value.trim().length > 0 || t('VALIDATION.required')
+    },
   },
   email: {
-    required: withI18nMessage(required, 'required'),
-    email: withI18nMessage(customValidators.email, 'email'),
+    required: (value) => required(value) || t('VALIDATION.required'),
+    email: (value) => email(value) || t('VALIDATION.email'),
   },
   phone: {
-    required: withI18nMessage(required, 'required'),
-    validFormat: withI18nMessage(phoneValidator, 'phoneFormat'),
+    required: (value) => required(value) || t('VALIDATION.required'),
+    validFormat: (value) => {
+      if (!value) return true
+      const digitsOnly = value.replace(/\D/g, '')
+      return digitsOnly.length >= 10 || t('VALIDATION.phoneFormat')
+    },
   },
   website: {
-    url: withI18nMessage((value) => {
+    url: (value) => {
       if (!value) return true // Пустое значение разрешено
       const normalizedUrl = normalizeUrl(value)
-      return customValidators.url(normalizedUrl)
-    }, 'url'),
+      return customValidators.url(normalizedUrl) || t('VALIDATION.url')
+    },
   },
   aboutMe: {
-    maxLength: withI18nMessage(
-      (value) => !value || value.length <= 500,
-      'maxLength',
-      { max: 500 }
-    )
+    maxLength: (value) => {
+      if (!value || value.length <= 500) return true
+      return t('VALIDATION.maxLength', { max: 500 })
+    },
   },
 }))
 
@@ -328,8 +344,6 @@ const handleSubmit = async () => {
 
     //console.log('After updateUserData call:', result.success, typeof result.success) // Добавляем лог
 
-
-
     if (result.success) {
       await userStore.fetchUserData()
       toast.success(result.message || t('profile.update_success'))
@@ -387,8 +401,24 @@ const handleClickOutside = (event) => {
   }
 }
 
+// Следим за изменениями переводов
+watch(() => languageStore.translations, (newTranslations) => {
+  console.log('=== DEBUG COMPONENT TRANSLATIONS ===')
+  console.log('1. Available messages:', messages.value)
+  console.log('2. UI messages:', messages.value?.UI)
+  console.log('3. Edit profile messages:', messages.value?.UI?.editprofile)
+  console.log('4. Test translation:', t('UI.editprofile.fields.gender.gender'))
+  console.log('5. Current locale:', i18n.global.locale.value)
+  console.log('6. Store translations:', languageStore.translations)
+  console.log('==================================')
+}, { immediate: true })
+
 // Инициализация данных при монтировании компонента
 onMounted(async () => {
+  if (!languageStore.isLoaded) {
+    await languageStore.setLanguage(languageStore.currentLanguage)
+  }
+
   //if (!userStore.userData) {
     await userStore.fetchUserData()
   //}
@@ -399,15 +429,15 @@ onMounted(async () => {
   // Обновляем formData после получения данных
   formData.value = {
     fullName: userData.fullName || '',
-      nickname: userData.nickname || '',
-      gender: userData.gender || '',
-      birthDate: userData.birthDate || '',
-      aboutMe: userData.aboutMe || '',
-      location: userData.location?.fullAddress || '',
-      locationData: userData.location || null,
-      email: userData.contactEmail || '',
-      phone: userData.phone || '',
-      website: userData.website || ''
+    nickname: userData.nickname || '',
+    gender: userData.gender || 'male',
+    birthDate: userData.birthDate || '',
+    aboutMe: userData.aboutMe || '',
+    location: userData.location?.fullAddress || '',
+    locationData: userData.location || null,
+    email: userData.contactEmail || '',
+    phone: userData.phone || '',
+    website: userData.website || ''
   }
   await nextTick()
   console.log('Ю---------------Form data after update:', formData.value)

@@ -39,15 +39,18 @@ export const useAuthStore = defineStore(
 
         const response = await api.post('/auth/login', loginData, { withCredentials: true })
 
-        if (response.data.success) {
-          loginInfo.value = response.data.user
+        if (response.data.status === 200) {
+          loginInfo.value = response.data.data.user
           isAuthenticated.value = true
           return { success: true, message: response.data.message }
         }
-        return { success: false, message: response.data.message || t('auth.api.login_error') }
+        return { success: false, message: response.data.message }
       } catch (err) {
-        // ...
         console.log('Login error:', err)
+        return {
+          success: false,
+          message: err.response?.data?.message || t('auth.api.login_error'),
+        }
       } finally {
         loading.value = false
       }

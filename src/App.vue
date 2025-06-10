@@ -29,7 +29,7 @@
                 :to="item.path"
                 class="text-gray-600 hover:text-gray-900"
               >
-                {{ $t(`navigation.${item.label}`) }}
+                {{ $t(`UI.mainmenu.link.${item.label}`) }}
               </router-link>
             </div>
           </div>
@@ -68,14 +68,14 @@
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     @click="isUserMenuOpen = false"
                   >
-                    {{ $t('auth.login') }}
+                    {{ $t('UI.usermenu.link.login') }}
                   </router-link>
                   <router-link
                     to="/signup"
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     @click="isUserMenuOpen = false"
                   >
-                    {{ $t('auth.register') }}
+                    {{ $t('UI.usermenu.link.register') }}
                   </router-link>
                 </template>
                 <!-- Меню для авторизованного пользователя -->
@@ -87,13 +87,13 @@
                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     @click="isUserMenuOpen = false"
                   >
-                    {{ $t(`navigation.user_menu.${item.label}`) }}
+                    {{ $t(`UI.usermenu.link.${item.label}`) }}
                   </router-link>
                   <button
                     @click="handleLogout"
                     class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
-                    {{ $t('navigation.user_menu.logout') }}
+                    {{ $t('UI.usermenu.button.logout') }}
                   </button>
                 </template>
               </div>
@@ -115,7 +115,7 @@
       <div class="fixed top-[120px] bottom-0 left-0 w-64 bg-white shadow-lg overflow-y-auto">
         <div class="p-4">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-bold text-gray-900">{{ $t('navigation.menu') }}</h2>
+            <h2 class="text-xl font-bold text-gray-900">{{ $t('UI.mainmenu.h2.title') }}</h2>
             <button @click="isMobileMenuOpen = false" class="text-gray-600 hover:text-gray-900">
               <Icon icon="mdi:close" class="w-6 h-6" />
             </button>
@@ -130,7 +130,7 @@
               class="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
               @click="isMobileMenuOpen = false"
             >
-              {{ $t(`navigation.${item.label}`) }}
+              {{ $t(`UI.mainmenu.link.${item.label}`) }}
             </router-link>
           </nav>
         </div>
@@ -162,8 +162,7 @@ import { Icon } from '@iconify/vue'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import ScrollBanner from '@/components/ScrollBanner.vue'
-//import { nextTick } from 'vue'
-
+import { useLanguageStore } from '@/stores/LanguageStore'
 
 useTrackVisit()
 
@@ -177,6 +176,7 @@ const isMobileMenuOpen = ref(false)
 const isReady = ref(false)
 const showBannerScroll = ref(true)
 const loginData = ref(null)
+const languageStore = useLanguageStore()
 
 watch(
   () => router.currentRoute.value.path,
@@ -206,34 +206,30 @@ watch(() => authStore.isAuthenticated, async (newValue) => {
   }
 })
 
-
 const menuItems = [
   { path: '/', label: 'home' },
   { path: '/pets', label: 'pets' },
-  { path: '/posts', label: 'posts' },
-  { path: '/advertising', label: 'advertising' },
+  { path: '/friends', label: 'friends' },
+  { path: '/messages', label: 'messages' },
+  { path: '/profile', label: 'profile' }
 ]
 
 const userMenuItems = [
   { path: '/profile', label: 'my_profile' },
   { path: '/settings', label: 'settings' },
-  { path: '/help', label: 'help' },
+  { path: '/help', label: 'help' }
 ]
 
 const handleLogout = async () => {
   const confirmed = await confirmDialogRef.value.show({
-    title: t('confirm_dialog.logout.title'),
-    message: t('confirm_dialog.logout.message')
+    title: t('UI.confirm_dialog.logout.title'),
+    message: t('UI.confirm_dialog.logout.message')
   })
 
   if (confirmed) {
     try {
       const result = await authStore.logout()
-console.log('handleLogout result',result)
-      //authStore.isAuthenticated.value = false
-      //loginData.value = null
       if (result.success) {
-        //authStore.$reset()
         localStorage.removeItem('auth')
         isUserMenuOpen.value = false
         router.push('/')

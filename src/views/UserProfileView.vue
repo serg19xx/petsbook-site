@@ -2,110 +2,8 @@
   <MainLayout>
     <!-- Left Sidebar Content -->
     <template #left-sidebar>
-      <div class="space-y-4">
-        <!-- Loading State -->
-        <div v-if="userStore.loading" class="bg-white rounded-lg shadow p-4">
-          <div class="animate-pulse space-y-4">
-            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
-            <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
-          </div>
-        </div>
 
-        <!-- Error State -->
-        <div v-else-if="userStore.error" class="bg-red-50 rounded-lg shadow p-4">
-          <div class="text-red-600">{{ userStore.error }}</div>
-        </div>
 
-        <!-- Content -->
-        <template v-else>
-          <!-- Basic Profile Navigation -->
-          <div class="bg-white rounded-lg shadow p-4">
-            <nav class="space-y-2">
-              <router-link
-                to="/profile/edit"
-                class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                :class="{ 'bg-gray-100': isActiveRoute('/profile/edit') }"
-              >
-                <Icon icon="mdi:account-edit" class="w-5 h-5 mr-3" />
-                {{ t('profile.edit') }}
-              </router-link>
-
-              <!-- Role-specific sections -->
-              <div v-if="userRole === 'petowner'" class="mt-4">
-                <router-link
-                  to="/profile/pets"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                  :class="{ 'bg-gray-100': isActiveRoute('/profile/pets') }"
-                >
-                  <Icon icon="mdi:paw" class="w-5 h-5 mr-3" />
-                  {{ t('profile.pets') }}
-                </router-link>
-                <router-link
-                  to="/profile/galleries"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <Icon icon="mdi:image-multiple" class="w-5 h-5 mr-3" />
-                  {{ t('profile.galleries') }}
-                </router-link>
-              </div>
-
-              <div v-if="userRole === 'business'" class="mt-4">
-                <router-link
-                  to="/profile/companies"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <Icon icon="mdi:domain" class="w-5 h-5 mr-3" />
-                  {{ t('profile.companies') }}
-                </router-link>
-                <router-link
-                  to="/profile/services"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <Icon icon="mdi:store" class="w-5 h-5 mr-3" />
-                  {{ t('profile.services') }}
-                </router-link>
-              </div>
-
-              <div v-if="userRole === 'producer'" class="mt-4">
-                <router-link
-                  to="/profile/agency"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <Icon icon="mdi:office-building" class="w-5 h-5 mr-3" />
-                  {{ t('profile.agency') }}
-                </router-link>
-                <router-link
-                  to="/profile/castings"
-                  class="flex items-center px-4 py-2 text-gray-700 rounded-lg hover:bg-gray-100"
-                >
-                  <Icon icon="mdi:camera-metering-matrix" class="w-5 h-5 mr-3" />
-                  {{ t('profile.castings') }}
-                </router-link>
-              </div>
-            </nav>
-          </div>
-
-          <!-- Stats Card -->
-          <div class="bg-white rounded-lg shadow p-4">
-            <h3 class="text-sm font-medium text-gray-500 mb-3">{{ t('profile.stats') }}</h3>
-            <div class="space-y-2">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">{{ t('profile.views') }}</span>
-                <span class="font-medium">{{ profileStats.views }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">{{ t('profile.followers') }}</span>
-                <span class="font-medium">{{ profileStats.followers }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">{{ t('profile.posts') }}</span>
-                <span class="font-medium">{{ profileStats.posts }}</span>
-              </div>
-            </div>
-          </div>
-        </template>
-      </div>
     </template>
 
     <!-- Main Content -->
@@ -126,13 +24,16 @@
                'bg-gray-100 text-gray-800': userRole === 'user'
              }">
           <Icon :icon="getRoleIcon" class="w-4 h-4 mr-2" />
-          {{ getRoleLabel }}
+          {{ $t(`UI.profileview.role.${userRole}`) }}
         </div>
 
         <!-- Role-specific content will be rendered here through router-view -->
         <router-view></router-view>
       </div>
     </template>
+
+    <template #right-sidebar></template>
+
   </MainLayout>
 </template>
 <!-- eslint-disable no-undef -->

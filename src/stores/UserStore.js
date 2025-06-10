@@ -22,40 +22,32 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const response = await api.get('/user/getuser', { withCredentials: true })
-      //const fetchedUser = response.data?.data.user
-      let fetchedUser = null
-      if (response.data?.data?.user) {
-        fetchedUser = response.data.data.user
-      } else if (response.data?.data) {
-        fetchedUser = response.data.data
-      } else if (response.data?.user) {
-        fetchedUser = response.data.user
-      }
-      console.log('@@@@@@ fetchedUser @@@@@@', fetchedUser)
-      console.log(
-        '========Server response in fetchUserData:',
-        JSON.parse(JSON.stringify(response.data)),
-      ) // Добавляем лог
+      console.log('Raw server response:', response)
 
-      console.log('========fetchedUser:', JSON.parse(JSON.stringify(fetchedUser)))
+      const fetchedUser = response.data?.data
+      console.log('Fetched user data:', fetchedUser)
 
       if (!fetchedUser) {
+        console.error('No user data found in response')
         throw new Error('Invalid response structure')
+      }
+
+      // Проверяем наличие обязательных полей
+      if (!fetchedUser.id) {
+        console.error('User data missing required field: id')
+        throw new Error('Invalid user data structure')
       }
 
       userData.value = fetchedUser
       authStore.loginInfo.avatar = fetchedUser.avatar
-      console.log('========Updated userData in store:', JSON.parse(JSON.stringify(userData.value))) // Добавляем лог
+      console.log('Updated store with user data:', userData.value)
       return {
         success: true,
         data: fetchedUser,
       }
     } catch (err) {
+      console.error('Error in fetchUserData:', err)
       error.value = err.response?.data?.message || 'Failed to fetch user data'
-      if (err.response?.status !== 401) {
-        // console.error('Fetch user data error:', err)
-      }
-      // 401 можно не логировать, если это ожидаемое поведение
       return {
         success: false,
         error: error.value,

@@ -17,7 +17,7 @@ window.showToast = () => {
   toast.success('Это тестовое уведомление!')
 }
 
-const initApp = async () => {
+async function initApp() {
   const app = createApp(App)
   app.directive('maska', maska)
   const pinia = createPinia()
@@ -57,9 +57,10 @@ const initApp = async () => {
     containerId: 'toast-container',
   })
 
-  // Инициализация языка после создания store
+  // Инициализируем язык до монтирования приложения
   const languageStore = useLanguageStore()
-  languageStore.initializeLanguage()
+  await languageStore.setLanguage(languageStore.currentLanguage)
+
   app.mount('#app')
 }
 

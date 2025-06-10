@@ -1,7 +1,7 @@
 <template>
   <div>
     <label v-if="label" :for="id" class="block text-sm font-medium text-gray-700 mb-1">
-      {{ label }}
+      {{ $t(label) }}
     </label>
     <div class="relative">
       <input
@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { vMaska as maska } from 'maska'
 
 const props = defineProps({
@@ -74,6 +74,11 @@ const emit = defineEmits(['update:modelValue'])
 const handleInput = (event) => {
   emit('update:modelValue', event.target.value)
 }
+
+onMounted(() => {
+  console.log('Input label:', props.label)
+  console.log('Input label type:', typeof props.label)
+})
 </script>
 
 <style scoped>

@@ -13,7 +13,7 @@
             </p>
           </div>
           <Button
-            :label="is2FAEnabled ? 'Отключить' : 'Включить'"
+            :label="is2FAEnabled ? 'UI.security.2fa.disable' : 'UI.security.2fa.enable'"
             :severity="is2FAEnabled ? 'danger' : 'success'"
             @click="handle2FAToggle"
             :loading="loading"
