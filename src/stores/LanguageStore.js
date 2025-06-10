@@ -38,8 +38,33 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function setLanguage(lang) {
     try {
+      console.log('Fetching translations for language:', lang)
       const response = await fetch(`/api/i18n/translations/${lang}`)
-      const { data } = await response.json()
+
+      // Добавляем логирование ответа
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+      // Получаем текст ответа для отладки
+      const responseText = await response.text()
+      console.log('Raw response:', responseText)
+
+      // Пытаемся распарсить JSON только если это действительно JSON
+      let responseData
+      try {
+        responseData = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError)
+        console.error('Response was:', responseText)
+        return null
+      }
+
+      if (responseData.status !== 200) {
+        console.error('API returned error:', responseData.message)
+        return null
+      }
+
+      const { data } = responseData
 
       console.log('=== DEBUG TRANSLATIONS LOADING ===')
       console.log('1. Raw API Response:', data)

@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
-      {{ label }}
+      {{ $t(label) }}
     </label>
 
     <!-- Location fields container -->
@@ -47,7 +47,7 @@
           v-model="unitNumber"
           type="text"
           class="input-base w-full"
-          :placeholder="$t('location.unit_placeholder')"
+          :placeholder="$t('UI.editprofile.fields.location.unit_placeholder')"
           @input="handleUnitChange"
         />
       </div>

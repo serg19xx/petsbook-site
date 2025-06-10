@@ -112,7 +112,7 @@
               <!-- Join Date -->
               <div class="flex items-center gap-2">
                 <Icon icon="mdi:calendar" class="w-5 h-5" />
-                <span>{{ $t('profile.joined') }} {{ formatDate(userData?.dateCreated) }}</span>
+                <span>{{ $t('UI.usercard.profile.created') }} {{ formatDate(userData?.dateCreated) }}</span>
               </div>
             </div>
 
@@ -274,7 +274,7 @@ import { useAuthStore } from '@/stores/AuthStore'
 import { useI18n } from 'vue-i18n'
 import { formatInTimeZone } from 'date-fns-tz'
 import { format } from 'date-fns'
-import { ru } from 'date-fns/locale'
+import { enUS, ru } from 'date-fns/locale'
 import Dialog from '@/components/ui/Dialog.vue'
 import AvatarEditor from '@/components/Profile/AvatarEditor.vue'
 import CoverEditor from './CoverEditor.vue'
@@ -290,7 +290,7 @@ const props = defineProps({
 const router = useRouter()
 const userStore = useUserStore()
 const authStore = useAuthStore()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 // Получаем данные из UserStore
 const userData = computed(() => userStore.userData)
@@ -330,15 +330,25 @@ const handleEdit = () => {
   router.push('/profile/edit')
 }
 
-const formatDate = (dateString) => {
-  if (!dateString) return ''
+const formatDate = (date) => {
+  if (!date) return ''
 
   try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return ''
+    const dateObj = typeof date === 'string' ? new Date(date) : date
+    console.log('Date object:', dateObj)
+    console.log('Current locale:', locale.value)
 
-    // Форматируем дату с учетом часового пояса пользователя
-    return formatInTimeZone(date, Intl.DateTimeFormat().resolvedOptions().timeZone, 'd MMMM yyyy', { locale: ru })
+    // Выбираем нужную локаль из date-fns
+    const dateFnsLocale = locale.value === 'ru' ? ru : enUS
+
+    const formatted = formatInTimeZone(
+      dateObj,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      'd MMMM yyyy',
+      { locale: dateFnsLocale }
+    )
+    console.log('Formatted date:', formatted)
+    return formatted
   } catch (error) {
     console.error('Error formatting date:', error)
     return ''

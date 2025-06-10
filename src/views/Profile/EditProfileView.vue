@@ -11,8 +11,6 @@
       <form @submit.prevent="handleSubmit">
         <!-- Basic Info Section -->
         <div class="bg-white rounded-lg border p-6 mb-6">
-          <h2 class="text-lg font-semibold mb-4">{{ $t('UI.editprofile.fields.full_name') }}</h2>
-
           <!-- Name Fields Row -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Input
@@ -167,17 +165,18 @@
 
         <!-- Action Buttons -->
         <div class="flex justify-end gap-4">
-          <button
+          <Button
             type="button"
             @click="handleCancel"
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >{{ $t('common.cancel') }}</button>
+            severity="secondary"
+            :label="$t('UI.editprofile.button.cancel')"
+          />
 
           <Button
             type="submit"
             :loading="loading"
-            :label="loading ? 'UI.editprofile.button.saving' : 'UI.editprofile.button.save'"
             severity="primary"
+            :label="$t(loading ? 'UI.editprofile.button.saving' : 'UI.editprofile.button.save')"
           />
         </div>
       </form>
