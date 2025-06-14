@@ -335,8 +335,6 @@ const formatDate = (date) => {
 
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date
-    console.log('Date object:', dateObj)
-    console.log('Current locale:', locale.value)
 
     // Выбираем нужную локаль из date-fns
     const dateFnsLocale = locale.value === 'ru' ? ru : enUS
@@ -347,7 +345,7 @@ const formatDate = (date) => {
       'd MMMM yyyy',
       { locale: dateFnsLocale }
     )
-    console.log('Formatted date:', formatted)
+
     return formatted
   } catch (error) {
     console.error('Error formatting date:', error)
@@ -361,7 +359,6 @@ const tempCover = ref(null)
 const tempAvatar = ref(null)
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-//console.log('=====-----API_BASE_URL',API_BASE_URL)
 
 // Добавляем обработчики для кнопок
 const handleCoverClick = () => {
@@ -404,8 +401,6 @@ const handleAvatarSave = async (file) => {
         avatar: `${fullAvatarUrl}?t=${Date.now()}`
       }
       await userStore.fetchUserData()
-      console.log('fullAvatarUrl',authStore.loginInfo)
-
     }
 
     // Закрываем диалог

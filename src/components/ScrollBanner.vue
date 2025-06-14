@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white shadow-sm border-b fixed w-full z-40" style="top: 117px">
+  <div class="bg-white shadow-sm border-b fixed w-full z-40" style="top: 122px">
     <div class="relative overflow-hidden">
       <div class="banner-scroll flex items-center space-x-6 py-1.5">
         <div

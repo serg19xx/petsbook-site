@@ -1,12 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import i18n from '@/i18n'
+import axios from 'axios'
 
 export const useLanguageStore = defineStore('language', () => {
   const translations = ref({})
   const currentLanguage = ref(localStorage.getItem('language') || 'en')
   const isLoaded = ref(false)
   const locales = ref(['en', 'ru'])
+
+  const currentTranslations = computed(() => translations.value[currentLanguage.value] || {})
 
   function flatToNested(flatObj) {
     const nested = {}
@@ -38,26 +41,8 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function setLanguage(lang) {
     try {
-      console.log('Fetching translations for language:', lang)
-      const response = await fetch(`/api/i18n/translations/${lang}`)
-
-      // Добавляем логирование ответа
-      console.log('Response status:', response.status)
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
-
-      // Получаем текст ответа для отладки
-      const responseText = await response.text()
-      console.log('Raw response:', responseText)
-
-      // Пытаемся распарсить JSON только если это действительно JSON
-      let responseData
-      try {
-        responseData = JSON.parse(responseText)
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError)
-        console.error('Response was:', responseText)
-        return null
-      }
+      const response = await axios.get(`/api/i18n/translations/${lang}`)
+      const responseData = response.data
 
       if (responseData.status !== 200) {
         console.error('API returned error:', responseData.message)
@@ -66,65 +51,34 @@ export const useLanguageStore = defineStore('language', () => {
 
       const { data } = responseData
 
-      console.log('=== DEBUG TRANSLATIONS LOADING ===')
-      console.log('1. Raw API Response:', data)
-      console.log('2. Current i18n locale:', i18n.global.locale.value)
-      console.log('3. Current i18n messages:', i18n.global.messages.value)
-
       // Создаем объект для всех переводов
       const newTranslations = {}
 
       // Проверяем наличие translations и обрабатываем только существующие секции
       if (data.translations) {
-        // Обрабатываем каждую секцию (UI, MESSAGE, VALIDATION)
         Object.entries(data.translations).forEach(([namespace, items]) => {
-          newTranslations[namespace] = {}
-
-          // Обрабатываем каждый перевод в секции
-          items.forEach((item) => {
-            // Убираем префикс namespace из ключа, так как он уже есть в базе
-            const keyWithoutNamespace = item.key.replace(`${namespace}.`, '')
-            const parts = keyWithoutNamespace.split('.')
-            let current = newTranslations[namespace]
-
-            // Создаем вложенную структуру
-            for (let i = 0; i < parts.length - 1; i++) {
-              const part = parts[i]
-              if (!current[part] || typeof current[part] !== 'object' || current[part] === null) {
-                current[part] = {}
-              }
-              current = current[part]
-            }
-
-            // Устанавливаем значение
-            const lastPart = parts[parts.length - 1]
-            current[lastPart] = item.value
-          })
+          newTranslations[namespace] = items
         })
       }
-
-      console.log('4. Processed translations:', newTranslations)
 
       // Устанавливаем локаль и сообщения
       i18n.global.locale.value = lang
       i18n.global.setLocaleMessage(lang, newTranslations)
 
-      console.log('=== DEBUG I18N SETUP ===')
-      console.log('1. Current locale:', i18n.global.locale.value)
-      console.log('2. Available locales:', i18n.global.availableLocales)
-      console.log('3. Messages structure:', JSON.stringify(i18n.global.messages.value, null, 2))
-      console.log('4. Test translation:', i18n.global.t('editprofile.fields.nickname'))
-      console.log('========================')
-
       translations.value = newTranslations
       currentLanguage.value = lang
+      console.log('==== currentLanguage', currentLanguage.value)
+      console.log('currentLanguage:', currentLanguage.value)
+      console.log('translations:', translations.value)
       isLoaded.value = true
       localStorage.setItem('language', lang)
 
+      console.log('Loading translations for:', currentLanguage)
+      console.log('Translations loaded:', translations)
+
       return newTranslations
     } catch (error) {
-      console.error('Failed to load language:', error)
-      return null
+      console.error('Error loading translations:', error)
     }
   }
 
@@ -133,13 +87,44 @@ export const useLanguageStore = defineStore('language', () => {
     return await setLanguage(savedLanguage)
   }
 
+  async function addLanguage(langCode) {
+    try {
+      const response = await axios.post(`/api/i18n/translate-language/${langCode}`)
+      const data = response.data
+      if (data.status !== 200) {
+        throw new Error(data.message || 'Failed to add language')
+      }
+      return true
+    } catch (error) {
+      console.error('Failed to add language:', error)
+      throw error
+    }
+  }
+
+  function changeLanguage(lang) {
+    setLanguage(lang)
+  }
+
+  async function fetchLocales() {
+    try {
+      const response = await axios.get('/api/i18n/locales')
+      locales.value = response.data.locales // например: [{ code: 'en', label: 'English' }, ...]
+    } catch (error) {
+      console.error('Failed to fetch locales:', error)
+    }
+  }
+
   return {
-    translations,
     currentLanguage,
+    translations,
     isLoaded,
     locales,
     setLanguage,
     initializeLanguage,
+    addLanguage,
+    changeLanguage,
+    currentTranslations,
+    fetchLocales,
   }
 })
 

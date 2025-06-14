@@ -1,15 +1,11 @@
 import { createI18n } from 'vue-i18n'
+import { ref } from 'vue'
 
 const i18n = createI18n({
   legacy: false,
-  locale: localStorage.getItem('language') || 'en',
+  locale: 'uk',
   fallbackLocale: 'en',
-  messages: {},
-  sync: true,
-  silentTranslationWarn: true,
-  silentFallbackWarn: true,
-  missingWarn: false,
-  fallbackWarn: false,
+  messages: ref({}),
 })
 
 // Добавляем глобальный обработчик ошибок
@@ -17,5 +13,8 @@ i18n.global.missing = (locale, key) => {
   console.error(`Missing translation: ${key} for locale: ${locale}`)
   return key
 }
+
+// Добавьте логирование
+console.log('i18n messages:', i18n.global.messages)
 
 export default i18n

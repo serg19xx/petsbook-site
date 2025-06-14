@@ -1,7 +1,7 @@
 <template>
   <div class="w-full">
     <label v-if="label" class="block text-sm font-medium text-gray-700 mb-1">
-      {{ $t(label) }}
+      {{ t(label) }}
     </label>
 
     <!-- Location fields container -->
@@ -55,16 +55,20 @@
 
     <!-- Error message -->
     <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
+
   </div>
 </template>
 <!-- eslint-disable no-undef -->
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-//import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n'
 import { mapboxService } from '@/services/MapboxService'
 ///import { getAlpha3RegionCode } from '@/utils/regionCodes'
 
-//const { t } = useI18n()
+const { t, messages, locale } = useI18n()
+console.log('DEBUG location:', t('UI.editprofile.fields.location'))
+console.log('DEBUG location _label:', t('UI.editprofile.fields.location._label'))
+console.log('DEBUG all fields:', messages.value[locale.value]?.UI?.editprofile?.fields)
 
 const props = defineProps({
   modelValue: {
@@ -246,6 +250,9 @@ onMounted(() => {
     }
   }
 })
+
+// Добавляем отладочный вывод в консоль
+//console.log('Label value:', 'UI.editprofile.fields.location');
 </script>
 
 <style scoped lang="postcss">

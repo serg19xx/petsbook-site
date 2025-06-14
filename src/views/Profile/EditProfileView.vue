@@ -10,6 +10,7 @@
 
       <form @submit.prevent="handleSubmit">
         <!-- Basic Info Section -->
+
         <div class="bg-white rounded-lg border p-6 mb-6">
           <!-- Name Fields Row -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -207,13 +208,16 @@ const userStore = useUserStore()
 const { t, messages } = useI18n()
 const languageStore = useLanguageStore()
 
+console.log('EditProfileView mounted')
+
 const loading = ref(false)
+const formSubmitted = ref(false)
 
 const formData = ref({
   nickname: '',
   fullName: '',
   aboutMe: '',
-  gender: '',
+  gender: 'male',
   birthDate: '',
   location: '',
   contactEmail: '',
@@ -236,42 +240,17 @@ const phoneValidator = (value) => {
 }
 
 // Validation rules
-const rules = computed(() => ({
-  fullName: { required: (value) => required(value) || t('VALIDATION.required') },
-  nickname: { required: (value) => required(value) || t('VALIDATION.required') },
-  gender: { required: (value) => required(value) || t('VALIDATION.required') },
-  birthDate: { required: (value) => required(value) || t('VALIDATION.required') },
-  location: {
-    required: (value) => {
-      return value && value.trim().length > 0 || t('VALIDATION.required')
-    },
-  },
-  email: {
-    required: (value) => required(value) || t('VALIDATION.required'),
-    email: (value) => email(value) || t('VALIDATION.email'),
-  },
-  phone: {
-    required: (value) => required(value) || t('VALIDATION.required'),
-    validFormat: (value) => {
-      if (!value) return true
-      const digitsOnly = value.replace(/\D/g, '')
-      return digitsOnly.length >= 10 || t('VALIDATION.phoneFormat')
-    },
-  },
-  website: {
-    url: (value) => {
-      if (!value) return true // Пустое значение разрешено
-      const normalizedUrl = normalizeUrl(value)
-      return customValidators.url(normalizedUrl) || t('VALIDATION.url')
-    },
-  },
-  aboutMe: {
-    maxLength: (value) => {
-      if (!value || value.length <= 500) return true
-      return t('VALIDATION.maxLength', { max: 500 })
-    },
-  },
-}))
+const rules = {
+  fullName: { required },
+  nickname: { required },
+  gender: { required },
+  birthDate: { required },
+  location: { required },
+  email: { required, email },
+  phone: { required },
+  website: { url: customValidators.url },
+  aboutMe: { maxLength: (value) => !value || value.length <= 500 }
+}
 
 const v$ = useVuelidate(rules, formData)
 
@@ -287,10 +266,17 @@ const validateField = async (fieldName) => {
   return result
 }
 
-// Get field error message
+// Изменим функцию getFieldError
 const getFieldError = (fieldName) => {
-  if (v$.value[fieldName].$error) {
-    return v$.value[fieldName].$errors[0].$message
+  const fieldState = v$.value[fieldName]
+  if (!fieldState) return ''
+  if (!formSubmitted.value && !fieldState.$dirty) return ''
+  if (fieldState.$error) {
+    const errors = fieldState.$errors
+    if (errors && errors.length > 0) {
+      const error = errors[0]
+      return error.$message
+    }
   }
   return ''
 }
@@ -315,11 +301,12 @@ const handleSubmit = async () => {
   if (loading.value) return
 
   loading.value = true
+  formSubmitted.value = true
 
   try {
     const isValid = await v$.value.$validate()
     if (!isValid) {
-      toast.error(t('validation.general_error'))
+      v$.value.$touch()
       return
     }
 
@@ -338,10 +325,8 @@ const handleSubmit = async () => {
         components: formData.value.locationData?.components || null
       }
     }
-    //console.log('Before updateUserData call') // Добавляем лог перед вызовом
-    const result = await userStore.updateUserData(updateData)
 
-    //console.log('After updateUserData call:', result.success, typeof result.success) // Добавляем лог
+    const result = await userStore.updateUserData(updateData)
 
     if (result.success) {
       await userStore.fetchUserData()
@@ -359,6 +344,7 @@ const handleSubmit = async () => {
 }
 
 const handleCancel = () => {
+  formSubmitted.value = false
   router.push('/profile')
 }
 
@@ -414,22 +400,19 @@ watch(() => languageStore.translations, (newTranslations) => {
 
 // Инициализация данных при монтировании компонента
 onMounted(async () => {
+  console.log('EditProfileView onMounted')
   if (!languageStore.isLoaded) {
     await languageStore.setLanguage(languageStore.currentLanguage)
   }
 
-  //if (!userStore.userData) {
-    await userStore.fetchUserData()
-  //}
+  await userStore.fetchUserData()
+  const userData = userStore.userData
+  console.log('======userData:', userData)
 
-  const userData = JSON.parse(JSON.stringify(userStore.userData))
-  console.log('User data in component:', userData)
-
-  // Обновляем formData после получения данных
   formData.value = {
     fullName: userData.fullName || '',
     nickname: userData.nickname || '',
-    gender: userData.gender || 'male',
+    gender: userData.gender ? userData.gender.toLowerCase() : 'male',
     birthDate: userData.birthDate || '',
     aboutMe: userData.aboutMe || '',
     location: userData.location?.fullAddress || '',
@@ -438,13 +421,18 @@ onMounted(async () => {
     phone: userData.phone || '',
     website: userData.website || ''
   }
+
   await nextTick()
-  console.log('Ю---------------Form data after update:', formData.value)
+
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+})
+
+watch(() => getFieldError('fullName'), (val) => {
+  console.log('getFieldError(fullName) changed:', val)
 })
 </script>
 

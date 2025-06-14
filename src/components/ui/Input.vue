@@ -9,11 +9,12 @@
         :type="type"
         :value="modelValue"
         @input="handleInput"
+        @blur="$emit('blur')"
         :placeholder="placeholder"
         :disabled="disabled"
         v-maska
         :data-maska="mask"
-        :class="['input-base', { 'input-error': error }, { 'input-disabled': disabled }, className]"
+        :class="['input-base', error ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : '']"
       />
       <slot name="icon-right" />
     </div>
@@ -69,7 +70,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'blur'])
 
 const handleInput = (event) => {
   emit('update:modelValue', event.target.value)
@@ -84,6 +85,7 @@ onMounted(() => {
 <style scoped>
 .input-base {
   @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500;
+  min-height: 40px;
 }
 
 .input-error {

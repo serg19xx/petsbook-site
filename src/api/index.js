@@ -51,7 +51,7 @@ api.interceptors.response.use(
         message: error.message,
       })
     }
-    //console.log('error.response?.status', error.response?.status)
+
     if (error.response?.status === 401) {
       const authStore = useAuthStore()
       authStore.logout()

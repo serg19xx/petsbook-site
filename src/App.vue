@@ -153,7 +153,7 @@
 <!-- eslint-disable no-undef -->
 <script setup>
 import { useTrackVisit } from '@/composables/useTrackVisit'
-import { ref, onMounted, onUnmounted, watch, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, watch, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/AuthStore'
@@ -178,6 +178,28 @@ const showBannerScroll = ref(true)
 const loginData = ref(null)
 const languageStore = useLanguageStore()
 
+
+const currentLangObj = computed(() =>
+  languageStore.currentLanguage
+    ? languageStore.locales.find(l => l.code === languageStore.currentLanguage)
+    : null
+)
+
+watch(
+  () => languageStore.currentLanguage,
+  () => {
+    // Найди объект языка по коду
+    const current = currentLangObj.value
+    // Установи направление текста
+    if (current && current.direction === 'rtl') {
+      document.documentElement.setAttribute('dir', 'rtl')
+    } else {
+      document.documentElement.setAttribute('dir', 'ltr')
+    }
+  },
+  { immediate: true }
+)
+
 watch(
   () => router.currentRoute.value.path,
   () => {
@@ -199,10 +221,9 @@ onMounted(async () => {
 
 // Следим за изменением статуса аутентификации ывапв
 watch(() => authStore.isAuthenticated, async (newValue) => {
-  console.log('WATCH  authStore.isAuthenticated',newValue)
+
   if (newValue) {
     const result = await userStore.fetchUserData()
-    console.log('WATCH  fetchUserData result:', result)
   }
 })
 

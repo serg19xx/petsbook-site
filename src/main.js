@@ -58,8 +58,10 @@ async function initApp() {
   })
 
   // Инициализируем язык до монтирования приложения
+  console.log('main.js: before language init')
   const languageStore = useLanguageStore()
   await languageStore.setLanguage(languageStore.currentLanguage)
+  console.log('main.js: after language init')
 
   app.mount('#app')
 }
