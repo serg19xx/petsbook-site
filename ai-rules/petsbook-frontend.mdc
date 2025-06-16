@@ -1,0 +1,47 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 📝 Project Rules: PetsBook Frontend
+
+## General
+- Primary Language: JavaScript (TypeScript only when needed)
+- Framework: Vue 3 (Composition API, script setup)
+- State Management: Pinia
+- Styling: Tailwind CSS
+- UI: Native Vue components + Tailwind; avoid PrimeVue; Headless UI allowed
+- Localization: vue-i18n, translations stored in **database** (not static JSON)
+- Authentication: HTTP Cookies (HttpOnly, Secure) ONLY — NO Bearer Token
+
+## Directory Conventions
+- /src/api/ → API functions per resource (e.g., pets.js, auth.js)
+- /src/components/ → Vue components, organized by feature or domain
+- /src/helpers/ → Utility functions (pure JS)
+- /src/stores/ → Pinia stores
+
+## Naming Conventions
+- Kebab-case for directories and files
+- Functions: camelCase
+- Variables: descriptive, auxiliary verbs (e.g., isLoading, hasError)
+
+## Code Practices
+- Prefer pure functions → `function` keyword
+- Avoid class syntax unless absolutely necessary
+- Use Composition API exclusively (`<script setup>`)
+- Async operations wrapped in try/catch
+- Wrap long API requests with Suspense and fallback
+- Use dynamic imports for large, rarely used components
+
+## Localisation (vue-i18n)
+- No static JSON, all translations fetched via API
+- Example: `$t('profile.edit.name')`
+
+## ⚠️ Stable Modules Protection
+- Protect tested and deployed files:
+  - /src/api/
+  - /src/components/
+  - /package.json → no modifications unless explicitly requested
+  - /tailwind.config.js
+  - /vite.config.ts
+  - /.env → NEVER modify

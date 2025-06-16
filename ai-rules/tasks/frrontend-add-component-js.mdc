@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# ➕ Add New Vue Component
+
+## Task:
+Add a new Vue component in `/src/components/[feature]/`
+
+## Requirements:
+- `<script setup>` syntax
+- Styling → Tailwind CSS
+- Structure → template, script, style → in that order
+- Use named props with TypeScript interfaces if props are complex

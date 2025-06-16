@@ -1,0 +1,31 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 🏗️ Task Template: Add API Endpoint Integration (Frontend - JS)
+
+## Context
+- Project: PetsBook Frontend
+- Language: JavaScript (main), TypeScript (only where strictly necessary)
+- API requests authenticated via HTTP Cookies (with HttpOnly and Secure flags)
+- Vue 3, Vue Router, Pinia, TailwindCSS, vue-i18n (localization from database)
+- Backend: PetsBook Backend (FlightPHP) — handled separately
+
+## Task Description
+Add a new REST API integration into the frontend application.
+
+## Requirements
+- Use axios instance located at `/src/api/axios.js`
+- Create new API function in `/src/api/{module}.js`
+- Handle loading and error states
+- Display received data in existing or new Vue components
+- Use `$t()` for all static and dynamic user-facing text
+
+## Example Usage
+```js
+import { fetchMyPets } from '@/api/pets'
+
+async function loadPets() {
+  const { data } = await fetchMyPets()
+}

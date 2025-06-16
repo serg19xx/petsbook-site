@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 📧 Email Handling Task (Backend)
+
+## Task:
+Add or modify email sending logic in `/src/Services/MailService.php`
+
+## Requirements:
+- Use Twig templates → `/views/emails/`
+- Support HTML and plain-text formats
+- Log sending status to database if required

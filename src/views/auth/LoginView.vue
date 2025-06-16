@@ -106,11 +106,11 @@ const isDev = ref(process.env.NODE_ENV === 'development')
 
 const rules = {
   email: {
-    required: withI18nMessage(required, 'VALIDATION.loginview.errors.required'),
-    email: withI18nMessage(email, 'VALIDATION.loginview.errors.invalid_email')
+    required: withI18nMessage(required, 'VALIDATION.required'),
+    email: withI18nMessage(email, 'VALIDATION.email')
   },
   password: {
-    required: withI18nMessage(required, 'VALIDATION.loginview.errors.required')
+    required: withI18nMessage(required, 'VALIDATION.required')
   }
 }
 
@@ -126,7 +126,7 @@ const handleSubmit = async () => {
 
   if (!isValid) {
     error.value = t('MESSAGE.loginview.errors.invalid_credentials')
-    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
+    //toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
     return
   }
 

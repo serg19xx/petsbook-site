@@ -1,0 +1,44 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 📝 Project Rules: PetsBook Backend
+
+## General
+- Language: PHP
+- Framework: FlightPHP
+- Templates: Twig (only for emails)
+- Database: MySQL/MariaDB
+- Mail Services: SendGrid, MailTrap, MailJet
+- Migration: ❌ NOT USED (manual DB changes)
+- Authentication: Cookie-based sessions, no Bearer tokens
+
+## Directory Structure
+- /src/Controllers/ → API endpoints (UserController.php, PetsController.php, etc.)
+- /src/Models/ → Data access & logic (e.g., User.php, Pet.php)
+- /src/Services/ → Services like AuthService.php, MailService.php
+- /src/Helpers/ → Utility functions (non-OOP where possible)
+- /views/ → Twig templates for email
+- /DATABASE_CHANGES.md → Manual change log of DB schema changes
+
+## Coding Style
+- Follow PSR-12 PHP Coding Standards
+- Avoid unnecessary abstraction; keep it procedural where efficient
+- One function = one task, prefer pure functions
+
+## ⚠️ Stable Modules Protection
+- Protect tested and deployed files:
+  - /src/Controllers/
+  - /src/Models/
+  - /DATABASE_CHANGES.md
+  - /.env → NEVER modify
+
+## Interaction with Frontend
+- REST API → JSON responses only
+- Error format:
+```json
+{
+  "error": true,
+  "message": "Validation failed"
+}

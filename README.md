@@ -33,3 +33,14 @@ npm run build
 ```sh
 npm run lint
 ```
+
+
+# AI Rules Archive
+
+This folder contains copies of AI configuration rules for multiple independent projects.
+
+Each project has its **own** `.cursor-rules.md` file in its root directory for use by Cursor IDE.
+
+Structure:
+- `petsbook-frontend.md` → Used as `.cursor-rules.md` in the PetsBook Frontend project
+- `petsbook-backend.md` → Used as `.cursor-rules.md` in the PetsBook Backend project

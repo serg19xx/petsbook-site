@@ -104,6 +104,8 @@
 </template>
 
 <script setup>
+// @ai-ignore-file
+// Cursor: This file/module is complete. Do not modify.
 import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLanguageStore } from '@/stores/LanguageStore'
@@ -124,13 +126,21 @@ const searchQuery = ref('')
 
 // Загрузка переведенных языков
 async function loadTranslatedLanguages() {
+  console.log('Перед axios.get')
   try {
     isLoading.value = true
     const response = await axios.get('/api/i18n/translated-languages')
+    console.log('После axios.get', response)
     const data = response.data
 
     if (data.status === 200) {
-      translatedLanguages.value = data.data.languages.map(lang => ({
+      // Фильтруем языки, оставляя только те, у которых есть хотя бы один перевод
+      const languagesWithTranslations = data.data.languages.filter(lang => {
+        //return lang.has_translations // Предполагаем, что бэкенд возвращает это поле
+        return lang.code === 'en' || lang.show_in_dialog === 1
+      })
+
+      translatedLanguages.value = languagesWithTranslations.map(lang => ({
         ...lang,
         nativeName: lang.native_name
       }))
@@ -167,10 +177,9 @@ async function loadAvailableLanguages() {
 }
 
 // Загружаем переведенные языки при монтировании компонента
-onMounted(() => {
-  console.log('availableLanguages', availableLanguages.value)
-  console.log('currentLanguage', currentLanguage.value)
-  loadTranslatedLanguages()
+onMounted(async () => {
+  console.log('LanguageSwitcher mounted')
+  await loadTranslatedLanguages()
 })
 
 // Загружаем доступные языки при открытии диалога

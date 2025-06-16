@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 🔧 Fix Localization in Frontend
+
+## Task:
+Fix or refactor localization for the given feature/component.
+
+## Requirements:
+- All translation keys → camelCase or dot.notation
+- No hardcoded strings in templates → use `$t()`
+- Missing keys → describe in output

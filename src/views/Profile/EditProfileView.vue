@@ -239,18 +239,19 @@ const phoneValidator = (value) => {
   return digitsOnly.length >= 10
 }
 
+
 // Validation rules
-const rules = {
-  fullName: { required },
-  nickname: { required },
-  gender: { required },
-  birthDate: { required },
-  location: { required },
-  email: { required, email },
-  phone: { required },
+const rules = computed(() => ({
+  fullName: { required: withI18nMessage(required, 'VALIDATION.required') },
+  nickname: { required: withI18nMessage(required, 'VALIDATION.required') },
+  gender: { required: withI18nMessage(required, 'VALIDATION.required') },
+  birthDate: { required: withI18nMessage(required, 'VALIDATION.required') },
+  location: { required: withI18nMessage(required, 'VALIDATION.required') },
+  email: { required: withI18nMessage(required, 'VALIDATION.required'), email: withI18nMessage(email, 'VALIDATION.email') },
+  phone: { required: withI18nMessage(required, 'VALIDATION.required') },
   website: { url: customValidators.url },
-  aboutMe: { maxLength: (value) => !value || value.length <= 500 }
-}
+  aboutMe: { maxLength: (value) => !value || value.length <= 500 },
+}))
 
 const v$ = useVuelidate(rules, formData)
 

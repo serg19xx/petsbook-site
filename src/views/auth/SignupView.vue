@@ -101,33 +101,33 @@ const formData = ref({
 
 const rules = computed(() => ({
   name: {
-    required: withI18nMessage(required, 'VALIDATION.signupview.input.name.required'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
     minLength: withI18nMessage(
       (value) => !value || value.length >= 2,
-      'VALIDATION.signupview.input.name.min_length',
+      'VALIDATION.minLength',
       { min: 2 }
     )
   },
   email: {
-    required: withI18nMessage(required, 'VALIDATION.signupview.input.email.required'),
-    email: withI18nMessage(email, 'VALIDATION.signupview.input.email.invalid')
+    required: withI18nMessage(required, 'VALIDATION.required'),
+    email: withI18nMessage(email, 'VALIDATION.email')
   },
   role: {
-    required: withI18nMessage(required, 'VALIDATION.signupview.select.role.required')
+    required: withI18nMessage(required, 'VALIDATION.required')
   },
   password: {
-    required: withI18nMessage(required, 'VALIDATION.signupview.input.password.required'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
     minLength: withI18nMessage(
       (value) => !value || value.length >= 8,
-      'VALIDATION.signupview.input.password.min_length',
+      'VALIDATION.minLength',
       { min: 8 }
     )
   },
   confirmPassword: {
-    required: withI18nMessage(required, 'VALIDATION.signupview.input.confirm_password.required'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
     sameAsPassword: withI18nMessage(
       (value) => !value || value === formData.value.password,
-      'VALIDATION.signupview.input.confirm_password.mismatch'
+      'VALIDATION.sameAs'
     )
   }
 }))

@@ -71,8 +71,8 @@ const formData = ref({
 
 const rules = computed(() => ({
   email: {
-    required: withI18nMessage(required, 'VALIDATION.passwordrecoveryview.input.email.required'),
-    email: withI18nMessage(email, 'VALIDATION.passwordrecoveryview.input.email.invalid'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
+    email: withI18nMessage(email, 'VALIDATION.email'),
   },
 }))
 

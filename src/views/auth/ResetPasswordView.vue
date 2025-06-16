@@ -82,18 +82,18 @@ const formData = ref({
 
 const rules = computed(() => ({
   password: {
-    required: withI18nMessage(required, 'VALIDATION.resetpasswordview.input.password.required'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
     minLength: withI18nMessage(
       (value) => !value || value.length >= 8,
-      'VALIDATION.resetpasswordview.input.password.min_length',
+      'VALIDATION.minLength',
       { min: 8 }
     )
   },
   confirmPassword: {
-    required: withI18nMessage(required, 'VALIDATION.resetpasswordview.input.confirm_password.required'),
+    required: withI18nMessage(required, 'VALIDATION.required'),
     sameAsPassword: withI18nMessage(
       (value) => !value || value === formData.value.password,
-      'VALIDATION.resetpasswordview.input.confirm_password.mismatch'
+      'VALIDATION.sameAs'
     )
   }
 }))

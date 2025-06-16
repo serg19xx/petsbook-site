@@ -1,0 +1,14 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# ➕ Add API Endpoint in Backend
+
+## Task:
+Add new endpoint in `/src/Controllers/[ControllerName].php`
+
+## Requirements:
+- Follow PSR-12
+- Return JSON with consistent format → `error` / `message` or `data`
+- Document any new routes
