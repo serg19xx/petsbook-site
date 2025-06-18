@@ -69,6 +69,7 @@ api.interceptors.response.use(
 )
 
 // API endpoints
+/*
 export const endpoints = {
   auth: {
     login: '/auth/login',
@@ -94,6 +95,7 @@ export const endpoints = {
     visit: '/stats/visit',
   },
 }
+*/
 
 export default api
 

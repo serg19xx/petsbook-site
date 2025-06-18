@@ -10,6 +10,11 @@ export const useLanguageStore = defineStore('language', () => {
   const isLoaded = ref(false)
   const locales = ref(['en', 'ru'])
 
+  // Добавляем новые refs для прогресса
+  const translationProgress = ref(0)
+  const translationStatus = ref('idle') // idle, processing, completed, failed
+  const translationMessage = ref('')
+
   const currentTranslations = computed(() => translations.value[currentLanguage.value] || {})
 
   function flatToNested(flatObj) {
@@ -38,6 +43,25 @@ export const useLanguageStore = defineStore('language', () => {
     }
 
     return nested
+  }
+
+  // Добавляем функции для управления прогрессом
+  function setTranslationProgress(progress) {
+    translationProgress.value = progress
+  }
+
+  function setTranslationStatus(status) {
+    translationStatus.value = status
+  }
+
+  function setTranslationMessage(message) {
+    translationMessage.value = message
+  }
+
+  function resetTranslationState() {
+    translationProgress.value = 0
+    translationStatus.value = 'idle'
+    translationMessage.value = ''
   }
 
   async function setLanguage(lang) {
@@ -89,17 +113,48 @@ export const useLanguageStore = defineStore('language', () => {
   }
 
   async function addLanguage(langCode) {
-    try {
-      const response = await api.post(`/i18n/translate-language/${langCode}`)
-      const data = response.data
-      if (data.status !== 200) {
-        throw new Error(data.message || 'Failed to add language')
+    return new Promise((resolve, reject) => {
+      try {
+        const eventSource = new EventSource(
+          `http://localhost:8080/api/i18n/translate-language/${langCode}`,
+        )
+
+        eventSource.onopen = () => {
+          setTranslationStatus('processing')
+          setTranslationMessage('Translating...')
+        }
+
+        eventSource.addEventListener('start', () => {
+          setTranslationStatus('processing')
+          setTranslationMessage('Translating...')
+        })
+
+        eventSource.addEventListener('complete', () => {
+          setTranslationStatus('completed')
+          setTranslationMessage('Translation completed!')
+          eventSource.close()
+          resolve(true)
+        })
+
+        eventSource.addEventListener('error', (event) => {
+          setTranslationStatus('failed')
+          setTranslationMessage('Error during translation')
+          eventSource.close()
+          reject(new Error('Translation failed'))
+        })
+
+        eventSource.onerror = (error) => {
+          setTranslationStatus('failed')
+          setTranslationMessage('Connection failed')
+          eventSource.close()
+          reject(new Error('Connection failed'))
+        }
+      } catch (error) {
+        setTranslationStatus('failed')
+        setTranslationMessage('Error')
+        reject(error)
       }
-      return true
-    } catch (error) {
-      console.error('Failed to add language:', error)
-      throw error
-    }
+    })
   }
 
   function changeLanguage(lang) {
@@ -120,12 +175,20 @@ export const useLanguageStore = defineStore('language', () => {
     translations,
     isLoaded,
     locales,
+    // Добавляем новые поля в return
+    translationProgress,
+    translationStatus,
+    translationMessage,
     setLanguage,
     initializeLanguage,
     addLanguage,
     changeLanguage,
     currentTranslations,
     fetchLocales,
+    // Добавляем новые функции в return
+    setTranslationProgress,
+    setTranslationStatus,
+    setTranslationMessage,
+    resetTranslationState,
   }
 })
-

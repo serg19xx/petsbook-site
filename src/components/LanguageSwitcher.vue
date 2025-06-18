@@ -74,12 +74,16 @@
               placeholder="Search language..."
               class="mb-4 w-full px-3 py-2 border rounded"
             />
-            <div v-if="isTranslating" class="w-full flex items-center justify-center mb-4">
+
+            <div v-if="languageStore.translationStatus === 'processing'" class="w-full flex items-center justify-center mb-4">
               <div class="w-2/3 bg-gray-200 rounded-full h-2.5">
                 <div class="bg-blue-600 h-2.5 rounded-full animate-pulse" style="width: 100%"></div>
               </div>
-              <span class="ml-2 text-sm text-gray-600">Translating...</span>
+              <span class="ml-2 text-sm text-gray-600">
+                {{ languageStore.translationMessage || 'Translating...' }}
+              </span>
             </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               <button
                 v-for="lang in filteredLanguages"
@@ -124,6 +128,19 @@ const isTranslating = ref(false)
 const availableLanguages = ref([])
 const translatedLanguages = ref([])
 const searchQuery = ref('')
+
+const progressBarClass = computed(() => {
+  switch (languageStore.translationStatus) {
+    case 'processing':
+      return 'bg-blue-600 animate-pulse'
+    case 'completed':
+      return 'bg-green-600'
+    case 'failed':
+      return 'bg-red-600'
+    default:
+      return 'bg-blue-600'
+  }
+})
 
 // Загрузка переведенных языков
 async function loadTranslatedLanguages() {
@@ -222,7 +239,7 @@ const handleAddLanguage = async (lang) => {
     toast.success(t('UI.language.success.added'))
   } catch (error) {
     console.error('Failed to add language:', error)
-    toast.error(t('UI.language.error.adding'))
+    toast.error($t('UI.language.error.adding'))
   } finally {
     isTranslating.value = false
   }
