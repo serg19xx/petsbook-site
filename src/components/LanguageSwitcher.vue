@@ -112,6 +112,7 @@ import { useLanguageStore } from '@/stores/LanguageStore'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import axios from 'axios'
+import api from '@/api'
 
 const { t } = useI18n()
 const languageStore = useLanguageStore()
@@ -129,7 +130,7 @@ async function loadTranslatedLanguages() {
   console.log('Перед axios.get')
   try {
     isLoading.value = true
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/i18n/translated-languages`)
+    const response = await api.get(`/api/i18n/translated-languages`)
     console.log('После axios.get', response)
     const data = response.data
 
