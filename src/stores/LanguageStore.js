@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import i18n from '@/i18n'
 import axios from 'axios'
+import api from '@/api'
 
 export const useLanguageStore = defineStore('language', () => {
   const translations = ref({})
@@ -41,7 +42,7 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function setLanguage(lang) {
     try {
-      const response = await axios.get(`/api/i18n/translations/${lang}`)
+      const response = await api.get(`/i18n/translations/${lang}`)
       const responseData = response.data
 
       if (responseData.status !== 200) {
@@ -89,7 +90,7 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function addLanguage(langCode) {
     try {
-      const response = await axios.post(`/api/i18n/translate-language/${langCode}`)
+      const response = await api.post(`/i18n/translate-language/${langCode}`)
       const data = response.data
       if (data.status !== 200) {
         throw new Error(data.message || 'Failed to add language')
@@ -107,7 +108,7 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function fetchLocales() {
     try {
-      const response = await axios.get('/api/i18n/locales')
+      const response = await api.get('/i18n/locales')
       locales.value = response.data.locales // например: [{ code: 'en', label: 'English' }, ...]
     } catch (error) {
       console.error('Failed to fetch locales:', error)
