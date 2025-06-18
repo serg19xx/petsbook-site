@@ -129,7 +129,7 @@ async function loadTranslatedLanguages() {
   console.log('Перед axios.get')
   try {
     isLoading.value = true
-    const response = await axios.get('/api/i18n/translated-languages')
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/i18n/translated-languages`)
     console.log('После axios.get', response)
     const data = response.data
 
