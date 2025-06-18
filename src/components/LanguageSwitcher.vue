@@ -158,7 +158,7 @@ async function loadTranslatedLanguages() {
 async function loadAvailableLanguages() {
   try {
     isLoading.value = true
-    const response = await api.get('/api/i18n/available-languages')
+    const response = await api.get('/i18n/available-languages')
     const data = response.data
     console.log('data.data.languages', data.data.languages)
     if (data.status === 200) {
