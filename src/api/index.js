@@ -4,7 +4,7 @@ import router from '@/router'
 import { useAuthStore } from '@/stores/AuthStore'
 
 axios.defaults.withCredentials = true
-
+console.log(import.meta.env.VITE_API_BASE_URL)
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api`,
   headers: {
