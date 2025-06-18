@@ -130,7 +130,7 @@ async function loadTranslatedLanguages() {
   console.log('Перед axios.get')
   try {
     isLoading.value = true
-    const response = await api.get(`/api/i18n/translated-languages`)
+    const response = await api.get(`/i18n/translated-languages`)
     console.log('После axios.get', response)
     const data = response.data
 
