@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_BASE_URL
 export const PhotoService = {
   async uploadPhoto(file, type) {
     try {
-      const formData = new FormData()
+      const formData = new globalThis.FormData()
       formData.append('photo', file)
 
       const endpoint = type === 'avatar' ? '/user/avatar' : '/user/cover'
@@ -32,7 +32,7 @@ export const PhotoService = {
 
   async deletePhoto(photoId) {
     try {
-      const response = await axios.delete(`${API_URL}/photos/${photoId}`)
+      const response = await api.delete(`${API_URL}/photos/${photoId}`)
 
       return response.data
     } catch (error) {
@@ -43,7 +43,7 @@ export const PhotoService = {
 
   async getPhotos(userId) {
     try {
-      const response = await axios.get(`${API_URL}/photos/user/${userId}`)
+      const response = await api.get(`${API_URL}/photos/user/${userId}`)
 
       return response.data
     } catch (error) {
