@@ -111,8 +111,7 @@
 </template>
 
 <script setup>
-// @ai-ignore-file
-// Cursor: This file/module is complete. Do not modify.
+
 import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useLanguageStore } from '@/stores/LanguageStore'
