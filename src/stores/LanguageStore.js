@@ -116,132 +116,15 @@ export const useLanguageStore = defineStore('language', () => {
   }
 
   async function addLanguage(langCode) {
-    return new Promise((resolve, reject) => {
-      let retryCount = 0
-      const maxRetries = 3
-      const retryDelay = 1000 // 1 second
-
-      function createEventSource() {
-        try {
-          console.log('Status before:', translationStatus.value)
-          setTranslationStatus('processing')
-
-          // Ensure we have a proper base URL that includes protocol
-          let baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
-          if (!baseURL.startsWith('http')) {
-            baseURL = window.location.protocol + '//' + baseURL
-          }
-          const url = `${baseURL}/api/i18n/translate-language/${langCode}`
-          console.log('EventSource URL:', url)
-
-          if (currentEventSource) {
-            currentEventSource.close()
-          }
-
-          currentEventSource = new EventSource(url)
-          console.log('Creating EventSource for language:', langCode)
-
-          currentEventSource.onopen = () => {
-            console.log('EventSource opened successfully')
-            setTranslationMessage('Starting translation...')
-            retryCount = 0 // Reset retry count on successful connection
-          }
-
-          currentEventSource.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data)
-              if (data.progress) {
-                setTranslationProgress(data.progress)
-              }
-              if (data.message) {
-                setTranslationMessage(data.message)
-              }
-            } catch (e) {
-              console.error('Error parsing message:', e)
-            }
-          }
-
-          currentEventSource.addEventListener('start', () => {
-            setTranslationStatus('processing')
-            setTranslationProgress(0)
-          })
-
-          currentEventSource.addEventListener('progress', (event) => {
-            try {
-              const data = JSON.parse(event.data)
-              setTranslationProgress(data.progress || 0)
-              setTranslationMessage(data.message || 'Translating...')
-            } catch (e) {
-              console.error('Error parsing progress:', e)
-            }
-          })
-
-          currentEventSource.addEventListener('complete', () => {
-            setTranslationStatus('completed')
-            setTranslationMessage('Translation completed!')
-            if (currentEventSource) {
-              currentEventSource.close()
-              currentEventSource = null
-            }
-            resolve(true)
-          })
-
-          currentEventSource.addEventListener('error', (event) => {
-            console.error('Translation error occurred:', event)
-
-            if (retryCount < maxRetries) {
-              console.log(`Retrying connection (${retryCount + 1}/${maxRetries})...`)
-              if (currentEventSource) {
-                currentEventSource.close()
-                currentEventSource = null
-              }
-              retryCount++
-              setTimeout(createEventSource, retryDelay)
-            } else {
-              console.error('Max retries reached, translation failed')
-              setTranslationStatus('failed')
-              setTranslationMessage('Translation failed after multiple attempts')
-              if (currentEventSource) {
-                currentEventSource.close()
-                currentEventSource = null
-              }
-              reject(new Error('Translation failed after multiple attempts'))
-            }
-          })
-
-          // Add connection timeout
-          setTimeout(() => {
-            if (translationStatus.value === 'processing' && retryCount >= maxRetries) {
-              setTranslationStatus('failed')
-              setTranslationMessage('Connection timeout')
-              if (currentEventSource) {
-                currentEventSource.close()
-                currentEventSource = null
-              }
-              reject(new Error('Connection timeout'))
-            }
-          }, 30000) // 30 seconds timeout
-        } catch (error) {
-          console.error('Error in addLanguage:', error)
-          if (retryCount < maxRetries) {
-            console.log(`Retrying after error (${retryCount + 1}/${maxRetries})...`)
-            retryCount++
-            setTimeout(createEventSource, retryDelay)
-          } else {
-            setTranslationStatus('failed')
-            setTranslationMessage('Error initializing translation')
-            if (currentEventSource) {
-              currentEventSource.close()
-              currentEventSource = null
-            }
-            reject(error)
-          }
-        }
-      }
-
-      // Start the initial connection attempt
-      createEventSource()
-    })
+    try {
+      console.log('Отправляем запрос на:', `/i18n/translate-language/${langCode}`)
+      const response = await api.post(`/i18n/translate-language/${langCode}`)
+      console.log('Получили ответ:', response.data)
+      return true
+    } catch (error) {
+      console.error('Ошибка запроса:', error.response || error)
+      throw error
+    }
   }
 
   // Добавляем функцию отмены
@@ -273,7 +156,6 @@ export const useLanguageStore = defineStore('language', () => {
     translations,
     isLoaded,
     locales,
-    // Добавляем новые поля в return
     translationProgress,
     translationStatus,
     translationMessage,
@@ -283,7 +165,6 @@ export const useLanguageStore = defineStore('language', () => {
     changeLanguage,
     currentTranslations,
     fetchLocales,
-    // Добавляем новые функции в return
     setTranslationProgress,
     setTranslationStatus,
     setTranslationMessage,

@@ -240,19 +240,15 @@ watch(
 const handleAddLanguage = async (lang) => {
   try {
     isTranslating.value = true
-    await languageStore.addLanguage(lang.code)
+    // Отправляем запрос без await
+    languageStore.addLanguage(lang.code)
 
-    // Обновляем список переведенных языков после успешного добавления
-    await loadTranslatedLanguages()
-
-    // Показываем уведомление об успехе
-    toast.success(t('UI.language.success.added'))
-  } catch (error) {
-    toast.error(t('UI.language.error.translation'))
-
-    // Сбрасываем состояние перевода
-    isTranslating.value = false
+    // Сразу показываем сообщение и закрываем диалог
+    toast.success('Запрос на перевод отправлен. Перевод будет готов через несколько минут')
     showAddLanguageDialog.value = false
+
+  } finally {
+    isTranslating.value = false
   }
 }
 
@@ -288,4 +284,16 @@ const progressWidth = computed(() => {
   }
   return '0%'
 })
+
+async function addLanguage(langCode) {
+  try {
+    console.log('Отправляем запрос на:', `/i18n/translate-language/${langCode}`)
+    const response = await api.post(`/i18n/translate-language/${langCode}`)
+    console.log('Получили ответ:', response.data)
+    return true
+  } catch (error) {
+    console.error('Ошибка запроса:', error.response || error)
+    throw error
+  }
+}
 </script>
