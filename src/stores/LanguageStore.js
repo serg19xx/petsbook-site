@@ -15,6 +15,8 @@ export const useLanguageStore = defineStore('language', () => {
   const translationStatus = ref('idle') // idle, processing, completed, failed
   const translationMessage = ref('')
 
+  let currentEventSource = null // Для хранения текущего соединения
+
   const currentTranslations = computed(() => translations.value[currentLanguage.value] || {})
 
   function flatToNested(flatObj) {
@@ -115,21 +117,71 @@ export const useLanguageStore = defineStore('language', () => {
   async function addLanguage(langCode) {
     return new Promise((resolve, reject) => {
       try {
-        const eventSource = new EventSource(
-          `http://localhost:8080/api/i18n/translate-language/${langCode}`,
-        )
+        console.log('=== EVENTSOURCE DEBUG ===')
+        console.log('Creating EventSource for language:', langCode)
+
+        const baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
+        const url = `${baseURL}/api/i18n/translate-language/${langCode}`
+        console.log('EventSource URL:', url)
+        console.log('Base URL from env:', import.meta.env.VITE_API_BASE_URL)
+        console.log('Window location origin:', window.location.origin)
+
+        const eventSource = new EventSource(url)
+        console.log('EventSource created:', eventSource)
+        console.log('Initial readyState:', eventSource.readyState)
+
+        // Таймер для отслеживания состояния
+        const stateCheckInterval = setInterval(() => {
+          console.log('EventSource readyState:', eventSource.readyState)
+          if (eventSource.readyState === 2) {
+            // CLOSED
+            clearInterval(stateCheckInterval)
+          }
+        }, 1000)
 
         eventSource.onopen = () => {
+          console.log('✅ EventSource opened successfully')
+          console.log('ReadyState on open:', eventSource.readyState)
           setTranslationStatus('processing')
           setTranslationMessage('Translating...')
         }
 
-        eventSource.addEventListener('start', () => {
+        eventSource.onmessage = (event) => {
+          console.log('📨 Received message:', event.data)
+          try {
+            const data = JSON.parse(event.data)
+            console.log('Parsed data:', data)
+            if (data.progress) {
+              setTranslationProgress(data.progress)
+            }
+            if (data.message) {
+              setTranslationMessage(data.message)
+            }
+          } catch (e) {
+            console.error('Error parsing message:', e)
+          }
+        }
+
+        eventSource.addEventListener('start', (event) => {
+          console.log('🚀 Received start event:', event.data)
           setTranslationStatus('processing')
           setTranslationMessage('Translating...')
         })
 
-        eventSource.addEventListener('complete', () => {
+        eventSource.addEventListener('progress', (event) => {
+          console.log('📊 Received progress event:', event.data)
+          try {
+            const data = JSON.parse(event.data)
+            setTranslationProgress(data.progress || 0)
+            setTranslationMessage(data.message || 'Translating...')
+          } catch (e) {
+            console.error('Error parsing progress:', e)
+          }
+        })
+
+        eventSource.addEventListener('complete', (event) => {
+          console.log('✅ Received complete event:', event.data)
+          clearInterval(stateCheckInterval)
           setTranslationStatus('completed')
           setTranslationMessage('Translation completed!')
           eventSource.close()
@@ -137,6 +189,9 @@ export const useLanguageStore = defineStore('language', () => {
         })
 
         eventSource.addEventListener('error', (event) => {
+          console.error('❌ EventSource error event:', event)
+          console.error('ReadyState on error:', eventSource.readyState)
+          clearInterval(stateCheckInterval)
           setTranslationStatus('failed')
           setTranslationMessage('Error during translation')
           eventSource.close()
@@ -144,17 +199,32 @@ export const useLanguageStore = defineStore('language', () => {
         })
 
         eventSource.onerror = (error) => {
+          console.error('❌ EventSource onerror:', error)
+          console.error('ReadyState on onerror:', eventSource.readyState)
+          clearInterval(stateCheckInterval)
           setTranslationStatus('failed')
           setTranslationMessage('Connection failed')
           eventSource.close()
           reject(new Error('Connection failed'))
         }
       } catch (error) {
+        console.error('General error in addLanguage:', error)
         setTranslationStatus('failed')
         setTranslationMessage('Error')
         reject(error)
       }
     })
+  }
+
+  // Добавляем функцию отмены
+  function cancelTranslation() {
+    if (currentEventSource) {
+      currentEventSource.close()
+      currentEventSource = null
+      setTranslationStatus('idle')
+      setTranslationMessage('')
+      setTranslationProgress(0)
+    }
   }
 
   function changeLanguage(lang) {
@@ -190,5 +260,6 @@ export const useLanguageStore = defineStore('language', () => {
     setTranslationStatus,
     setTranslationMessage,
     resetTranslationState,
+    cancelTranslation,
   }
 })

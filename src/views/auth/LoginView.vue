@@ -72,7 +72,7 @@
 
 <!-- eslint-disable no-undef -->
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useUserStore } from '@/stores/UserStore'
@@ -83,7 +83,6 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
-import { useLanguageStore } from '@/stores/LanguageStore'
 
 const { t, locale, messages } = useI18n()
 const router = useRouter()
@@ -96,13 +95,6 @@ const formData = reactive({
   password: '',
   remember: false
 })
-
-const userData = userStore.userData
-
-const languageStore = useLanguageStore()
-const currentLocale = computed(() => locale.value)
-
-const isDev = ref(process.env.NODE_ENV === 'development')
 
 const rules = {
   email: {
@@ -126,13 +118,15 @@ const handleSubmit = async () => {
 
   if (!isValid) {
     error.value = t('MESSAGE.loginview.errors.invalid_credentials')
-    //toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
+    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
     return
   }
 
   loading.value = true
 
   try {
+    await new Promise(resolve => setTimeout(resolve, 1000))
+
     const response = await authStore.login({
       email: formData.email,
       password: formData.password,
@@ -140,8 +134,8 @@ const handleSubmit = async () => {
     })
 
     if (!response.success) {
-      error.value = t('MESSAGE.loginview.errors.invalid_credentials')
-      toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
+      error.value = response.message || t('MESSAGE.loginview.errors.invalid_credentials')
+      toast.error(response.message || t('MESSAGE.loginview.errors.invalid_credentials'))
       return
     }
 
@@ -151,16 +145,11 @@ const handleSubmit = async () => {
 
   } catch (err) {
     console.error('Error logging in:', err)
-    error.value = t('MESSAGE.loginview.errors.invalid_credentials')
-    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
+    error.value = err.message || t('MESSAGE.loginview.errors.invalid_credentials')
+    toast.error(err.message || t('MESSAGE.loginview.errors.invalid_credentials'))
   } finally {
     loading.value = false
   }
-}
-
-async function toggleLocale() {
-  const newLocale = locale.value === 'ru' ? 'en' : 'ru'
-  await languageStore.setLanguage(newLocale)
 }
 
 onMounted(() => {

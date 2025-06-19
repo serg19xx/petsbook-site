@@ -1,11 +1,10 @@
 import { createI18n } from 'vue-i18n'
-import { ref } from 'vue'
 
 const i18n = createI18n({
   legacy: false,
   locale: 'uk',
   fallbackLocale: 'en',
-  messages: ref({}),
+  messages: {},
 })
 
 // Добавляем глобальный обработчик ошибок

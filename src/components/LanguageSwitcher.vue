@@ -230,17 +230,35 @@ const handleLanguageSelect = async (lang) => {
   }
 }
 
+// Следим за статусом перевода
+watch(
+  () => languageStore.translationStatus,
+  (newStatus) => {
+    console.log('Translation status changed:', newStatus)
+    if (newStatus === 'completed' || newStatus === 'failed') {
+      setTimeout(() => {
+        isTranslating.value = false
+        showAddLanguageDialog.value = false
+      }, 1000)
+    }
+  }
+)
+
 const handleAddLanguage = async (lang) => {
+  console.log('Starting translation for:', lang.code)
   try {
     isTranslating.value = true
+    console.log('Status before:', languageStore.translationStatus)
     await languageStore.addLanguage(lang.code)
+    console.log('Status after:', languageStore.translationStatus)
     showAddLanguageDialog.value = false
     await loadTranslatedLanguages()
     toast.success(t('UI.language.success.added'))
   } catch (error) {
     console.error('Failed to add language:', error)
-    toast.error($t('UI.language.error.adding'))
+    toast.error(t('UI.language.error.adding'))
   } finally {
+    console.log('Final status:', languageStore.translationStatus)
     isTranslating.value = false
   }
 }
