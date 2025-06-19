@@ -6,7 +6,7 @@ import api from '@/api'
 
 export const useLanguageStore = defineStore('language', () => {
   const translations = ref({})
-  const currentLanguage = ref(localStorage.getItem('language') || 'en')
+  const currentLanguage = ref(window.localStorage.getItem('language') || 'en')
   const isLoaded = ref(false)
   const locales = ref(['en', 'ru'])
 
@@ -117,40 +117,28 @@ export const useLanguageStore = defineStore('language', () => {
   async function addLanguage(langCode) {
     return new Promise((resolve, reject) => {
       try {
-        console.log('=== EVENTSOURCE DEBUG ===')
-        console.log('Creating EventSource for language:', langCode)
+        console.log('Status before:', translationStatus.value)
+        setTranslationStatus('processing')
 
         const baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
         const url = `${baseURL}/api/i18n/translate-language/${langCode}`
         console.log('EventSource URL:', url)
-        console.log('Base URL from env:', import.meta.env.VITE_API_BASE_URL)
-        console.log('Window location origin:', window.location.origin)
 
-        const eventSource = new EventSource(url)
-        console.log('EventSource created:', eventSource)
-        console.log('Initial readyState:', eventSource.readyState)
-
-        // Таймер для отслеживания состояния
-        const stateCheckInterval = setInterval(() => {
-          console.log('EventSource readyState:', eventSource.readyState)
-          if (eventSource.readyState === 2) {
-            // CLOSED
-            clearInterval(stateCheckInterval)
-          }
-        }, 1000)
-
-        eventSource.onopen = () => {
-          console.log('✅ EventSource opened successfully')
-          console.log('ReadyState on open:', eventSource.readyState)
-          setTranslationStatus('processing')
-          setTranslationMessage('Translating...')
+        if (currentEventSource) {
+          currentEventSource.close()
         }
 
-        eventSource.onmessage = (event) => {
-          console.log('📨 Received message:', event.data)
+        currentEventSource = new EventSource(url)
+        console.log('Creating EventSource for language:', langCode)
+
+        currentEventSource.onopen = () => {
+          console.log('EventSource opened successfully')
+          setTranslationMessage('Starting translation...')
+        }
+
+        currentEventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data)
-            console.log('Parsed data:', data)
             if (data.progress) {
               setTranslationProgress(data.progress)
             }
@@ -162,14 +150,12 @@ export const useLanguageStore = defineStore('language', () => {
           }
         }
 
-        eventSource.addEventListener('start', (event) => {
-          console.log('🚀 Received start event:', event.data)
+        currentEventSource.addEventListener('start', () => {
           setTranslationStatus('processing')
-          setTranslationMessage('Translating...')
+          setTranslationProgress(0)
         })
 
-        eventSource.addEventListener('progress', (event) => {
-          console.log('📊 Received progress event:', event.data)
+        currentEventSource.addEventListener('progress', (event) => {
           try {
             const data = JSON.parse(event.data)
             setTranslationProgress(data.progress || 0)
@@ -179,38 +165,47 @@ export const useLanguageStore = defineStore('language', () => {
           }
         })
 
-        eventSource.addEventListener('complete', (event) => {
-          console.log('✅ Received complete event:', event.data)
-          clearInterval(stateCheckInterval)
+        currentEventSource.addEventListener('complete', () => {
           setTranslationStatus('completed')
           setTranslationMessage('Translation completed!')
-          eventSource.close()
+          if (currentEventSource) {
+            currentEventSource.close()
+            currentEventSource = null
+          }
           resolve(true)
         })
 
-        eventSource.addEventListener('error', (event) => {
-          console.error('❌ EventSource error event:', event)
-          console.error('ReadyState on error:', eventSource.readyState)
-          clearInterval(stateCheckInterval)
+        currentEventSource.addEventListener('error', (event) => {
+          console.error('Translation failed:', event)
           setTranslationStatus('failed')
-          setTranslationMessage('Error during translation')
-          eventSource.close()
+          setTranslationMessage('Translation failed')
+          if (currentEventSource) {
+            currentEventSource.close()
+            currentEventSource = null
+          }
           reject(new Error('Translation failed'))
         })
 
-        eventSource.onerror = (error) => {
-          console.error('❌ EventSource onerror:', error)
-          console.error('ReadyState on onerror:', eventSource.readyState)
-          clearInterval(stateCheckInterval)
-          setTranslationStatus('failed')
-          setTranslationMessage('Connection failed')
-          eventSource.close()
-          reject(new Error('Connection failed'))
-        }
+        // Добавляем таймаут для соединения
+        setTimeout(() => {
+          if (translationStatus.value === 'processing') {
+            setTranslationStatus('failed')
+            setTranslationMessage('Connection timeout')
+            if (currentEventSource) {
+              currentEventSource.close()
+              currentEventSource = null
+            }
+            reject(new Error('Connection timeout'))
+          }
+        }, 30000) // 30 секунд таймаут
       } catch (error) {
-        console.error('General error in addLanguage:', error)
+        console.error('Error in addLanguage:', error)
         setTranslationStatus('failed')
-        setTranslationMessage('Error')
+        setTranslationMessage('Error initializing translation')
+        if (currentEventSource) {
+          currentEventSource.close()
+          currentEventSource = null
+        }
         reject(error)
       }
     })

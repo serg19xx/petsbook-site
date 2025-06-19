@@ -77,7 +77,10 @@
 
             <div v-if="languageStore.translationStatus === 'processing'" class="w-full flex items-center justify-center mb-4">
               <div class="w-2/3 bg-gray-200 rounded-full h-2.5">
-                <div class="bg-blue-600 h-2.5 rounded-full animate-pulse" style="width: 100%"></div>
+                <div
+                  class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                  :style="{ width: progressWidth }"
+                ></div>
               </div>
               <span class="ml-2 text-sm text-gray-600">
                 {{ languageStore.translationMessage || 'Translating...' }}
@@ -115,7 +118,6 @@ import { Icon } from '@iconify/vue'
 import { useLanguageStore } from '@/stores/LanguageStore'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
-import axios from 'axios'
 import api from '@/api'
 
 const { t } = useI18n()
@@ -144,17 +146,14 @@ const progressBarClass = computed(() => {
 
 // Загрузка переведенных языков
 async function loadTranslatedLanguages() {
-  console.log('Перед axios.get')
   try {
     isLoading.value = true
     const response = await api.get(`/i18n/translated-languages`)
-    console.log('После axios.get', response)
     const data = response.data
 
     if (data.status === 200) {
       // Фильтруем языки, оставляя только те, у которых есть хотя бы один перевод
       const languagesWithTranslations = data.data.languages.filter(lang => {
-        //return lang.has_translations // Предполагаем, что бэкенд возвращает это поле
         return lang.code === 'en' || lang.show_in_dialog === 1
       })
 
@@ -164,7 +163,6 @@ async function loadTranslatedLanguages() {
       }))
     }
   } catch (error) {
-    console.error('Failed to load translated languages:', error)
     toast.error(t('UI.language.error.loading'))
   } finally {
     isLoading.value = false
@@ -177,7 +175,6 @@ async function loadAvailableLanguages() {
     isLoading.value = true
     const response = await api.get('/i18n/available-languages')
     const data = response.data
-    console.log('data.data.languages', data.data.languages)
     if (data.status === 200) {
       availableLanguages.value = data.data.languages.map(lang => ({
         code: lang.code,
@@ -187,7 +184,6 @@ async function loadAvailableLanguages() {
       }))
     }
   } catch (error) {
-    console.error('Failed to load available languages:', error)
     toast.error(t('UI.language.error.loading'))
   } finally {
     isLoading.value = false
@@ -196,7 +192,6 @@ async function loadAvailableLanguages() {
 
 // Загружаем переведенные языки при монтировании компонента
 onMounted(async () => {
-  console.log('LanguageSwitcher mounted')
   await loadTranslatedLanguages()
 })
 
@@ -225,7 +220,6 @@ const handleLanguageSelect = async (lang) => {
     await languageStore.setLanguage(lang)
     isOpen.value = false
   } catch (error) {
-    console.error('Failed to switch language:', error)
     toast.error(t('UI.language.error.switching'))
   }
 }
@@ -234,7 +228,6 @@ const handleLanguageSelect = async (lang) => {
 watch(
   () => languageStore.translationStatus,
   (newStatus) => {
-    console.log('Translation status changed:', newStatus)
     if (newStatus === 'completed' || newStatus === 'failed') {
       setTimeout(() => {
         isTranslating.value = false
@@ -245,21 +238,21 @@ watch(
 )
 
 const handleAddLanguage = async (lang) => {
-  console.log('Starting translation for:', lang.code)
   try {
     isTranslating.value = true
-    console.log('Status before:', languageStore.translationStatus)
     await languageStore.addLanguage(lang.code)
-    console.log('Status after:', languageStore.translationStatus)
-    showAddLanguageDialog.value = false
+
+    // Обновляем список переведенных языков после успешного добавления
     await loadTranslatedLanguages()
+
+    // Показываем уведомление об успехе
     toast.success(t('UI.language.success.added'))
   } catch (error) {
-    console.error('Failed to add language:', error)
-    toast.error(t('UI.language.error.adding'))
-  } finally {
-    console.log('Final status:', languageStore.translationStatus)
+    toast.error(t('UI.language.error.translation'))
+
+    // Сбрасываем состояние перевода
     isTranslating.value = false
+    showAddLanguageDialog.value = false
   }
 }
 
@@ -286,5 +279,13 @@ const sortedTranslatedLanguages = computed(() => {
 
   // Возвращаем массив с английским в начале
   return english ? [english, ...otherLanguages] : otherLanguages
+})
+
+// Добавляем вычисляемое свойство для определения ширины прогресс-бара
+const progressWidth = computed(() => {
+  if (languageStore.translationStatus === 'processing') {
+    return `${languageStore.translationProgress}%`
+  }
+  return '0%'
 })
 </script>
