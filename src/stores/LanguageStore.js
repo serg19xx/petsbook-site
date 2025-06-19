@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import i18n from '@/i18n'
-import axios from 'axios'
 import api from '@/api'
+
+/* global window, localStorage, console, EventSource, setTimeout */
 
 export const useLanguageStore = defineStore('language', () => {
   const translations = ref({})
@@ -10,12 +11,12 @@ export const useLanguageStore = defineStore('language', () => {
   const isLoaded = ref(false)
   const locales = ref(['en', 'ru'])
 
-  // Добавляем новые refs для прогресса
+  // Translation state
   const translationProgress = ref(0)
   const translationStatus = ref('idle') // idle, processing, completed, failed
   const translationMessage = ref('')
 
-  let currentEventSource = null // Для хранения текущего соединения
+  let currentEventSource = null // For storing current connection
 
   const currentTranslations = computed(() => translations.value[currentLanguage.value] || {})
 
@@ -116,98 +117,130 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function addLanguage(langCode) {
     return new Promise((resolve, reject) => {
-      try {
-        console.log('Status before:', translationStatus.value)
-        setTranslationStatus('processing')
+      let retryCount = 0
+      const maxRetries = 3
+      const retryDelay = 1000 // 1 second
 
-        const baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
-        const url = `${baseURL}/api/i18n/translate-language/${langCode}`
-        console.log('EventSource URL:', url)
-
-        if (currentEventSource) {
-          currentEventSource.close()
-        }
-
-        currentEventSource = new EventSource(url)
-        console.log('Creating EventSource for language:', langCode)
-
-        currentEventSource.onopen = () => {
-          console.log('EventSource opened successfully')
-          setTranslationMessage('Starting translation...')
-        }
-
-        currentEventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data)
-            if (data.progress) {
-              setTranslationProgress(data.progress)
-            }
-            if (data.message) {
-              setTranslationMessage(data.message)
-            }
-          } catch (e) {
-            console.error('Error parsing message:', e)
-          }
-        }
-
-        currentEventSource.addEventListener('start', () => {
+      function createEventSource() {
+        try {
+          console.log('Status before:', translationStatus.value)
           setTranslationStatus('processing')
-          setTranslationProgress(0)
-        })
 
-        currentEventSource.addEventListener('progress', (event) => {
-          try {
-            const data = JSON.parse(event.data)
-            setTranslationProgress(data.progress || 0)
-            setTranslationMessage(data.message || 'Translating...')
-          } catch (e) {
-            console.error('Error parsing progress:', e)
+          // Ensure we have a proper base URL that includes protocol
+          let baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
+          if (!baseURL.startsWith('http')) {
+            baseURL = window.location.protocol + '//' + baseURL
           }
-        })
+          const url = `${baseURL}/api/i18n/translate-language/${langCode}`
+          console.log('EventSource URL:', url)
 
-        currentEventSource.addEventListener('complete', () => {
-          setTranslationStatus('completed')
-          setTranslationMessage('Translation completed!')
           if (currentEventSource) {
             currentEventSource.close()
-            currentEventSource = null
           }
-          resolve(true)
-        })
 
-        currentEventSource.addEventListener('error', (event) => {
-          console.error('Translation failed:', event)
-          setTranslationStatus('failed')
-          setTranslationMessage('Translation failed')
-          if (currentEventSource) {
-            currentEventSource.close()
-            currentEventSource = null
+          currentEventSource = new EventSource(url)
+          console.log('Creating EventSource for language:', langCode)
+
+          currentEventSource.onopen = () => {
+            console.log('EventSource opened successfully')
+            setTranslationMessage('Starting translation...')
+            retryCount = 0 // Reset retry count on successful connection
           }
-          reject(new Error('Translation failed'))
-        })
 
-        // Добавляем таймаут для соединения
-        setTimeout(() => {
-          if (translationStatus.value === 'processing') {
-            setTranslationStatus('failed')
-            setTranslationMessage('Connection timeout')
+          currentEventSource.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data)
+              if (data.progress) {
+                setTranslationProgress(data.progress)
+              }
+              if (data.message) {
+                setTranslationMessage(data.message)
+              }
+            } catch (e) {
+              console.error('Error parsing message:', e)
+            }
+          }
+
+          currentEventSource.addEventListener('start', () => {
+            setTranslationStatus('processing')
+            setTranslationProgress(0)
+          })
+
+          currentEventSource.addEventListener('progress', (event) => {
+            try {
+              const data = JSON.parse(event.data)
+              setTranslationProgress(data.progress || 0)
+              setTranslationMessage(data.message || 'Translating...')
+            } catch (e) {
+              console.error('Error parsing progress:', e)
+            }
+          })
+
+          currentEventSource.addEventListener('complete', () => {
+            setTranslationStatus('completed')
+            setTranslationMessage('Translation completed!')
             if (currentEventSource) {
               currentEventSource.close()
               currentEventSource = null
             }
-            reject(new Error('Connection timeout'))
+            resolve(true)
+          })
+
+          currentEventSource.addEventListener('error', (event) => {
+            console.error('Translation error occurred:', event)
+
+            if (retryCount < maxRetries) {
+              console.log(`Retrying connection (${retryCount + 1}/${maxRetries})...`)
+              if (currentEventSource) {
+                currentEventSource.close()
+                currentEventSource = null
+              }
+              retryCount++
+              setTimeout(createEventSource, retryDelay)
+            } else {
+              console.error('Max retries reached, translation failed')
+              setTranslationStatus('failed')
+              setTranslationMessage('Translation failed after multiple attempts')
+              if (currentEventSource) {
+                currentEventSource.close()
+                currentEventSource = null
+              }
+              reject(new Error('Translation failed after multiple attempts'))
+            }
+          })
+
+          // Add connection timeout
+          setTimeout(() => {
+            if (translationStatus.value === 'processing' && retryCount >= maxRetries) {
+              setTranslationStatus('failed')
+              setTranslationMessage('Connection timeout')
+              if (currentEventSource) {
+                currentEventSource.close()
+                currentEventSource = null
+              }
+              reject(new Error('Connection timeout'))
+            }
+          }, 30000) // 30 seconds timeout
+        } catch (error) {
+          console.error('Error in addLanguage:', error)
+          if (retryCount < maxRetries) {
+            console.log(`Retrying after error (${retryCount + 1}/${maxRetries})...`)
+            retryCount++
+            setTimeout(createEventSource, retryDelay)
+          } else {
+            setTranslationStatus('failed')
+            setTranslationMessage('Error initializing translation')
+            if (currentEventSource) {
+              currentEventSource.close()
+              currentEventSource = null
+            }
+            reject(error)
           }
-        }, 30000) // 30 секунд таймаут
-      } catch (error) {
-        console.error('Error in addLanguage:', error)
-        setTranslationStatus('failed')
-        setTranslationMessage('Error initializing translation')
-        if (currentEventSource) {
-          currentEventSource.close()
-          currentEventSource = null
         }
-        reject(error)
       }
+
+      // Start the initial connection attempt
+      createEventSource()
     })
   }
 
