@@ -38,8 +38,9 @@
         <!-- Кнопка добавления языка -->
         <button
           @click="showAddLanguageDialog = true"
-          class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
         >
+          <Icon icon="mdi:earth-plus" class="w-5 h-5 text-blue-600" />
           {{ t('UI.language.add') }}
         </button>
       </div>
@@ -54,9 +55,20 @@
         <!-- Заголовок -->
         <div class="flex justify-between items-center p-6 border-b">
           <h2 class="text-xl font-semibold">{{ t('UI.language.select') }}</h2>
-          <button @click="showAddLanguageDialog = false" class="text-gray-500 hover:text-gray-700">
-            <Icon icon="mdi:close" class="w-6 h-6" />
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Кнопка синхронизации -->
+            <button
+              @click="refreshTranslationKeys"
+              :disabled="isRefreshing"
+              class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+            >
+              <Icon icon="mdi:refresh" class="w-4 h-4" :class="{ 'animate-spin': isRefreshing }" />
+              {{ isRefreshing ? 'Syncing...' : 'Sync Keys' }}
+            </button>
+            <button @click="showAddLanguageDialog = false" class="text-gray-500 hover:text-gray-700">
+              <Icon icon="mdi:close" class="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
         <!-- Скроллируемая область -->
@@ -85,6 +97,25 @@
             </div>
           </div>
 
+          <!-- Прогресс синхронизации -->
+          <div v-if="isRefreshing" class="w-full mb-4">
+            <div class="bg-blue-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-blue-700">Syncing translation keys...</span>
+                <span class="text-sm text-blue-500">{{ refreshProgress }}%</span>
+              </div>
+              <div class="w-full bg-blue-200 rounded-full h-2">
+                <div
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: refreshProgress + '%' }"
+                ></div>
+              </div>
+              <div class="mt-2 text-xs text-blue-600">
+                {{ refreshMessage }}
+              </div>
+            </div>
+          </div>
+
           <!-- Список доступных языков -->
           <div v-else>
             <input
@@ -98,7 +129,7 @@
               <button
                 v-for="lang in filteredLanguages"
                 :key="lang.code"
-                @click="handleAddLanguage1(lang)"
+                @click="handleAddLanguage(lang)"
                 class="flex items-center p-2 rounded-lg hover:bg-gray-100"
                 :disabled="isTranslating"
                 :class="isTranslating ? 'opacity-50 cursor-not-allowed' : ''"
@@ -139,6 +170,10 @@ const translatingLanguage = ref(null)
 const availableLanguages = ref([])
 const translatedLanguages = ref([])
 const searchQuery = ref('')
+const isRefreshing = ref(false)
+const refreshProgress = ref(0)
+const refreshMessage = ref('')
+let refreshPollInterval = null
 
 const progressBarClass = computed(() => {
   switch (languageStore.translationStatus) {
@@ -240,7 +275,6 @@ watch(
     if (newStatus === 'completed' || newStatus === 'failed') {
       setTimeout(() => {
         isTranslating.value = false
-        showAddLanguageDialog.value = false
       }, 1000)
     }
   }
@@ -278,26 +312,26 @@ const testServerConnection = async () => {
 
   } catch (error) {
     console.error('Ошибка тестового запроса:', error)
-    console.error('Статус:', error.response?.status)
+    console.error('Статус:', error.response?.status || 'No response')
     console.error('Данные:', error.response?.data)
   }
 }
 
-const handleAddLanguage1 = async (lang) => {
+const handleAddLanguage = async (lang) => {
   let taskId = null
   let pollInterval = null
+  let pendingTimeout = null
 
   try {
     console.log('=== НАЧАЛО ПЕРЕВОДА ===', lang.code)
 
     isTranslating.value = true
-    translatingLanguage.value = lang
     translationProgress.value = 0
     translationMessage.value = 'Starting translation...'
 
     // Запускаем перевод
     console.log('Отправляем запрос на перевод...')
-    console.log('URL:', `/i18n/translate-language-1/${lang.code}`)
+    console.log('URL:', `/i18n/translate-language/${lang.code}`)
 
     // Используем GET запрос БЕЗ таймаута
     let response
@@ -306,7 +340,7 @@ const handleAddLanguage1 = async (lang) => {
       console.log('Время начала запроса:', new Date().toISOString())
 
       console.log('=== ОТПРАВЛЯЕМ ЗАПРОС ===')
-      response = await api.get(`/i18n/translate-language-1/${lang.code}`)
+      response = await api.get(`/i18n/translate-language/${lang.code}`)
       console.log('=== ЗАПРОС ЗАВЕРШЕН ===')
 
       console.log('=== ПОСЛЕ API ЗАПРОСА ===')
@@ -317,7 +351,7 @@ const handleAddLanguage1 = async (lang) => {
       console.error('=== ОШИБКА API ЗАПРОСА ===')
       console.error('Время ошибки:', new Date().toISOString())
       console.error('Ошибка:', apiError)
-      console.error('Статус:', apiError.response?.status)
+      console.error('Статус:', apiError.response?.status || 'No response')
       console.error('Данные ответа:', apiError.response?.data)
       console.error('Сообщение:', apiError.message)
 
@@ -335,6 +369,15 @@ const handleAddLanguage1 = async (lang) => {
     console.log('Получили taskId:', taskId)
 
     console.log('=== ЗАПУСКАЕМ POLLING ===')
+
+    // Таймаут для pending статуса (5 минут)
+    pendingTimeout = setTimeout(() => {
+      console.log('=== ТАЙМАУТ PENDING СТАТУСА ===')
+      clearInterval(pollInterval)
+      translationMessage.value = 'Translation task is stuck in pending status. Please try again later.'
+      toast.error('Translation task is stuck. Please try again later.')
+      isTranslating.value = false
+    }, 5 * 60 * 1000) // 5 минут
 
     // Polling
     pollInterval = setInterval(async () => {
@@ -355,21 +398,31 @@ const handleAddLanguage1 = async (lang) => {
           })
         }
 
-        // Рассчитываем прогресс
-        if (taskData.total_strings > 0) {
-          translationProgress.value = Math.round((taskData.processed_strings / taskData.total_strings) * 100)
-          console.log('Прогресс обновлен:', translationProgress.value + '%')
-        } else {
-          translationProgress.value = 0
-          console.log('Прогресс: 0% (total_strings = 0)')
-        }
-
-        translationMessage.value = `Processed ${taskData.processed_strings} of ${taskData.total_strings}`
-
         // Проверяем статус задачи
-        if (taskData.status === 'completed' || taskData.status === 'completed_with_errors') {
+        if (taskData.status === 'pending') {
+          console.log('Задача в ожидании обработки...')
+          translationMessage.value = 'Task is waiting to be processed...'
+          translationProgress.value = 0
+          // Продолжаем polling
+        } else if (taskData.status === 'processing') {
+          console.log('Задача в процессе обработки...')
+          clearTimeout(pendingTimeout) // Отменяем таймаут
+
+          // Рассчитываем прогресс
+          if (taskData.total_strings > 0) {
+            translationProgress.value = Math.round((taskData.processed_strings / taskData.total_strings) * 100)
+            console.log('Прогресс обновлен:', translationProgress.value + '%')
+          } else {
+            translationProgress.value = 0
+            console.log('Прогресс: 0% (total_strings = 0)')
+          }
+
+          translationMessage.value = `Processed ${taskData.processed_strings} of ${taskData.total_strings}`
+          // Продолжаем polling
+        } else if (taskData.status === 'completed' || taskData.status === 'completed_with_errors') {
           console.log('=== ПЕРЕВОД ЗАВЕРШЕН ===')
           clearInterval(pollInterval)
+          clearTimeout(pendingTimeout)
           translationProgress.value = 100
           translationMessage.value = 'Translation completed!'
           toast.success('Translation completed!')
@@ -394,6 +447,7 @@ const handleAddLanguage1 = async (lang) => {
           console.log('=== ПЕРЕВОД ПРОВАЛЕН ===')
           console.error('Детали ошибки:', taskData.errors)
           clearInterval(pollInterval)
+          clearTimeout(pendingTimeout)
 
           // Показываем конкретную ошибку пользователю
           let errorMessage = 'Translation failed'
@@ -406,19 +460,18 @@ const handleAddLanguage1 = async (lang) => {
           setTimeout(() => {
             isTranslating.value = false
           }, 1500)
-        } else if (taskData.status === 'processing') {
-          console.log('Задача все еще в процессе...')
-          // Продолжаем polling
         } else {
           console.log('Неизвестный статус:', taskData.status)
+          translationMessage.value = `Unknown status: ${taskData.status}`
         }
       } catch (err) {
         console.error('Ошибка при проверке статуса:', err)
-        console.error('Детали ошибки:', err.response?.data)
+        console.error('Детали ошибки:', err.response?.data || 'No response data')
         clearInterval(pollInterval)
+        clearTimeout(pendingTimeout)
         translationMessage.value = 'Error checking status'
         toast.error('Error checking status')
-        showAddLanguageDialog.value = false
+        isTranslating.value = false
       }
     }, 2000)
 
@@ -436,11 +489,13 @@ const handleAddLanguage1 = async (lang) => {
     if (pollInterval) {
       clearInterval(pollInterval)
     }
+    if (pendingTimeout) {
+      clearTimeout(pendingTimeout)
+    }
 
     isTranslating.value = false
     translationMessage.value = 'Error starting translation'
     toast.error('Error starting translation')
-    translatingLanguage.value = null
   }
 }
 
@@ -489,4 +544,73 @@ async function addLanguage(langCode) {
   }
 }
 
+const refreshTranslationKeys = async () => {
+  try {
+    isRefreshing.value = true
+    refreshProgress.value = 0
+    refreshMessage.value = 'Starting sync...'
+    console.log('=== НАЧАЛО СИНХРОНИЗАЦИИ КЛЮЧЕЙ ===')
+
+    // Запускаем синхронизацию
+    const response = await api.post('/i18n/refresh-keys')
+    console.log('Ответ синхронизации:', response.data)
+
+    if (response.data.status === 200) {
+      const taskId = response.data.data.taskId
+      console.log('Получили taskId для синхронизации:', taskId)
+
+      // Запускаем polling для отслеживания прогресса
+      refreshPollInterval = setInterval(async () => {
+        try {
+          const statusResp = await api.get(`/i18n/refresh-task-status/${taskId}`)
+          const taskData = statusResp.data.data
+
+          console.log('Статус синхронизации:', taskData)
+
+          // Обновляем прогресс
+          if (taskData.total_languages > 0) {
+            refreshProgress.value = Math.round((taskData.processed_languages / taskData.total_languages) * 100)
+          }
+
+          refreshMessage.value = `Syncing ${taskData.current_language || 'languages'}... (${taskData.processed_languages}/${taskData.total_languages})`
+
+          // Проверяем завершение
+          if (taskData.status === 'completed' || taskData.status === 'completed_with_errors') {
+            clearInterval(refreshPollInterval)
+            refreshProgress.value = 100
+            refreshMessage.value = 'Sync completed!'
+            toast.success(`Synced ${taskData.synced_keys} keys for ${taskData.total_languages} languages`)
+
+            setTimeout(() => {
+              isRefreshing.value = false
+              refreshProgress.value = 0
+              refreshMessage.value = ''
+            }, 2000)
+          } else if (taskData.status === 'failed') {
+            clearInterval(refreshPollInterval)
+            refreshMessage.value = 'Sync failed'
+            toast.error('Sync failed')
+            isRefreshing.value = false
+          }
+        } catch (err) {
+          console.error('Ошибка при проверке статуса синхронизации:', err)
+          clearInterval(refreshPollInterval)
+          refreshMessage.value = 'Error checking sync status'
+          toast.error('Error checking sync status')
+          isRefreshing.value = false
+        }
+      }, 2000)
+
+    } else {
+      toast.error('Failed to start sync')
+      isRefreshing.value = false
+    }
+  } catch (error) {
+    console.error('Ошибка синхронизации:', error)
+    toast.error('Sync failed: ' + (error.response?.data?.message || error.message))
+    isRefreshing.value = false
+  }
+}
+
 </script>
+

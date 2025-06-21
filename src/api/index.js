@@ -130,7 +130,7 @@ export const apiService = {
 
   async trackVisit(payload) {
     try {
-      await api.post(endpoints.stats.visit, payload)
+      await api.post('/stats/visit', payload)
     } catch (error) {
       if (import.meta.env.DEV) {
         console.error('Failed to track visit', error)
