@@ -51,7 +51,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
     >
       <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
-        <!-- Заголовок (фиксированный) -->
+        <!-- Заголовок -->
         <div class="flex justify-between items-center p-6 border-b">
           <h2 class="text-xl font-semibold">{{ t('UI.language.select') }}</h2>
           <button @click="showAddLanguageDialog = false" class="text-gray-500 hover:text-gray-700">
@@ -66,6 +66,25 @@
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
           </div>
 
+          <!-- Прогресс перевода -->
+          <div v-if="isTranslating" class="w-full mb-4">
+            <div class="bg-gray-100 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Translating {{ translatingLanguage?.name || 'language' }}...</span>
+                <span class="text-sm text-gray-500">{{ translationProgress }}%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  :style="{ width: translationProgress + '%' }"
+                ></div>
+              </div>
+              <div class="mt-2 text-xs text-gray-500">
+                {{ translationMessage }}
+              </div>
+            </div>
+          </div>
+
           <!-- Список доступных языков -->
           <div v-else>
             <input
@@ -75,23 +94,11 @@
               class="mb-4 w-full px-3 py-2 border rounded"
             />
 
-            <div v-if="languageStore.translationStatus === 'processing'" class="w-full flex items-center justify-center mb-4">
-              <div class="w-2/3 bg-gray-200 rounded-full h-2.5">
-                <div
-                  class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                  :style="{ width: progressWidth }"
-                ></div>
-              </div>
-              <span class="ml-2 text-sm text-gray-600">
-                {{ languageStore.translationMessage || 'Translating...' }}
-              </span>
-            </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
               <button
                 v-for="lang in filteredLanguages"
                 :key="lang.code"
-                @click="handleAddLanguage(lang)"
+                @click="handleAddLanguage1(lang)"
                 class="flex items-center p-2 rounded-lg hover:bg-gray-100"
                 :disabled="isTranslating"
                 :class="isTranslating ? 'opacity-50 cursor-not-allowed' : ''"
@@ -126,6 +133,9 @@ const isOpen = ref(false)
 const showAddLanguageDialog = ref(false)
 const isLoading = ref(false)
 const isTranslating = ref(false)
+const translationProgress = ref(0)
+const translationMessage = ref('')
+const translatingLanguage = ref(null)
 const availableLanguages = ref([])
 const translatedLanguages = ref([])
 const searchQuery = ref('')
@@ -236,6 +246,7 @@ watch(
   }
 )
 
+/*
 const handleAddLanguage = async (lang) => {
   try {
     isTranslating.value = true
@@ -248,6 +259,188 @@ const handleAddLanguage = async (lang) => {
 
   } finally {
     isTranslating.value = false
+  }
+}
+*/
+
+// Добавьте эту функцию для тестирования
+const testServerConnection = async () => {
+  try {
+    console.log('=== ТЕСТИРУЕМ ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===')
+
+    // Тестируем простой GET запрос
+    const testResponse = await api.get('/i18n/available-languages')
+    console.log('Тестовый запрос прошел успешно:', testResponse.status)
+
+    // Тестируем POST запрос без параметров
+    const testPostResponse = await api.post('/i18n/available-languages')
+    console.log('Тестовый POST запрос прошел успешно:', testPostResponse.status)
+
+  } catch (error) {
+    console.error('Ошибка тестового запроса:', error)
+    console.error('Статус:', error.response?.status)
+    console.error('Данные:', error.response?.data)
+  }
+}
+
+const handleAddLanguage1 = async (lang) => {
+  let taskId = null
+  let pollInterval = null
+
+  try {
+    console.log('=== НАЧАЛО ПЕРЕВОДА ===', lang.code)
+
+    isTranslating.value = true
+    translatingLanguage.value = lang
+    translationProgress.value = 0
+    translationMessage.value = 'Starting translation...'
+
+    // Запускаем перевод
+    console.log('Отправляем запрос на перевод...')
+    console.log('URL:', `/i18n/translate-language-1/${lang.code}`)
+
+    // Используем GET запрос БЕЗ таймаута
+    let response
+    try {
+      console.log('=== ПЕРЕД API ЗАПРОСОМ ===')
+      console.log('Время начала запроса:', new Date().toISOString())
+
+      console.log('=== ОТПРАВЛЯЕМ ЗАПРОС ===')
+      response = await api.get(`/i18n/translate-language-1/${lang.code}`)
+      console.log('=== ЗАПРОС ЗАВЕРШЕН ===')
+
+      console.log('=== ПОСЛЕ API ЗАПРОСА ===')
+      console.log('Время получения ответа:', new Date().toISOString())
+      console.log('Ответ получен:', response)
+      console.log('Ответ data:', response.data)
+    } catch (apiError) {
+      console.error('=== ОШИБКА API ЗАПРОСА ===')
+      console.error('Время ошибки:', new Date().toISOString())
+      console.error('Ошибка:', apiError)
+      console.error('Статус:', apiError.response?.status)
+      console.error('Данные ответа:', apiError.response?.data)
+      console.error('Сообщение:', apiError.message)
+
+      throw apiError
+    }
+
+    // Проверяем структуру ответа
+    if (!response.data || !response.data.data || !response.data.data.taskId) {
+      console.error('=== НЕПРАВИЛЬНАЯ СТРУКТУРА ОТВЕТА ===')
+      console.error('Полный ответ:', response)
+      throw new Error('Неправильная структура ответа от сервера')
+    }
+
+    taskId = response.data.data.taskId
+    console.log('Получили taskId:', taskId)
+
+    console.log('=== ЗАПУСКАЕМ POLLING ===')
+
+    // Polling
+    pollInterval = setInterval(async () => {
+      try {
+        console.log('Проверяем статус задачи:', taskId)
+        const statusResp = await api.get(`/i18n/task-status/${taskId}`)
+        console.log('Ответ статуса получен:', statusResp)
+
+        const taskData = statusResp.data.data
+        console.log('Статус задачи:', taskData)
+
+        // Добавляем логирование ошибок
+        if (taskData.errors && taskData.errors.length > 0) {
+          console.error('=== ОШИБКИ ЗАДАЧИ ===')
+          console.error('Ошибки:', taskData.errors)
+          taskData.errors.forEach((error, index) => {
+            console.error(`Ошибка ${index + 1}:`, error)
+          })
+        }
+
+        // Рассчитываем прогресс
+        if (taskData.total_strings > 0) {
+          translationProgress.value = Math.round((taskData.processed_strings / taskData.total_strings) * 100)
+          console.log('Прогресс обновлен:', translationProgress.value + '%')
+        } else {
+          translationProgress.value = 0
+          console.log('Прогресс: 0% (total_strings = 0)')
+        }
+
+        translationMessage.value = `Processed ${taskData.processed_strings} of ${taskData.total_strings}`
+
+        // Проверяем статус задачи
+        if (taskData.status === 'completed' || taskData.status === 'completed_with_errors') {
+          console.log('=== ПЕРЕВОД ЗАВЕРШЕН ===')
+          clearInterval(pollInterval)
+          translationProgress.value = 100
+          translationMessage.value = 'Translation completed!'
+          toast.success('Translation completed!')
+
+          // Убираем переведенный язык из доступных
+          availableLanguages.value = availableLanguages.value.filter(l => l.code !== lang.code)
+
+          // Добавляем язык в переведенные
+          const translatedLang = {
+            code: lang.code,
+            name: lang.name,
+            nativeName: lang.nativeName,
+            flag_icon: lang.flag,
+            show_in_dialog: 1
+          }
+          translatedLanguages.value.push(translatedLang)
+
+          setTimeout(() => {
+            isTranslating.value = false
+          }, 1500)
+        } else if (taskData.status === 'failed') {
+          console.log('=== ПЕРЕВОД ПРОВАЛЕН ===')
+          console.error('Детали ошибки:', taskData.errors)
+          clearInterval(pollInterval)
+
+          // Показываем конкретную ошибку пользователю
+          let errorMessage = 'Translation failed'
+          if (taskData.errors && taskData.errors.length > 0) {
+            errorMessage = `Translation failed: ${taskData.errors[0]}`
+          }
+
+          translationMessage.value = errorMessage
+          toast.error(errorMessage)
+          setTimeout(() => {
+            isTranslating.value = false
+          }, 1500)
+        } else if (taskData.status === 'processing') {
+          console.log('Задача все еще в процессе...')
+          // Продолжаем polling
+        } else {
+          console.log('Неизвестный статус:', taskData.status)
+        }
+      } catch (err) {
+        console.error('Ошибка при проверке статуса:', err)
+        console.error('Детали ошибки:', err.response?.data)
+        clearInterval(pollInterval)
+        translationMessage.value = 'Error checking status'
+        toast.error('Error checking status')
+        showAddLanguageDialog.value = false
+      }
+    }, 2000)
+
+    console.log('=== POLLING ЗАПУЩЕН ===')
+
+  } catch (error) {
+    console.error('=== ОБЩАЯ ОШИБКА ПЕРЕВОДА ===')
+    console.error('Ошибка при запуске перевода:', error)
+    console.error('Ошибка response:', error.response)
+    console.error('Ошибка message:', error.message)
+    console.error('Ошибка status:', error.response?.status)
+    console.error('Ошибка data:', error.response?.data)
+
+    // Очищаем интервал если он был создан
+    if (pollInterval) {
+      clearInterval(pollInterval)
+    }
+
+    isTranslating.value = false
+    translationMessage.value = 'Error starting translation'
+    toast.error('Error starting translation')
+    translatingLanguage.value = null
   }
 }
 
@@ -295,4 +488,5 @@ async function addLanguage(langCode) {
     throw error
   }
 }
+
 </script>
