@@ -11,15 +11,26 @@
         </button>
       </div>
       <div class="p-4 flex flex-col gap-4">
-        <div class="flex gap-2 items-center">
-          <label class="font-medium">Namespace:</label>
-          <select v-model="selectedNamespace" class="border rounded px-2 py-1">
-            <option value="">All</option>
-            <option v-for="ns in namespaces" :key="ns" :value="ns">{{ ns }}</option>
-          </select>
+        <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full sm:w-auto">
+            <label class="font-medium text-sm">Namespace:</label>
+            <select v-model="selectedNamespace" class="border rounded px-2 py-1 text-sm w-full sm:w-auto">
+              <option value="">All</option>
+              <option v-for="ns in namespaces" :key="ns" :value="ns">{{ ns }}</option>
+            </select>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2 items-start sm:items-center w-full sm:w-auto">
+            <label class="font-medium text-sm">Search:</label>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Search by key name or value..."
+              class="border rounded px-2 py-1 text-sm w-full sm:w-64"
+            />
+          </div>
           <button
             @click="openAddDialog"
-            class="ml-auto px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+            class="w-full sm:w-auto px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
           >
             <Icon icon="mdi:plus" class="w-4 h-4 inline mr-1" />
             Add Key
@@ -31,26 +42,26 @@
             :key="key.id"
             class="p-3 border rounded-lg bg-gray-50 hover:bg-blue-50 flex flex-col gap-1 relative"
           >
-            <div class="font-bold text-blue-700">{{ key.namespace }}</div>
-            <div class="font-semibold text-gray-800">{{ key.key_name }}</div>
-            <div class="font-medium text-green-700">
-              {{ key.english_value || key.value }}
+            <div class="font-bold text-blue-700 text-sm">{{ key.namespace }}</div>
+            <div class="font-semibold text-gray-800 text-sm break-all">{{ key.key_name }}</div>
+            <div class="font-medium text-green-700 text-sm break-all">{{ key.english_value || key.value }}</div>
+            <div class="text-xs text-gray-500 break-all">{{ key.description }}</div>
+            <div class="flex gap-1 mt-2 sm:absolute sm:top-2 sm:right-2 sm:mt-0">
+              <button
+                @click="deleteKey(key)"
+                class="text-red-500 hover:text-red-700 p-1"
+                title="Delete key"
+              >
+                <Icon icon="mdi:delete" class="w-4 h-4" />
+              </button>
+              <button
+                @click="openEditDialog(key)"
+                class="text-gray-500 hover:text-blue-600 p-1"
+                title="Edit key"
+              >
+                <Icon icon="mdi:pencil" class="w-4 h-4" />
+              </button>
             </div>
-            <div class="text-xs text-gray-500">{{ key.description }}</div>
-            <button
-              @click="deleteKey(key)"
-              class="absolute top-2 right-2 text-red-500 hover:text-red-700"
-              title="Delete key"
-            >
-              <Icon icon="mdi:delete" class="w-4 h-4" />
-            </button>
-            <button
-              @click="openEditDialog(key)"
-              class="absolute top-2 right-8 text-gray-500 hover:text-blue-600"
-              title="Edit key"
-            >
-              <Icon icon="mdi:pencil" class="w-4 h-4" />
-            </button>
           </div>
         </div>
       </div>
@@ -81,6 +92,7 @@ const selectedNamespace = ref('')
 const showKeyDialog = ref(false)
 const editKeyId = ref(0)
 const editKeyData = ref(null)
+const searchQuery = ref('')
 
 const namespaces = computed(() => {
   const set = new Set(keys.value.map(k => k.namespace))
@@ -90,7 +102,12 @@ const namespaces = computed(() => {
 const filteredKeys = computed(() =>
   keys.value.filter(
     k =>
-      (!selectedNamespace.value || k.namespace === selectedNamespace.value)
+      (!selectedNamespace.value || k.namespace === selectedNamespace.value) &&
+      (!searchQuery.value ||
+        k.key_name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        (k.english_value && k.english_value.toLowerCase().includes(searchQuery.value.toLowerCase())) ||
+        (k.value && k.value.toLowerCase().includes(searchQuery.value.toLowerCase()))
+      )
   )
 )
 
