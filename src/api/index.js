@@ -17,12 +17,24 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Добавляем токен из cookie
+    const token = getCookie('auth_token') // или как у вас называется cookie
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
     return Promise.reject(error)
   },
 )
+
+// Функция для получения cookie
+function getCookie(name) {
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop().split(';').shift()
+}
 
 // Response interceptor
 api.interceptors.response.use(

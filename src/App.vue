@@ -54,7 +54,7 @@
                   icon="mdi:account-outline"
                   class="w-8 h-8 text-gray-600"
                 />
-                <img v-else :src="authStore.loginInfo.avatar" alt="User avatar" class="w-8 h-8 rounded-full" />
+                <img v-else :src="getAvatarUrl" alt="" class="w-8 h-8 rounded-full" />
               </button>
               <!-- Выпадающее меню -->
               <div
@@ -178,7 +178,6 @@ const showBannerScroll = ref(true)
 const loginData = ref(null)
 const languageStore = useLanguageStore()
 
-
 const currentLangObj = computed(() =>
   languageStore.currentLanguage
     ? languageStore.locales.find(l => l.code === languageStore.currentLanguage)
@@ -278,5 +277,7 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+const getAvatarUrl = computed(() => userStore.getAvatarUrl)
 
 </script>

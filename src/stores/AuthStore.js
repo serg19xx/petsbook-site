@@ -4,6 +4,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '@/api' // Updated import
 import i18n from '@/i18n'
+import router from '@/router'
+import { useUserStore } from './UserStore'
 
 export const useAuthStore = defineStore(
   'auth',
@@ -42,6 +44,9 @@ export const useAuthStore = defineStore(
         if (response.data.status === 200) {
           loginInfo.value = response.data.data.user
           isAuthenticated.value = true
+          const userStore = useUserStore()
+          await userStore.fetchUserData(true)
+          router.push('/')
           return { success: true, message: response.data.message }
         }
         return { success: false, message: response.data.message }
@@ -59,11 +64,13 @@ export const useAuthStore = defineStore(
     const logout = async () => {
       try {
         // Можно добавить запрос к API для логаута на сервере, если требуется
+        const userStore = useUserStore()
+        userStore.clearUserData()
         await api.post('/auth/logout', {}, { withCredentials: true })
         loginInfo.value = null
         isAuthenticated.value = false
         localStorage.removeItem('auth')
-        //router.push('/')
+        router.push('/login')
 
         return {
           success: true,
