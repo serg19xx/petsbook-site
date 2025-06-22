@@ -43,6 +43,15 @@
           <Icon icon="mdi:earth-plus" class="w-5 h-5 text-blue-600" />
           {{ t('UI.language.add') }}
         </button>
+
+        <!-- Добавляем новую опцию -->
+        <button
+          @click="showTranslationKeyManager = true"
+          class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+        >
+          <Icon icon="mdi:key-plus" class="w-5 h-5 text-green-600" />
+          Translation Key Manager
+        </button>
       </div>
     </div>
 
@@ -57,14 +66,7 @@
           <h2 class="text-xl font-semibold">{{ t('UI.language.select') }}</h2>
           <div class="flex items-center gap-2">
             <!-- Кнопка синхронизации -->
-            <button
-              @click="refreshTranslationKeys"
-              :disabled="isRefreshing"
-              class="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
-            >
-              <Icon icon="mdi:refresh" class="w-4 h-4" :class="{ 'animate-spin': isRefreshing }" />
-              {{ isRefreshing ? 'Syncing...' : 'Sync Keys' }}
-            </button>
+
             <button @click="showAddLanguageDialog = false" class="text-gray-500 hover:text-gray-700">
               <Icon icon="mdi:close" class="w-6 h-6" />
             </button>
@@ -93,25 +95,6 @@
               </div>
               <div class="mt-2 text-xs text-gray-500">
                 {{ translationMessage }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Прогресс синхронизации -->
-          <div v-if="isRefreshing" class="w-full mb-4">
-            <div class="bg-blue-50 rounded-lg p-4">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-medium text-blue-700">Syncing translation keys...</span>
-                <span class="text-sm text-blue-500">{{ refreshProgress }}%</span>
-              </div>
-              <div class="w-full bg-blue-200 rounded-full h-2">
-                <div
-                  class="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  :style="{ width: refreshProgress + '%' }"
-                ></div>
-              </div>
-              <div class="mt-2 text-xs text-blue-600">
-                {{ refreshMessage }}
               </div>
             </div>
           </div>
@@ -145,6 +128,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Добавляем диалог в конец template -->
+    <TranslationKeyManager
+      :is-visible="showTranslationKeyManager"
+      @close="showTranslationKeyManager = false"
+    />
   </div>
 </template>
 
@@ -156,12 +145,14 @@ import { useLanguageStore } from '@/stores/LanguageStore'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import api from '@/api'
+import TranslationKeyManager from './TranslationKeyManager.vue'
 
 const { t } = useI18n()
 const languageStore = useLanguageStore()
 
 const isOpen = ref(false)
 const showAddLanguageDialog = ref(false)
+const showTranslationKeyManager = ref(false)
 const isLoading = ref(false)
 const isTranslating = ref(false)
 const translationProgress = ref(0)
@@ -170,10 +161,6 @@ const translatingLanguage = ref(null)
 const availableLanguages = ref([])
 const translatedLanguages = ref([])
 const searchQuery = ref('')
-const isRefreshing = ref(false)
-const refreshProgress = ref(0)
-const refreshMessage = ref('')
-let refreshPollInterval = null
 
 const progressBarClass = computed(() => {
   switch (languageStore.translationStatus) {
@@ -541,74 +528,6 @@ async function addLanguage(langCode) {
   } catch (error) {
     console.error('Ошибка запроса:', error.response || error)
     throw error
-  }
-}
-
-const refreshTranslationKeys = async () => {
-  try {
-    isRefreshing.value = true
-    refreshProgress.value = 0
-    refreshMessage.value = 'Starting sync...'
-    console.log('=== НАЧАЛО СИНХРОНИЗАЦИИ КЛЮЧЕЙ ===')
-
-    // Запускаем синхронизацию
-    const response = await api.post('/i18n/refresh-keys')
-    console.log('Ответ синхронизации:', response.data)
-
-    if (response.data.status === 200) {
-      const taskId = response.data.data.taskId
-      console.log('Получили taskId для синхронизации:', taskId)
-
-      // Запускаем polling для отслеживания прогресса
-      refreshPollInterval = setInterval(async () => {
-        try {
-          const statusResp = await api.get(`/i18n/refresh-task-status/${taskId}`)
-          const taskData = statusResp.data.data
-
-          console.log('Статус синхронизации:', taskData)
-
-          // Обновляем прогресс
-          if (taskData.total_languages > 0) {
-            refreshProgress.value = Math.round((taskData.processed_languages / taskData.total_languages) * 100)
-          }
-
-          refreshMessage.value = `Syncing ${taskData.current_language || 'languages'}... (${taskData.processed_languages}/${taskData.total_languages})`
-
-          // Проверяем завершение
-          if (taskData.status === 'completed' || taskData.status === 'completed_with_errors') {
-            clearInterval(refreshPollInterval)
-            refreshProgress.value = 100
-            refreshMessage.value = 'Sync completed!'
-            toast.success(`Synced ${taskData.synced_keys} keys for ${taskData.total_languages} languages`)
-
-            setTimeout(() => {
-              isRefreshing.value = false
-              refreshProgress.value = 0
-              refreshMessage.value = ''
-            }, 2000)
-          } else if (taskData.status === 'failed') {
-            clearInterval(refreshPollInterval)
-            refreshMessage.value = 'Sync failed'
-            toast.error('Sync failed')
-            isRefreshing.value = false
-          }
-        } catch (err) {
-          console.error('Ошибка при проверке статуса синхронизации:', err)
-          clearInterval(refreshPollInterval)
-          refreshMessage.value = 'Error checking sync status'
-          toast.error('Error checking sync status')
-          isRefreshing.value = false
-        }
-      }, 2000)
-
-    } else {
-      toast.error('Failed to start sync')
-      isRefreshing.value = false
-    }
-  } catch (error) {
-    console.error('Ошибка синхронизации:', error)
-    toast.error('Sync failed: ' + (error.response?.data?.message || error.message))
-    isRefreshing.value = false
   }
 }
 
