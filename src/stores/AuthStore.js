@@ -21,6 +21,7 @@ export const useAuthStore = defineStore(
     const { t } = i18n.global
 
     const isAuthenticated = ref(false)
+    const isReady = ref(false)
 
     //const userAvatar = ref(null)
 
@@ -42,10 +43,11 @@ export const useAuthStore = defineStore(
         const response = await api.post('/auth/login', loginData, { withCredentials: true })
 
         if (response.data.status === 200) {
-          loginInfo.value = response.data.data.user
+          // loginInfo.value = response.data.data.user // УДАЛЯЕМ ЭТО
           isAuthenticated.value = true
           const userStore = useUserStore()
-          await userStore.fetchUserData(true)
+          // Теперь fetchUserData сам обновит все, что нужно
+          await userStore.fetchUserData()
           router.push('/')
           return { success: true, message: response.data.message }
         }
@@ -218,6 +220,7 @@ export const useAuthStore = defineStore(
     return {
       loading,
       isAuthenticated,
+      isReady,
       //initializeAuth,
       login,
       logout,

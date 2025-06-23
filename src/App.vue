@@ -1,5 +1,11 @@
 <template>
-  <div v-if="isReady" class="min-h-screen bg-gray-50 overflow-x-hidden">
+  <!-- Показываем лоадер, пока authStore не готов (это очень быстро) -->
+  <div v-if="!authStore.isReady" class="flex items-center justify-center min-h-screen">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+  </div>
+
+  <!-- Как только authStore готов, показываем приложение -->
+  <div v-else class="min-h-screen bg-gray-50 overflow-x-hidden">
     <ConfirmDialog ref="confirmDialogRef" />
     <!-- Header -->
     <header class="bg-white shadow fixed top-0 left-0 right-0 z-50">
@@ -54,7 +60,7 @@
                   icon="mdi:account-outline"
                   class="w-8 h-8 text-gray-600"
                 />
-                <img v-else :src="getAvatarUrl" alt="" class="w-8 h-8 rounded-full" />
+                <img v-else :src="userStore.getAvatarUrl" alt="" class="w-8 h-8 rounded-full" />
               </button>
               <!-- Выпадающее меню -->
               <div
@@ -144,10 +150,6 @@
       />
     </div>
   </div>
-  <div v-else class="flex items-center justify-center min-h-screen">
-    <!-- Здесь можно добавить loader -->
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-  </div>
 </template>
 
 <!-- eslint-disable no-undef -->
@@ -173,7 +175,6 @@ const userStore = useUserStore()
 const confirmDialogRef = ref(null)
 const isUserMenuOpen = ref(false)
 const isMobileMenuOpen = ref(false)
-const isReady = ref(false)
 const showBannerScroll = ref(true)
 const loginData = ref(null)
 const languageStore = useLanguageStore()
@@ -208,21 +209,9 @@ watch(
 )
 
 onMounted(async () => {
-  //const loginData = JSON.parse(localStorage.getItem('loginData'))
-  //if (loginData) {
-    //const result = await userStore.fetchUserData()
-    //authStore.isAuthenticated = true
-  //}else{
-  //  authStore.isAuthenticated = false
-  //}
-  isReady.value = true
-})
-
-// Следим за изменением статуса аутентификации ывапв
-watch(() => authStore.isAuthenticated, async (newValue) => {
-
-  if (newValue) {
-    const result = await userStore.fetchUserData()
+  // Если пользователь аутентифицирован, но данные не загружены, загружаем их
+  if (authStore.isAuthenticated && !userStore.userData) {
+    await userStore.fetchUserData()
   }
 })
 
@@ -248,12 +237,8 @@ const handleLogout = async () => {
 
   if (confirmed) {
     try {
-      const result = await authStore.logout()
-      if (result.success) {
-        localStorage.removeItem('auth')
-        isUserMenuOpen.value = false
-        router.push('/')
-      }
+      await authStore.logout()
+      isUserMenuOpen.value = false
     } catch (error) {
       console.error('Logout error:', error)
     }

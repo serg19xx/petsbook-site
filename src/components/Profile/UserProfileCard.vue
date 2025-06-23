@@ -31,7 +31,7 @@
             <div class="w-24 h-24 rounded-full border-4 border-white overflow-hidden bg-gray-200">
               <img
                 v-if="userData?.avatar"
-                :src="userData?.avatar + '?t=' + Date.now()"
+                :src="userStore.getAvatarUrl"
                 alt="Profile picture"
                 class="w-full h-full object-cover"
               />
