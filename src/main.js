@@ -58,25 +58,27 @@ app.use(Vue3Toastify, {
 
 // Создаем экземпляр UserStore
 const userStore = useUserStore()
-
-// Инициализируем язык до монтирования приложения
-console.log('main.js: before language init')
 const languageStore = useLanguageStore()
-await languageStore.setLanguage(languageStore.currentLanguage)
-console.log('main.js: after language init')
 
-// Асинхронная инициализация
-async function initApp() {
-  try {
-    // 1. Ждем, пока загрузятся данные пользователя
-    await userStore.fetchUserData()
-  } catch (error) {
-    console.error('Failed to initialize user data:', error)
-  } finally {
-    // 2. Только после этого монтируем приложение
-    app.mount('#app')
+// Оборачиваем всю асинхронную логику в async-функцию
+async function initializeApp() {
+  // Инициализируем язык до монтирования приложения
+  console.log('main.js: before language init')
+  await languageStore.setLanguage(languageStore.currentLanguage)
+  console.log('main.js: after language init')
+
+  // Проверяем, есть ли токен, перед загрузкой данных пользователя
+  if (document.cookie.includes('auth_token=')) {
+    try {
+      await userStore.fetchUserData()
+    } catch (error) {
+      console.error('Failed to initialize user data on startup:', error)
+    }
   }
+
+  // Монтируем приложение только после всей инициализации
+  app.mount('#app')
 }
 
 // Запускаем инициализацию
-initApp()
+initializeApp()
