@@ -39,14 +39,14 @@
             </div>
 
             <!-- Footer -->
-            <div class="dialog-footer">
+            <div v-if="!hideFooter" class="dialog-footer">
               <slot name="footer">
                 <div class="flex justify-end space-x-3">
                   <button
                     @click="close"
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                   >
-                    {{ t('common.cancel') }}
+                    {{ t('UI.dialog.button.cancel', 'Cancel') }}
                   </button>
                 </div>
               </slot>
@@ -76,6 +76,10 @@ const props = defineProps({
     type: String,
     default: 'md',
     validator: (value) => ['sm', 'md', 'lg'].includes(value)
+  },
+  hideFooter: {
+    type: Boolean,
+    default: false
   }
 })
 

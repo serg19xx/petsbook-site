@@ -331,14 +331,14 @@ const handleSubmit = async () => {
 
     if (result.success) {
       await userStore.fetchUserData()
-      toast.success(result.message || t('profile.update_success'))
+      toast.success(t('UI.editprofile.success'))
       //router.push('/profile')
     } else {
-      toast.error(result?.error || t('profile.update_error'))
+      toast.error(t('UI.editprofile.error'))
     }
   } catch (error) {
     //console.error('Error updating profile:', error)
-    toast.error(t('profile.update_error'))
+    toast.error(t('UI.editprofile.error'))
   } finally {
     loading.value = false
   }

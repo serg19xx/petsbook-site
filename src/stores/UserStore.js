@@ -71,7 +71,7 @@ export const useUserStore = defineStore('user', () => {
         //console.log('Returning success response') // Добавляем лог
         return {
           success: true,
-          message: response.data?.message || 'Profile updated successfully',
+          message: response.data?.message, //|| 'Profile updated successfully',
         }
       } else {
         //console.log('Returning error response') // Добавляем лог

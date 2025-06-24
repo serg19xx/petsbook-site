@@ -52,6 +52,15 @@
           <Icon icon="mdi:key-plus" class="w-5 h-5 text-green-600" />
           Translation Key Manager
         </button>
+
+        <!-- Добавляем Email Template Manager -->
+        <button
+          @click="showEmailTemplateManager = true"
+          class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+        >
+          <Icon icon="mdi:email-edit" class="w-5 h-5 text-purple-600" />
+          {{ t('UI.language.emailTemplateManager', 'Email Template Manager') }}
+        </button>
       </div>
     </div>
 
@@ -134,6 +143,12 @@
       :is-visible="showTranslationKeyManager"
       @close="showTranslationKeyManager = false"
     />
+
+    <!-- Добавляем Email Template Manager диалог -->
+    <EmailTemplateManager
+      :is-visible="showEmailTemplateManager"
+      @close="showEmailTemplateManager = false"
+    />
   </div>
 </template>
 
@@ -146,6 +161,7 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import api from '@/api'
 import TranslationKeyManager from './TranslationKeyManager.vue'
+import EmailTemplateManager from './EmailTemplateManager.vue'
 
 const { t } = useI18n()
 const languageStore = useLanguageStore()
@@ -153,6 +169,7 @@ const languageStore = useLanguageStore()
 const isOpen = ref(false)
 const showAddLanguageDialog = ref(false)
 const showTranslationKeyManager = ref(false)
+const showEmailTemplateManager = ref(false)
 const isLoading = ref(false)
 const isTranslating = ref(false)
 const translationProgress = ref(0)

@@ -49,7 +49,7 @@
           <button
             @click="$refs.fileInput.click()"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Выбрать фото"
+            :title="t('UI.photoeditor.tooltip.selectPhoto')"
           >
             <Icon icon="mdi:image-plus" class="w-6 h-6" />
           </button>
@@ -57,7 +57,7 @@
             v-if="imageUrl"
             @click="centerImage"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Центрировать"
+            :title="t('UI.photoeditor.tooltip.center')"
           >
             <Icon icon="mdi:image-filter-center-focus" class="w-6 h-6" />
           </button>
@@ -65,7 +65,7 @@
             v-if="imageUrl"
             @click="rotateLeft"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Повернуть влево"
+            :title="t('UI.photoeditor.tooltip.rotateLeft')"
           >
             <Icon icon="mdi:rotate-left" class="w-6 h-6" />
           </button>
@@ -73,7 +73,7 @@
             v-if="imageUrl"
             @click="rotateRight"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Повернуть вправо"
+            :title="t('UI.photoeditor.tooltip.rotateRight')"
           >
             <Icon icon="mdi:rotate-right" class="w-6 h-6" />
           </button>
@@ -81,7 +81,7 @@
             v-if="imageUrl"
             @click="zoomIn"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Увеличить"
+            :title="t('UI.photoeditor.tooltip.zoomIn')"
           >
             <Icon icon="mdi:magnify-plus" class="w-6 h-6" />
           </button>
@@ -89,7 +89,7 @@
             v-if="imageUrl"
             @click="zoomOut"
             class="p-2 rounded-full hover:bg-gray-100"
-            title="Уменьшить"
+            :title="t('UI.photoeditor.tooltip.zoomOut')"
           >
             <Icon icon="mdi:magnify-minus" class="w-6 h-6" />
           </button>
@@ -100,14 +100,14 @@
             @click="cancel"
             class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Отмена
+            {{ t('UI.buttons.cancel') }}
           </button>
           <button
-            v-if="imageUrl"
+            :disabled="!imageUrl"
             @click="save"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Сохранить
+            {{ t('UI.buttons.save') }}
           </button>
         </div>
       </div>
@@ -118,6 +118,9 @@
 <script setup>
 import { ref, onUnmounted, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   maxSize: {
@@ -244,7 +247,7 @@ const handleFileSelect = (event) => {
   if (file) {
     // Проверяем размер файла
     if (file.size > props.maxSize * 1024) {
-      alert(`Размер файла не должен превышать ${props.maxSize}KB`)
+      alert(t('validation.fileSizeExceeded', { maxSize: props.maxSize }))
       return
     }
 

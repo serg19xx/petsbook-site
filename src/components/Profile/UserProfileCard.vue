@@ -240,6 +240,7 @@
       :modelValue="showPhotoDialog"
       :title="t('UI.profilecard.dialog.edit_avatar')"
       size="lg"
+      :hide-footer="true"
       @update:modelValue="showPhotoDialog = $event"
       @close="showPhotoDialog = false"
     >
@@ -254,6 +255,7 @@
       :modelValue="showCoverPhotoDialog"
       :title="t('UI.profilecard.dialog.edit_cover')"
       size="lg"
+      :hide-footer="true"
       @update:modelValue="showCoverPhotoDialog = $event"
       @close="showCoverPhotoDialog = false"
     >
