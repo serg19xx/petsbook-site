@@ -95,36 +95,72 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
     editingTemplate.value[field] = value
   }
 
-  const saveTemplate = async () => {
-    if (!selectedTemplate.value || !hasChanges.value) return false
-
+  const saveTemplate = async (templateData) => {
     try {
-      isSaving.value = true
+      isLoading.value = true
       error.value = null
 
-      const response = await api.put(
-        `/email-templates/${selectedTemplate.value.id}`,
-        editingTemplate.value,
-      )
+      const response = await api.post('/i18n/email-templates/save', templateData)
 
-      if (response.data.status === 200) {
-        // Обновляем шаблон в списке
-        const index = templates.value.findIndex((t) => t.id === selectedTemplate.value.id)
-        if (index !== -1) {
-          templates.value[index] = { ...editingTemplate.value }
-          selectedTemplate.value = templates.value[index]
+      if (response.data.success) {
+        console.log('Backend response:', response.data)
+
+        if (response.data.action === 'created') {
+          // Новый шаблон создан - добавляем в список и выбираем
+          console.log('New template created with ID:', response.data.template_id)
+
+          if (response.data.template) {
+            // Добавляем новый шаблон в список
+            templates.value.push(response.data.template)
+            // Сразу выбираем его
+            selectedTemplate.value = response.data.template
+          } else {
+            // Если полной записи нет, перезагружаем список
+            await loadTemplates()
+          }
+        } else if (response.data.action === 'updated') {
+          // Существующий шаблон обновлен
+          console.log('Template updated, ID:', response.data.template_id)
+
+          if (response.data.template) {
+            // Обновляем запись в списке
+            const index = templates.value.findIndex(
+              (t) => t.template_id === response.data.template_id,
+            )
+            if (index !== -1) {
+              templates.value[index] = response.data.template
+              selectedTemplate.value = response.data.template
+            }
+          } else {
+            // Fallback - обновляем локально
+            const index = templates.value.findIndex(
+              (t) => t.template_id === response.data.template_id,
+            )
+            if (index !== -1) {
+              templates.value[index] = { ...templates.value[index], ...templateData }
+              selectedTemplate.value = templates.value[index]
+            }
+          }
         }
 
-        return true
+        return {
+          success: true,
+          message: response.data.message,
+          template_id: response.data.template_id,
+          action: response.data.action,
+        }
       } else {
         throw new Error(response.data.message || 'Failed to save template')
       }
     } catch (err) {
       console.error('Error saving template:', err)
-      error.value = err.message || 'Failed to save template'
-      return false
+      error.value = err.response?.data?.message || err.message || 'Failed to save template'
+      return {
+        success: false,
+        message: error.value,
+      }
     } finally {
-      isSaving.value = false
+      isLoading.value = false
     }
   }
 

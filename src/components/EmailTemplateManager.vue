@@ -91,6 +91,15 @@
                 </div>
                 <div class="flex gap-2">
                   <button
+                    @click="handleSave"
+                    :disabled="emailTemplateStore.isLoading"
+                    class="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 disabled:bg-gray-400"
+                    :title="t('UI.emailTemplateManager.save', 'Save')"
+                  >
+                    <Icon v-if="emailTemplateStore.isLoading" icon="mdi:loading" class="w-4 h-4 animate-spin" />
+                    <Icon v-else icon="mdi:content-save" class="w-4 h-4" />
+                  </button>
+                  <button
                     @click="showPreview = true"
                     class="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                     :title="t('UI.emailTemplateManager.preview', 'Preview')"
@@ -109,37 +118,35 @@
               </div>
             </div>
 
-            <!-- Структура письма -->
+            <!-- Структура письма - только реальные поля -->
             <div class="flex-1 overflow-y-auto p-4">
               <div class="space-y-6">
+                <!-- Code -->
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="block text-sm font-medium text-gray-700">
+                      Code
+                    </label>
+                  </div>
+                  <input
+                    v-model="editableCode"
+                    type="text"
+                    class="w-full px-3 py-2 border rounded-md text-sm"
+                    placeholder="e.g. welcome_email"
+                  />
+                </div>
+
                 <!-- Subject -->
                 <div>
                   <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium text-gray-700">
-                      {{ t('UI.emailTemplateManager.subject', 'Subject') }}
+                      Subject
                     </label>
                   </div>
                   <textarea
-                    :value="emailTemplateStore.selectedTemplate?.subject || ''"
+                    v-model="editableSubject"
                     class="w-full h-16 px-3 py-2 border rounded-md text-sm resize-none overflow-y-auto"
                     placeholder="Email subject..."
-                  ></textarea>
-                </div>
-
-                <!-- Header -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Header
-                    </label>
-                    <button class="text-xs text-purple-600 hover:text-purple-700">
-                      <Icon icon="mdi:pencil" class="w-4 h-4" />
-                    </button>
-                  </div>
-                  <textarea
-                    :value="emailTemplateStore.selectedTemplate?.header_html || ''"
-                    class="w-full h-32 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
-                    placeholder="Header HTML code..."
                   ></textarea>
                 </div>
 
@@ -147,33 +154,13 @@
                 <div>
                   <div class="flex items-center justify-between mb-2">
                     <label class="block text-sm font-medium text-gray-700">
-                      Body
+                      Body HTML
                     </label>
-                    <button class="text-xs text-purple-600 hover:text-purple-700">
-                      <Icon icon="mdi:pencil" class="w-4 h-4" />
-                    </button>
                   </div>
                   <textarea
-                    :value="emailTemplateStore.selectedTemplate?.body_html || ''"
-                    class="w-full h-48 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
+                    v-model="editableBody"
+                    class="w-full h-96 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
                     placeholder="Body HTML code..."
-                  ></textarea>
-                </div>
-
-                <!-- Footer -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Footer
-                    </label>
-                    <button class="text-xs text-purple-600 hover:text-purple-700">
-                      <Icon icon="mdi:pencil" class="w-4 h-4" />
-                    </button>
-                  </div>
-                  <textarea
-                    :value="emailTemplateStore.selectedTemplate?.footer_html || ''"
-                    class="w-full h-24 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
-                    placeholder="Footer HTML code..."
                   ></textarea>
                 </div>
               </div>
@@ -183,7 +170,7 @@
       </div>
     </div>
 
-    <!-- Preview Modal -->
+    <!-- Preview Modal - показывает полное письмо с header и footer -->
     <div
       v-if="showPreview"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4"
@@ -206,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { useEmailTemplateStore } from '@/stores/EmailTemplateStore'
@@ -227,6 +214,24 @@ const emailTemplateStore = useEmailTemplateStore()
 const isCreatingNew = ref(false)
 const showPreview = ref(false)
 
+// Редактируемые поля - только реальные
+const editableCode = ref('')
+const editableSubject = ref('')
+const editableBody = ref('')
+
+// Синхронизация с выбранным шаблоном
+watch(() => emailTemplateStore.selectedTemplate, (newTemplate) => {
+  if (newTemplate) {
+    editableCode.value = newTemplate.code || ''
+    editableSubject.value = newTemplate.subject || ''
+    editableBody.value = newTemplate.body_html || ''
+  } else {
+    editableCode.value = ''
+    editableSubject.value = ''
+    editableBody.value = ''
+  }
+}, { immediate: true })
+
 // Генерация полного HTML письма для превью
 const getFullEmailHtml = () => {
   const template = emailTemplateStore.selectedTemplate
@@ -234,16 +239,53 @@ const getFullEmailHtml = () => {
 
   return `
     ${template.header_html || ''}
-    ${template.body_html || ''}
+    ${editableBody.value || template.body_html || ''}
     ${template.footer_html || ''}
   `
 }
 
 // Обработчики кнопок
+const handleSave = async () => {
+  if (!editableCode.value.trim()) {
+    console.log('Code is required')
+    return
+  }
+
+  if (!editableSubject.value.trim()) {
+    console.log('Subject is required')
+    return
+  }
+
+  if (!editableBody.value.trim()) {
+    console.log('Body is required')
+    return
+  }
+
+  const templateData = {
+    template_id: emailTemplateStore.selectedTemplate?.template_id || 0,
+    code: editableCode.value.trim(),
+    subject: editableSubject.value.trim(),
+    body_html: editableBody.value.trim()
+  }
+
+  console.log('Saving template with data:', templateData)
+
+  const success = await emailTemplateStore.saveTemplate(templateData)
+
+  if (success) {
+    console.log('Template saved successfully')
+  } else {
+    console.log('Failed to save template:', emailTemplateStore.error)
+  }
+}
+
 const handleAddTemplate = () => {
   console.log('Add template clicked')
   isCreatingNew.value = true
   emailTemplateStore.clearSelection()
+  editableCode.value = ''
+  editableSubject.value = ''
+  editableBody.value = ''
 }
 
 const handleDeleteTemplate = () => {
