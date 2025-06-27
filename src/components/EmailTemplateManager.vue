@@ -118,7 +118,7 @@
               </div>
             </div>
 
-            <!-- Структура письма - только реальные поля -->
+            <!-- Структура письма - без Layout ID -->
             <div class="flex-1 overflow-y-auto p-4">
               <div class="space-y-6">
                 <!-- Code -->
@@ -159,7 +159,7 @@
                   </div>
                   <textarea
                     v-model="editableBody"
-                    class="w-full h-96 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
+                    class="w-full h-80 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
                     placeholder="Body HTML code..."
                   ></textarea>
                 </div>
@@ -168,23 +168,47 @@
           </div>
         </div>
       </div>
+
+      <!-- Ошибка -->
+      <div v-if="errorMessage" class="mb-4 p-3 rounded bg-red-100 border border-red-400 text-red-700 font-semibold">
+        {{ errorMessage }}
+      </div>
     </div>
 
-    <!-- Preview Modal - показывает полное письмо с header и footer -->
+    <!-- Preview Modal -->
     <div
       v-if="showPreview"
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4"
     >
       <div class="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center p-4 border-b">
-          <h3 class="text-lg font-semibold">Email Preview</h3>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold">Email Preview</h3>
+            <!-- Subject под заголовком -->
+            <p class="text-sm text-gray-600 mt-1">
+              <strong>Subject:</strong> {{ editableSubject || 'No subject' }}
+            </p>
+          </div>
+
+          <!-- Свитчер режимов -->
+          <div class="flex items-center gap-4 mx-4">
+            <label class="flex items-center gap-2 text-sm">
+              <input
+                v-model="previewWithVariables"
+                type="checkbox"
+                class="rounded"
+              />
+              <span>Show with sample data</span>
+            </label>
+          </div>
+
           <button @click="showPreview = false" class="text-gray-500 hover:text-gray-700">
             <Icon icon="mdi:close" class="w-6 h-6" />
           </button>
         </div>
         <div class="flex-1 overflow-auto p-4">
           <div class="border rounded-lg overflow-hidden">
-            <div v-html="getFullEmailHtml()" class="bg-white"></div>
+            <div v-html="getPreviewHtml()" class="bg-white"></div>
           </div>
         </div>
       </div>
@@ -213,69 +237,112 @@ const emailTemplateStore = useEmailTemplateStore()
 // Флаги состояния
 const isCreatingNew = ref(false)
 const showPreview = ref(false)
+const previewWithVariables = ref(false)
 
-// Редактируемые поля - только реальные
-const editableCode = ref('')
-const editableSubject = ref('')
-const editableBody = ref('')
+// Редактируемые поля
+const editableTemplateId = ref(emailTemplateStore.selectedTemplate?.template_id || '')
+const editableCode = ref(emailTemplateStore.selectedTemplate?.code || '')
+const editableSubject = ref(emailTemplateStore.selectedTemplate?.subject || '')
+const editableBody = ref(emailTemplateStore.selectedTemplate?.body_html || '')
+const editableLayoutId = ref(emailTemplateStore.selectedTemplate?.layout_id || '')
+const editableLocale = ref(emailTemplateStore.selectedTemplate?.locale || '')
+
+// Примерные данные для подстановки переменных
+const sampleData = {
+  confirm_link: 'https://example.com/confirm/abc123',
+  user_name: 'John Doe',
+  Sender_Phone: '+1 (555) 123-4567',
+  Sender_Email: 'support@petsbook.ca',
+  Company_Address: '123 Pet Street, Animal City, AC 12345',
+  Company_Website: 'https://petsbook.ca',
+  UnsubscribeUrl: 'https://petsbook.ca/unsubscribe/xyz789'
+}
+
+// Функция замены переменных
+const replaceVariables = (html) => {
+  if (!html) return ''
+
+  let result = html
+
+  // Заменяем переменные в фигурных скобках {{ variable }}
+  Object.entries(sampleData).forEach(([key, value]) => {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
+    result = result.replace(regex, value)
+  })
+
+  // Заменяем переменные в шаблонах {% if %} и подобных (упрощенно)
+  result = result.replace(/{% if \w+ %}/g, '')
+  result = result.replace(/{% endif %}/g, '')
+
+  return result
+}
+
+// Генерация HTML для превью
+const getPreviewHtml = () => {
+  const template = emailTemplateStore.selectedTemplate
+  if (!template) return ''
+
+  let headerHtml = template.header_html || ''
+  let bodyHtml = editableBody.value || template.body_html || ''
+  let footerHtml = template.footer_html || ''
+
+  if (previewWithVariables.value) {
+    // Показываем с подставленными переменными
+    headerHtml = replaceVariables(headerHtml)
+    bodyHtml = replaceVariables(bodyHtml)
+    footerHtml = replaceVariables(footerHtml)
+  }
+
+  return `${headerHtml}${bodyHtml}${footerHtml}`
+}
 
 // Синхронизация с выбранным шаблоном
 watch(() => emailTemplateStore.selectedTemplate, (newTemplate) => {
   if (newTemplate) {
+    editableTemplateId.value = newTemplate.template_id || ''
     editableCode.value = newTemplate.code || ''
     editableSubject.value = newTemplate.subject || ''
     editableBody.value = newTemplate.body_html || ''
+    editableLayoutId.value = newTemplate.layout_id || ''
+    editableLocale.value = newTemplate.locale || ''
   } else {
+    editableTemplateId.value = ''
     editableCode.value = ''
     editableSubject.value = ''
     editableBody.value = ''
+    editableLayoutId.value = ''
+    editableLocale.value = ''
   }
 }, { immediate: true })
 
-// Генерация полного HTML письма для превью
-const getFullEmailHtml = () => {
-  const template = emailTemplateStore.selectedTemplate
-  if (!template) return ''
-
-  return `
-    ${template.header_html || ''}
-    ${editableBody.value || template.body_html || ''}
-    ${template.footer_html || ''}
-  `
+// Простая функция уведомлений
+const showNotification = (type, message) => {
+  if (type === 'error') {
+    alert('Error: ' + message)
+  } else {
+    alert('Success: ' + message)
+  }
 }
 
-// Обработчики кнопок
+const errorMessage = ref('')
+
 const handleSave = async () => {
-  if (!editableCode.value.trim()) {
-    console.log('Code is required')
-    return
-  }
-
-  if (!editableSubject.value.trim()) {
-    console.log('Subject is required')
-    return
-  }
-
-  if (!editableBody.value.trim()) {
-    console.log('Body is required')
-    return
-  }
-
-  const templateData = {
-    template_id: emailTemplateStore.selectedTemplate?.template_id || 0,
-    code: editableCode.value.trim(),
-    subject: editableSubject.value.trim(),
-    body_html: editableBody.value.trim()
-  }
-
-  console.log('Saving template with data:', templateData)
-
-  const success = await emailTemplateStore.saveTemplate(templateData)
-
-  if (success) {
-    console.log('Template saved successfully')
-  } else {
-    console.log('Failed to save template:', emailTemplateStore.error)
+  try {
+    await emailTemplateStore.saveTemplate({
+      template_id: editableTemplateId.value,
+      code: editableCode.value,
+      subject: editableSubject.value,
+      body_html: editableBody.value,
+      layout_id: editableLayoutId.value,
+      locale: editableLocale.value
+    })
+    alert('Template saved successfully')
+  } catch (error) {
+    if (error?.response?.data?.error) {
+      alert(error.response.data.error)
+    } else {
+      alert(error.message || 'Unknown error')
+    }
   }
 }
 
@@ -286,6 +353,8 @@ const handleAddTemplate = () => {
   editableCode.value = ''
   editableSubject.value = ''
   editableBody.value = ''
+  editableLayoutId.value = ''
+  editableLocale.value = ''
 }
 
 const handleDeleteTemplate = () => {
