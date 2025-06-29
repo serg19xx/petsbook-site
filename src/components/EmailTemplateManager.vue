@@ -5,11 +5,32 @@
       <div class="flex justify-between items-center p-6 border-b">
         <h2 class="text-xl font-semibold flex items-center gap-2">
           <Icon icon="mdi:email-edit" class="w-6 h-6 text-purple-600" />
-          {{ t('UI.emailTemplateManager.title', 'Email Template Manager') }}
+          Email Template Manager
         </h2>
-        <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
-          <Icon icon="mdi:close" class="w-6 h-6" />
-        </button>
+        <div class="flex items-center gap-3">
+          <!-- Translate Template Button -->
+          <button
+            @click="handleTranslateTemplate"
+            class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm flex items-center gap-2 transition-colors"
+            title="Translate Template"
+          >
+            <Icon icon="mdi:translate" class="w-4 h-4" />
+            Translate Template
+          </button>
+          <!-- Translate Layout Button -->
+          <button
+            @click="handleTranslateLayout"
+            class="px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm flex items-center gap-2 transition-colors"
+            title="Translate Layout"
+          >
+            <Icon icon="mdi:translate-variant" class="w-4 h-4" />
+            Translate Layout
+          </button>
+          <!-- Close Button -->
+          <button @click="$emit('close')" class="text-gray-500 hover:text-gray-700">
+            <Icon icon="mdi:close" class="w-6 h-6" />
+          </button>
+        </div>
       </div>
 
       <!-- Основное содержимое -->
@@ -120,49 +141,80 @@
 
             <!-- Структура письма - без Layout ID -->
             <div class="flex-1 overflow-y-auto p-4">
-              <div class="space-y-6">
-                <!-- Code -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Code
-                    </label>
-                  </div>
-                  <input
-                    v-model="editableCode"
-                    type="text"
-                    class="w-full px-3 py-2 border rounded-md text-sm"
-                    placeholder="e.g. welcome_email"
-                  />
-                </div>
+              <div class="border-b flex gap-2 mb-4">
+                <button
+                  :class="activeTab === 'main' ? 'border-b-2 border-purple-600 text-purple-700 font-semibold' : 'text-gray-500'"
+                  class="px-4 py-2 focus:outline-none"
+                  @click="activeTab = 'main'"
+                >
+                  Template
+                </button>
+                <button
+                  :class="activeTab === 'testdata' ? 'border-b-2 border-purple-600 text-purple-700 font-semibold' : 'text-gray-500'"
+                  class="px-4 py-2 focus:outline-none"
+                  @click="activeTab = 'testdata'"
+                >
+                  Test Data (JSON)
+                </button>
+              </div>
 
-                <!-- Subject -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Subject
-                    </label>
+              <div v-if="activeTab === 'main'">
+                <div class="space-y-6">
+                  <!-- Code -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">
+                        Code
+                      </label>
+                    </div>
+                    <input
+                      v-model="editableCode"
+                      type="text"
+                      class="w-full px-3 py-2 border rounded-md text-sm"
+                      placeholder="e.g. welcome_email"
+                    />
                   </div>
-                  <textarea
-                    v-model="editableSubject"
-                    class="w-full h-16 px-3 py-2 border rounded-md text-sm resize-none overflow-y-auto"
-                    placeholder="Email subject..."
-                  ></textarea>
-                </div>
 
-                <!-- Body -->
-                <div>
-                  <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
-                      Body HTML
-                    </label>
+                  <!-- Subject -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">
+                        Subject
+                      </label>
+                    </div>
+                    <textarea
+                      v-model="editableSubject"
+                      class="w-full h-16 px-3 py-2 border rounded-md text-sm resize-none overflow-y-auto"
+                      placeholder="Email subject..."
+                    ></textarea>
                   </div>
-                  <textarea
-                    v-model="editableBody"
-                    class="w-full h-80 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
-                    placeholder="Body HTML code..."
-                  ></textarea>
+
+                  <!-- Body -->
+                  <div>
+                    <div class="flex items-center justify-between mb-2">
+                      <label class="block text-sm font-medium text-gray-700">
+                        Body HTML
+                      </label>
+                    </div>
+                    <textarea
+                      v-model="editableBody"
+                      class="w-full h-80 px-3 py-2 border rounded-md text-xs font-mono resize-none overflow-y-auto"
+                      placeholder="Body HTML code..."
+                    ></textarea>
+                  </div>
                 </div>
+              </div>
+              <div v-else>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                  Test Data (JSON)
+                </label>
+                <textarea
+                  v-model="editableTestData"
+                  rows="16"
+                  class="w-full font-mono border rounded p-2 resize-y"
+                  style="min-height: 120px; max-height: 400px;"
+                  placeholder='{"Sender_Phone": "+1...", "now": "2024"}'
+                ></textarea>
               </div>
             </div>
           </div>
@@ -186,7 +238,7 @@
             <h3 class="text-lg font-semibold">Email Preview</h3>
             <!-- Subject под заголовком -->
             <p class="text-sm text-gray-600 mt-1">
-              <strong>Subject:</strong> {{ editableSubject || 'No subject' }}
+              <strong>Subject:</strong> {{ replaceVariables(editableSubject, parsedTestData) || 'No subject' }}
             </p>
           </div>
 
@@ -208,7 +260,7 @@
         </div>
         <div class="flex-1 overflow-auto p-4">
           <div class="border rounded-lg overflow-hidden">
-            <div v-html="getPreviewHtml()" class="bg-white"></div>
+            <div v-html="getPreviewHtml()" class="bg-white email-preview"></div>
           </div>
         </div>
       </div>
@@ -238,6 +290,7 @@ const emailTemplateStore = useEmailTemplateStore()
 const isCreatingNew = ref(false)
 const showPreview = ref(false)
 const previewWithVariables = ref(false)
+const activeTab = ref('main') // 'main' или 'testdata'
 
 // Редактируемые поля
 const editableTemplateId = ref(emailTemplateStore.selectedTemplate?.template_id || '')
@@ -246,34 +299,32 @@ const editableSubject = ref(emailTemplateStore.selectedTemplate?.subject || '')
 const editableBody = ref(emailTemplateStore.selectedTemplate?.body_html || '')
 const editableLayoutId = ref(emailTemplateStore.selectedTemplate?.layout_id || '')
 const editableLocale = ref(emailTemplateStore.selectedTemplate?.locale || '')
+const editableTestData = ref('{}')
 
 // Примерные данные для подстановки переменных
 const sampleData = {
-  confirm_link: 'https://example.com/confirm/abc123',
-  user_name: 'John Doe',
   Sender_Phone: '+1 (555) 123-4567',
   Sender_Email: 'support@petsbook.ca',
-  Company_Address: '123 Pet Street, Animal City, AC 12345',
-  Company_Website: 'https://petsbook.ca',
-  UnsubscribeUrl: 'https://petsbook.ca/unsubscribe/xyz789'
+  UnsubscribeUrl: 'https://petsbook.ca/unsubscribe/xyz789',
+  now: new Date().getFullYear().toString()
+  // ... другие переменные, если нужно ...
 }
 
+const parsedTestData = computed(() => {
+  try {
+    return JSON.parse(editableTestData.value)
+  } catch {
+    return {} // или sampleData, если хотите fallback
+  }
+})
+
 // Функция замены переменных
-const replaceVariables = (html) => {
+function replaceVariables(html, data) {
   if (!html) return ''
-
-  let result = html
-
-  // Заменяем переменные в фигурных скобках {{ variable }}
-  Object.entries(sampleData).forEach(([key, value]) => {
-    const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g')
-    result = result.replace(regex, value)
+  let result = html.replace(/{%[^%]*%}/g, '')
+  result = result.replace(/{{\s*([\w_]+)\s*}}/g, (match, key) => {
+    return data[key] !== undefined ? data[key] : match
   })
-
-  // Заменяем переменные в шаблонах {% if %} и подобных (упрощенно)
-  result = result.replace(/{% if \w+ %}/g, '')
-  result = result.replace(/{% endif %}/g, '')
-
   return result
 }
 
@@ -281,20 +332,24 @@ const replaceVariables = (html) => {
 const getPreviewHtml = () => {
   const template = emailTemplateStore.selectedTemplate
   if (!template) return ''
-
+  //console.log('RAW BODY:', editableBody.value)
   let headerHtml = template.header_html || ''
   let bodyHtml = editableBody.value || template.body_html || ''
   let footerHtml = template.footer_html || ''
 
   if (previewWithVariables.value) {
-    // Показываем с подставленными переменными
-    headerHtml = replaceVariables(headerHtml)
-    bodyHtml = replaceVariables(bodyHtml)
-    footerHtml = replaceVariables(footerHtml)
+    // Используем именно parsedTestData!
+    headerHtml = replaceVariables(headerHtml, parsedTestData.value)
+    bodyHtml = replaceVariables(bodyHtml, parsedTestData.value)
+    footerHtml = replaceVariables(footerHtml, parsedTestData.value)
   }
-
-  return `${headerHtml}${bodyHtml}${footerHtml}`
+  console.log('BBBBBBODY:', bodyHtml)
+  const html = `${headerHtml}${bodyHtml}${footerHtml}`
+  //console.log(html);
+  return html
 }
+
+
 
 // Синхронизация с выбранным шаблоном
 watch(() => emailTemplateStore.selectedTemplate, (newTemplate) => {
@@ -305,6 +360,7 @@ watch(() => emailTemplateStore.selectedTemplate, (newTemplate) => {
     editableBody.value = newTemplate.body_html || ''
     editableLayoutId.value = newTemplate.layout_id || ''
     editableLocale.value = newTemplate.locale || ''
+    editableTestData.value = newTemplate.test_data_json || '{}'
   } else {
     editableTemplateId.value = ''
     editableCode.value = ''
@@ -312,6 +368,7 @@ watch(() => emailTemplateStore.selectedTemplate, (newTemplate) => {
     editableBody.value = ''
     editableLayoutId.value = ''
     editableLocale.value = ''
+    editableTestData.value = '{}'
   }
 }, { immediate: true })
 
@@ -334,7 +391,8 @@ const handleSave = async () => {
       subject: editableSubject.value,
       body_html: editableBody.value,
       layout_id: editableLayoutId.value,
-      locale: editableLocale.value
+      locale: editableLocale.value,
+      test_data_json: editableTestData.value
     })
     alert('Template saved successfully')
   } catch (error) {
@@ -376,4 +434,66 @@ onMounted(() => {
     emailTemplateStore.loadTemplates()
   }
 })
+
+const testDataJson = ref('')
+
+const saveTestData = () => {
+  // Implementation of saveTestData function
+}
+
+async function handleTranslateTemplate() {
+  try {
+    await emailTemplateStore.translateTemplate()
+    alert('Template translation started')
+  } catch (e) {
+    alert('Error while translating template: ' + (e?.message || e))
+  }
+}
+
+async function handleTranslateLayout() {
+  try {
+    await emailTemplateStore.translateLayout()
+    alert('Layout translation started')
+  } catch (e) {
+    alert('Error while translating layout: ' + (e?.message || e))
+  }
+}
 </script>
+
+<style>
+.email-preview h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin: 0.67em 0;
+}
+.email-preview h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin: 0.75em 0;
+}
+.email-preview h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin: 0.83em 0;
+}
+.email-preview ul {
+  list-style: disc inside;
+  margin: 1em 0 1.5em 1.5em;
+  padding: 0;
+}
+.email-preview li {
+  margin: 0.2em 0;
+}
+.email-preview a {
+  color: #1976d2;
+  text-decoration: underline;
+  word-break: break-all;
+}
+.email-preview p {
+  margin: 0.5em 0;
+}
+</style>
+
+
+
+

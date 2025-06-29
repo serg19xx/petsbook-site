@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/api'
+import axios from 'axios'
 
 export const useEmailTemplateStore = defineStore('emailTemplate', () => {
   // Состояние
@@ -226,6 +227,24 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
     await Promise.all([loadTemplates(), loadLanguages()])
   }
 
+  const translateTemplate = async () => {
+    try {
+      await axios.post('/api/email-templates/translate')
+      return true
+    } catch (e) {
+      throw new Error(e?.response?.data?.error || e.message || 'Failed to translate templates')
+    }
+  }
+
+  const translateLayout = async () => {
+    try {
+      await axios.post('/api/email-layouts/translate')
+      return true
+    } catch (e) {
+      throw new Error(e?.response?.data?.error || e.message || 'Failed to translate layouts')
+    }
+  }
+
   return {
     // Состояние
     templates,
@@ -261,5 +280,7 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
     resetFilters,
     resetStore,
     initialize,
+    translateTemplate,
+    translateLayout,
   }
 })
