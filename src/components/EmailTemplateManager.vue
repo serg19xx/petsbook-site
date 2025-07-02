@@ -39,7 +39,7 @@
         <div class="w-1/3 border-r bg-gray-50 flex flex-col">
           <!-- Поиск и кнопка добавления -->
           <div class="p-4 border-b bg-white">
-            <div class="flex gap-2">
+            <div class="flex gap-2 mb-2">
               <input
                 v-model="emailTemplateStore.searchQuery"
                 type="text"
@@ -54,6 +54,23 @@
                 <Icon icon="mdi:plus" class="w-4 h-4" />
               </button>
             </div>
+            <!-- Language Switcher -->
+            <div class="flex gap-2 items-center">
+              <label class="text-xs text-gray-500">{{ t('UI.language.select', 'Language') }}:</label>
+              <select
+                v-model="selectedLocale"
+                class="px-2 py-1 border rounded text-xs"
+              >
+                <option value="">{{ t('UI.common.all', 'All') }}</option>
+                <option
+                  v-for="locale in localeOptions"
+                  :key="locale.code"
+                  :value="locale.code"
+                >
+                  {{ locale.label }}
+                </option>
+              </select>
+            </div>
           </div>
 
           <!-- Список шаблонов -->
@@ -63,13 +80,13 @@
               <p class="text-sm text-gray-500 mt-2">{{ t('UI.common.loading', 'Loading...') }}</p>
             </div>
 
-            <div v-else-if="emailTemplateStore.filteredTemplates.length === 0" class="p-4 text-center text-gray-500">
+            <div v-else-if="filteredTemplates.length === 0" class="p-4 text-center text-gray-500">
               {{ t('UI.emailTemplateManager.noTemplates', 'No templates found') }}
             </div>
 
             <div v-else>
               <button
-                v-for="template in emailTemplateStore.filteredTemplates"
+                v-for="template in filteredTemplates"
                 :key="template.template_id"
                 @click="emailTemplateStore.selectTemplate(template)"
                 class="w-full p-4 text-left hover:bg-white border-b transition-colors"
@@ -273,6 +290,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { Icon } from '@iconify/vue'
 import { useI18n } from 'vue-i18n'
 import { useEmailTemplateStore } from '@/stores/EmailTemplateStore'
+import api from '@/api'
 
 const props = defineProps({
   isVisible: {
@@ -458,6 +476,71 @@ async function handleTranslateLayout() {
     alert('Error while translating layout: ' + (e?.message || e))
   }
 }
+
+// Новый фильтр по языку
+const selectedLocale = ref('')
+
+// Список языков с сервера
+const availableLanguages = ref([])
+
+// Загрузка языков с сервера
+async function loadAvailableLanguages() {
+  try {
+    const response = await api.get('/i18n/translated-languages')
+    const data = response.data
+    if (data.status === 200) {
+      availableLanguages.value = data.data.languages.map(lang => ({
+        code: lang.code,
+        name: lang.name,
+        nativeName: lang.native_name,
+        flag: lang.flag_icon
+      }))
+    }
+  } catch (e) {
+    // ignore error for now
+  }
+}
+
+// Получаем список всех уникальных языков из шаблонов
+const usedLocales = computed(() => {
+  // Если шаблоны еще не загружены, возвращаем пустой массив
+  if (!emailTemplateStore.templates.length) return []
+  // Берем все уникальные коды языков из шаблонов
+  return Array.from(new Set(emailTemplateStore.templates.map(t => t.locale).filter(Boolean)))
+})
+
+// Для отображения: [{ code, label }]
+const localeOptions = computed(() => {
+  // Просто все языки с сервера, label = name
+  return availableLanguages.value.map(lang => ({
+    code: lang.code,
+    label: lang.name
+  }))
+})
+
+// Загрузка языков при открытии диалога
+watch(() => props.isVisible, (newValue) => {
+  if (newValue) {
+    emailTemplateStore.loadTemplates()
+    loadAvailableLanguages()
+  }
+})
+
+onMounted(() => {
+  if (props.isVisible) {
+    emailTemplateStore.loadTemplates()
+    loadAvailableLanguages()
+  }
+})
+
+// Фильтруем шаблоны по выбранному языку и поисковому запросу
+const filteredTemplates = computed(() => {
+  let templates = emailTemplateStore.filteredTemplates
+  if (selectedLocale.value) {
+    templates = templates.filter(t => t.locale === selectedLocale.value)
+  }
+  return templates
+})
 </script>
 
 <style>

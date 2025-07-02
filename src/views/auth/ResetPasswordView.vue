@@ -120,12 +120,45 @@ const handleSubmit = async () => {
   isError.value = false
 
   try {
-    const response = await authStore.resetPassword({
-      token: route.query.token,
-      password: formData.value.password
-    })
+    // Проверяем наличие токена и выводим его в консоль для отладки
+    let token = route.query.token
+    // Если token массив (например, ?token=abc&token=def), берем первый
+    if (Array.isArray(token)) token = token[0]
+    // Приводим к строке, если возможно
+    if (typeof token !== 'string') token = String(token ?? '')
+    token = token.trim()
+    // Если токен пустой, пробуем взять из route.params (например, если маршрут типа /reset-password/:token)
+    if (!token || token === 'undefined' || token === 'null' || token.length < 10) {
+      if (route.params && route.params.token) {
+        token = String(route.params.token).trim()
+        console.log('Trying route.params.token:', token, '| length:', token.length)
+      }
+    }
+    console.log('Reset password token (final):', token, '| length:', token.length)
+    if (!token || token === 'undefined' || token === 'null' || token.length < 10) {
+      message.value = t('MESSAGE.resetpasswordview.error.unexpected')
+      isError.value = true
+      toast.error(message.value)
+      loading.value = false
+      return
+    }
+    // Проверяем пароль для отладки
+    console.log('Reset password value:', formData.value.password)
+    // Проверяем, что функция существует
+    if (typeof authStore.resetPassword !== 'function') {
+      console.error('authStore.resetPassword is not a function')
+      message.value = t('MESSAGE.resetpasswordview.error.unexpected')
+      isError.value = true
+      toast.error(message.value)
+      loading.value = false
+      return
+    }
+    // ВАЖНО: resetPassword(token, password), а не resetPassword({token, password})
+    console.log('Sending reset password request with token:', token, 'and password:', formData.value.password)
+    const result = await authStore.resetPassword(token, formData.value.password)
 
-    if (response.success) {
+    // resetPassword возвращает true/false, а не объект
+    if (result === true) {
       message.value = t('MESSAGE.resetpasswordview.success.password_changed')
       isError.value = false
       toast.success(message.value)
@@ -133,7 +166,8 @@ const handleSubmit = async () => {
         router.push('/login')
       }, 2000)
     } else {
-      message.value = response.message || t('MESSAGE.resetpasswordview.error.unexpected')
+      // Если result === false, используем ошибку из authStore
+      message.value = authStore.resetPasswordError || t('MESSAGE.resetpasswordview.error.unexpected')
       isError.value = true
       toast.error(message.value)
     }

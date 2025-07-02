@@ -168,7 +168,13 @@ export const useAuthStore = defineStore(
 
     const resetPassword = async (token, password) => {
       try {
-        console.log('Sending reset password request with token:', token)
+        // Проверяем, что token и password переданы корректно
+        if (!token || !password) {
+          resetPasswordError.value = 'Missing token or password'
+          resetPasswordSuccess.value = false
+          return false
+        }
+        console.log('Sending reset password request with token:', { token, password })
         const response = await api.post('/auth/set-new-password', { token, password })
 
         // Проверяем успешный ответ

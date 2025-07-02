@@ -90,6 +90,7 @@
 </template>
 
 <script setup>
+//      "apiKey": "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",
 import { ref, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { toast } from 'vue3-toastify'
