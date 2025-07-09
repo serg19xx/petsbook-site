@@ -70,6 +70,10 @@ const getErrorMessage = (code) => {
       return 'Недействительная ссылка подтверждения'
     case 'EMAIL_ALREADY_VERIFIED':
       return 'Email уже подтвержден'
+    case 'NETWORK_ERROR':
+      return 'Ошибка сети. Проверьте подключение к интернету.'
+    case 'SERVER_ERROR':
+      return 'Ошибка сервера. Попробуйте позже.'
     default:
       return 'Ошибка при подтверждении email'
   }
@@ -116,29 +120,46 @@ const handleResendVerification = async () => {
 onMounted(async () => {
   try {
     const token = route.params.token
+    console.log('Verifying token:', token) // Добавим логирование
+
     const response = await api.get(`/auth/verify-email/${token}`, {
       withCredentials: true,
     })
 
-    if (response.data.status === 200) {
+    console.log('Verification response:', response) // Добавим логирование
+
+    // Исправляем проверку ответа
+    if (response.status === 200 && response.data.success) {
       success.value = true
       toast.success('Email успешно подтвержден!', {
         autoClose: 3000,
       })
     } else {
       success.value = false
-      errorCode.value = response.data.message
-      toast.error(getErrorMessage(response.data.message), {
+      errorCode.value = response.data.message || 'UNKNOWN_ERROR'
+      toast.error(getErrorMessage(errorCode.value), {
         autoClose: 5000,
       })
     }
   } catch (error) {
+    console.error('Email verification error:', error)
     success.value = false
-    errorCode.value = error.response?.data?.message || 'UNKNOWN_ERROR'
+
+    // Улучшенная обработка ошибок
+    if (error.response) {
+      // Сервер ответил с ошибкой
+      errorCode.value = error.response.data?.message || 'SERVER_ERROR'
+    } else if (error.request) {
+      // Запрос был отправлен, но ответа нет
+      errorCode.value = 'NETWORK_ERROR'
+    } else {
+      // Что-то пошло не так при настройке запроса
+      errorCode.value = 'UNKNOWN_ERROR'
+    }
+
     toast.error(getErrorMessage(errorCode.value), {
       autoClose: 5000,
     })
-    console.error('Email verification error:', error)
   } finally {
     loading.value = false
   }
