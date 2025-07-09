@@ -167,36 +167,75 @@ export const apiService = {
   async login(credentials) {
     try {
       const response = await api.post(endpoints.auth.login, credentials)
-      return response.data
+      return {
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data || null,
+      }
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Login failed')
+      return {
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'LOGIN_FAILED',
+        message: error.response?.data?.message || 'Login failed',
+        data: null,
+      }
     }
   },
 
   async getProfile() {
     try {
       const response = await api.get(endpoints.user.profile)
-      return response.data
+      return {
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data || null,
+      }
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to fetch profile')
+      return {
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'PROFILE_FETCH_FAILED',
+        message: error.response?.data?.message || 'Failed to fetch profile',
+        data: null,
+      }
     }
   },
 
   async updateProfile(profileData) {
     try {
       const response = await api.put(endpoints.user.update, profileData)
-      return response.data
+      return {
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data || null,
+      }
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Failed to update profile')
+      return {
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'PROFILE_UPDATE_FAILED',
+        message: error.response?.data?.message || 'Failed to update profile',
+        data: null,
+      }
     }
   },
 
   async trackVisit(payload) {
     try {
       await api.post('/stats/visit', payload)
+      return {
+        status: 200,
+        error_code: '',
+        message: '',
+        data: null,
+      }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.error('Failed to track visit', error)
+      return {
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'TRACK_VISIT_FAILED',
+        message: error.response?.data?.message || 'Failed to track visit',
+        data: null,
       }
     }
   },

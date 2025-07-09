@@ -133,7 +133,7 @@ const handleSubmit = async () => {
       remember: formData.remember
     })
 
-    if (!response.success) {
+    if (!(response.status === 200 && response.error_code === 'LOGIN_SUCCESS')) {
       error.value = response.message || t('MESSAGE.loginview.errors.invalid_credentials')
       toast.error(response.message || t('MESSAGE.loginview.errors.invalid_credentials'))
       return

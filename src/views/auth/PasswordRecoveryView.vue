@@ -100,7 +100,7 @@ const handleSubmit = async () => {
   try {
     const response = await authStore.requestPasswordReset(formData.value.email)
 
-    if (response.success) {
+    if (response.status === 200 && response.error_code === 'PASSWORD_RESET_EMAIL_SENT') {
       message.value = t('MESSAGE.passwordrecoveryview.success.email_sent', { email: formData.value.email })
       isError.value = false
       formData.value.email = ''

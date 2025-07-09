@@ -43,50 +43,46 @@ export const useUserStore = defineStore('user', () => {
 
   const updateUserData = async (updateData) => {
     if (loading.value) {
-      return { success: false, error: 'Already loading' }
+      return { status: 429, error_code: 'ALREADY_LOADING', message: 'Already loading', data: null }
     }
 
     loading.value = true
     error.value = null
 
     try {
-      //console.log('BEFORE API:')
       const response = await api.put('/user/update', updateData, {
         withCredentials: true,
       })
-      //console.log('========Server response:', response.data) // Добавляем лог
 
-      // Проверяем успешность ответа сервера
-      if (response.status === 200 || response.data?.status === 200) {
-        // Сначала обновляем локальные данные
+      if (response.status === 200 && response.data?.status === 200) {
         userData.value = {
           ...userData.value,
           ...updateData,
           avatar: updateData.avatar || userData.value.avatar,
           cover: updateData.cover || userData.value.cover,
         }
-
         await fetchUserData()
-
-        //console.log('Returning success response') // Добавляем лог
         return {
-          success: true,
-          message: response.data?.message, //|| 'Profile updated successfully',
+          status: 200,
+          error_code: response.data?.error_code || 'USER_UPDATE_SUCCESS',
+          message: response.data?.message || '',
+          data: response.data?.data || null,
         }
       } else {
-        //console.log('Returning error response') // Добавляем лог
         return {
-          // Изменено здесь
-          success: false,
-          error: response.data?.message || 'Failed to update user data',
+          status: response.data?.status || 500,
+          error_code: response.data?.error_code || 'USER_UPDATE_FAILED',
+          message: response.data?.message || 'Failed to update user data',
+          data: null,
         }
       }
     } catch (err) {
-      //console.error('Update error:', err) // Добавляем лог
       error.value = err.response?.data?.message || 'Failed to update user data'
       return {
-        success: false,
-        error: error.value,
+        status: err.response?.data?.status || 500,
+        error_code: err.response?.data?.error_code || 'USER_UPDATE_FAILED',
+        message: error.value,
+        data: null,
       }
     } finally {
       loading.value = false

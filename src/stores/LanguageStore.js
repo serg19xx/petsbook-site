@@ -21,31 +21,64 @@ export const useLanguageStore = defineStore('language', () => {
   const currentTranslations = computed(() => translations.value[currentLanguage.value] || {})
 
   function flatToNested(flatObj) {
-    const nested = {}
+    console.log('flatToNested called with:', flatObj)
 
-    // Сначала сортируем ключи по длине (от коротких к длинным)
-    const sortedKeys = Object.keys(flatObj).sort((a, b) => a.length - b.length)
-
-    for (const flatKey of sortedKeys) {
-      const value = flatObj[flatKey]
-      const keys = flatKey.split('.')
-      let current = nested
-
-      // Проходим по всем ключам кроме последнего
-      for (let i = 0; i < keys.length - 1; i++) {
-        const key = keys[i]
-        if (!current[key]) {
-          current[key] = {}
-        }
-        current = current[key]
-      }
-
-      // Обрабатываем последний ключ
-      const lastKey = keys[keys.length - 1]
-      current[lastKey] = value
+    // Проверяем входные данные
+    if (!flatObj || typeof flatObj !== 'object') {
+      console.error('Invalid input to flatToNested:', flatObj)
+      return null
     }
 
-    return nested
+    try {
+      const nested = {}
+      console.log('Created nested object')
+
+      // Получаем ключи
+      const keys = Object.keys(flatObj)
+      console.log('Total keys to process:', keys.length)
+
+      if (keys.length === 0) {
+        console.log('No keys to process, returning empty object')
+        return nested
+      }
+
+      // Обрабатываем каждый ключ
+      for (let i = 0; i < keys.length; i++) {
+        const flatKey = keys[i]
+        console.log(`Processing key ${i + 1}/${keys.length}:`, flatKey)
+
+        try {
+          const value = flatObj[flatKey]
+          const keyParts = flatKey.split('.')
+          let current = nested
+
+          // Создаем вложенную структуру
+          for (let j = 0; j < keyParts.length - 1; j++) {
+            const part = keyParts[j]
+            if (!current[part]) {
+              current[part] = {}
+            }
+            current = current[part]
+          }
+
+          // Устанавливаем значение
+          const lastPart = keyParts[keyParts.length - 1]
+          current[lastPart] = value
+          console.log(`Successfully processed: ${flatKey} -> ${value}`)
+        } catch (keyError) {
+          console.error(`Error processing key "${flatKey}":`, keyError)
+          // Продолжаем обработку других ключей
+        }
+      }
+
+      console.log('All keys processed successfully')
+      console.log('Final nested object keys:', Object.keys(nested))
+      return nested
+    } catch (error) {
+      console.error('Critical error in flatToNested:', error)
+      console.error('Error stack:', error.stack)
+      return null
+    }
   }
 
   // Добавляем функции для управления прогрессом
@@ -68,49 +101,62 @@ export const useLanguageStore = defineStore('language', () => {
   }
 
   async function setLanguage(lang) {
+    console.log('setLanguage called with:', lang)
     try {
+      console.log('Перед await api.get')
       const response = await api.get(`/i18n/translations/${lang}`)
+      console.log('После await, API response:', response)
       const responseData = response.data
-
+      console.log('API responseData:', responseData)
       if (responseData.status !== 200) {
         console.error('API returned error:', responseData.message)
         return null
       }
-
       const { data } = responseData
-
-      // Создаем объект для всех переводов
-      const newTranslations = {}
-
-      // Проверяем наличие translations и обрабатываем только существующие секции
+      let newTranslations = {}
+      console.log(
+        'data.translations:',
+        data.translations,
+        typeof data.translations,
+        Array.isArray(data.translations),
+      )
       if (data.translations) {
-        Object.entries(data.translations).forEach(([namespace, items]) => {
-          newTranslations[namespace] = items
-        })
+        console.log('data:', data)
+        console.log('Translations before flatToNested:', data.translations)
+        const nested = flatToNested(data.translations)
+        console.log('flatToNested output:', nested)
+        console.log('nested type:', typeof nested)
+        console.log('nested keys:', nested ? Object.keys(nested) : 'nested is null/undefined')
+        newTranslations = nested
+        console.log('Translations after flatToNested:', newTranslations)
+
+        if (nested) {
+          console.log('Setting locale message for:', lang)
+          i18n.global.setLocaleMessage(lang, nested)
+          console.log('en messages:', i18n.global.getLocaleMessage('en'))
+          console.log('Current locale before setting:', i18n.global.locale.value)
+
+          // Устанавливаем локаль
+          i18n.global.locale.value = lang
+          console.log('Current locale after setting:', i18n.global.locale.value)
+        } else {
+          console.error('nested is null/undefined, cannot set locale message')
+        }
+      } else {
+        console.warn('data.translations отсутствует или пустой!', data)
       }
-
-      // Устанавливаем локаль и сообщения
-      i18n.global.locale.value = lang
-      i18n.global.setLocaleMessage(lang, newTranslations)
-
       translations.value = newTranslations
       currentLanguage.value = lang
-      console.log('==== currentLanguage', currentLanguage.value)
-      console.log('currentLanguage:', currentLanguage.value)
-      console.log('translations:', translations.value)
       isLoaded.value = true
       localStorage.setItem('language', lang)
-
-      console.log('Loading translations for:', currentLanguage)
-      console.log('Translations loaded:', translations)
-
       return newTranslations
     } catch (error) {
-      console.error('Error loading translations:', error)
+      console.error('Error in setLanguage:', error)
     }
   }
 
   async function initializeLanguage() {
+    console.log('Calling initializeLanguage...')
     const savedLanguage = localStorage.getItem('language') || 'en'
     return await setLanguage(savedLanguage)
   }

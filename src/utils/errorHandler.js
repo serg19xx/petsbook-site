@@ -6,7 +6,8 @@ const { t } = i18n.global
 
 export const handleGeneralError = (error) => {
   const errorCode = error?.response?.data?.code || API_CODES.GENERAL.UNKNOWN_ERROR
-
+  const status = error?.response?.data?.status || 500
+  const message = error?.response?.data?.message || ''
   const errorMessages = {
     [API_CODES.GENERAL.VALIDATION_ERROR]: 'errors.general.validation',
     [API_CODES.GENERAL.PERMISSION_ERROR]: 'errors.general.permission',
@@ -14,10 +15,14 @@ export const handleGeneralError = (error) => {
     [API_CODES.GENERAL.BUSINESS_ERROR]: 'errors.general.business',
     [API_CODES.GENERAL.TECHNICAL_ERROR]: 'errors.general.technical',
   }
-
   const messageKey = errorMessages[errorCode] || 'errors.general.unknown'
   showNotification.error(messageKey)
-  return { success: false, code: errorCode }
+  return {
+    status,
+    error_code: errorCode,
+    message,
+    data: null,
+  }
 }
 
 export const isGeneralError = (errorCode) => {

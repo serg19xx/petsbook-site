@@ -37,26 +37,40 @@ export const useAuthStore = defineStore(
         }
 
         if (!loginData.email || !loginData.password) {
-          return { success: false, message: t('auth.api.missing_credentials') }
+          return {
+            status: 400,
+            error_code: 'MISSING_CREDENTIALS',
+            message: t('auth.api.missing_credentials'),
+            data: null,
+          }
         }
 
         const response = await api.post('/auth/login', loginData, { withCredentials: true })
 
         if (response.data.status === 200) {
-          // loginInfo.value = response.data.data.user // УДАЛЯЕМ ЭТО
           isAuthenticated.value = true
           const userStore = useUserStore()
-          // Теперь fetchUserData сам обновит все, что нужно
           await userStore.fetchUserData()
           router.push('/')
-          return { success: true, message: response.data.message }
+          return {
+            status: 200,
+            error_code: response.data.error_code || 'LOGIN_SUCCESS',
+            message: response.data.message,
+            data: response.data.data || null,
+          }
         }
-        return { success: false, message: response.data.message }
-      } catch (err) {
-        console.log('Login error:', err)
         return {
-          success: false,
+          status: response.data.status || 500,
+          error_code: response.data.error_code || 'LOGIN_FAILED',
+          message: response.data.message,
+          data: null,
+        }
+      } catch (err) {
+        return {
+          status: err.response?.data?.status || 500,
+          error_code: err.response?.data?.error_code || 'LOGIN_FAILED',
           message: err.response?.data?.message || t('auth.api.login_error'),
+          data: null,
         }
       } finally {
         loading.value = false
@@ -178,7 +192,7 @@ export const useAuthStore = defineStore(
         const response = await api.post('/auth/set-new-password', { token, password })
 
         // Проверяем успешный ответ
-        if (response.data.success) {
+        if (response.data.status === 200) {
           resetPasswordSuccess.value = true
           resetPasswordError.value = null
           return true
@@ -198,27 +212,26 @@ export const useAuthStore = defineStore(
     const validateResetToken = async (token) => {
       try {
         const response = await api.post('/auth/validate-reset-token', { token })
-        console.log('Token validation response:===', response.data) // для отладки
-
-        // Исправленная проверка
-        if (response.data.status) {
+        if (response.data.status === 200) {
           return {
-            success: true,
-            error_code: 'TOKEN_VALID',
+            status: 200,
+            error_code: response.data.error_code || 'TOKEN_VALID',
+            message: response.data.message || '',
+            data: response.data.data || null,
           }
         }
-
         return {
-          success: false,
+          status: response.data.status || 400,
           error_code: response.data.error_code || 'INVALID_TOKEN',
           message: response.data.message || t('auth.api.invalid_token'),
+          data: null,
         }
       } catch (error) {
-        console.error('Token validation error:', error)
         return {
-          success: false,
+          status: error.response?.data?.status || 400,
           error_code: error.response?.data?.error_code || 'INVALID_TOKEN',
           message: error.response?.data?.message || t('auth.api.invalid_token'),
+          data: null,
         }
       }
     }

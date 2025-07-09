@@ -6,13 +6,17 @@ export const profileApi = {
     try {
       const response = await api.get('/user/getuser', { withCredentials: true })
       return {
-        success: true,
-        data: response.data.data.user,
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data?.user || null,
       }
     } catch (error) {
       return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to fetch profile data',
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'PROFILE_FETCH_FAILED',
+        message: error.response?.data?.message || 'Failed to fetch profile data',
+        data: null,
       }
     }
   },
@@ -22,13 +26,17 @@ export const profileApi = {
     try {
       const response = await api.put('/user/update', profileData, { withCredentials: true })
       return {
-        success: true,
-        data: response.data.data,
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data || null,
       }
     } catch (error) {
       return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to update profile',
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'PROFILE_UPDATE_FAILED',
+        message: error.response?.data?.message || 'Failed to update profile',
+        data: null,
       }
     }
   },
@@ -50,13 +58,17 @@ export const profileApi = {
         { withCredentials: true },
       )
       return {
-        success: true,
-        data: response.data.data.avatar,
+        status: response.data.status || response.status,
+        error_code: response.data.error_code || '',
+        message: response.data.message || '',
+        data: response.data.data?.avatar || null,
       }
     } catch (error) {
       return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to upload avatar',
+        status: error.response?.data?.status || 500,
+        error_code: error.response?.data?.error_code || 'AVATAR_UPLOAD_FAILED',
+        message: error.response?.data?.message || 'Failed to upload avatar',
+        data: null,
       }
     }
   },

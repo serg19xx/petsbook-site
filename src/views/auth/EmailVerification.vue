@@ -99,7 +99,7 @@ const handleResendVerification = async () => {
     const response = await api.post('/auth/resend-verification',{},{
       withCredentials:true
     })
-    if (response.data.success) {
+    if (response.status === 200 && response.data?.success) {
       toast.success('Новое письмо с подтверждением отправлено на ваш email', {
         autoClose: 5000,
       })
@@ -130,14 +130,14 @@ onMounted(async () => {
     console.log('Verification response:', response) // Добавим логирование
 
     // Исправляем проверку ответа
-    if (response.status === 200 && response.data.success) {
+    if (response.status === 200 || response.data?.status === 200) {
       success.value = true
       toast.success('Email успешно подтвержден!', {
         autoClose: 3000,
       })
     } else {
       success.value = false
-      errorCode.value = response.data.message || 'UNKNOWN_ERROR'
+      errorCode.value = response.data?.error_code || response.data?.message || 'UNKNOWN_ERROR'
       toast.error(getErrorMessage(errorCode.value), {
         autoClose: 5000,
       })
