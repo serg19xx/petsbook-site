@@ -93,6 +93,7 @@ const getErrorDescription = (code) => {
 }
 
 const handleResendVerification = async () => {
+  alert('handleResendVerification')
   resendLoading.value = true
   try {
     const response = await api.post('/auth/resend-verification',{},{
