@@ -10,7 +10,7 @@ $query = "SELECT * FROM languages
           AND show_in_dialog = 1
           ORDER BY name ASC";
 
-$stmt = $pdo->query($query);
+$stmt = $pdo->query($query);  ///adfgadfgad
 $languages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Формируем ответ
