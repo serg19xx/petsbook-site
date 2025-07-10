@@ -45,7 +45,7 @@ export const useAuthStore = defineStore(
           }
         }
 
-        const response = await api.post('/auth/login', loginData, { withCredentials: true })
+        const response = await api.post('/api/auth/login', loginData, { withCredentials: true })
 
         if (response.data.status === 200) {
           isAuthenticated.value = true
@@ -82,7 +82,7 @@ export const useAuthStore = defineStore(
         // Можно добавить запрос к API для логаута на сервере, если требуется
         const userStore = useUserStore()
         userStore.clearUserData()
-        await api.post('/auth/logout', {}, { withCredentials: true })
+        await api.post('/api/auth/logout', {}, { withCredentials: true })
         loginInfo.value = null
         isAuthenticated.value = false
         localStorage.removeItem('auth')
@@ -104,7 +104,7 @@ export const useAuthStore = defineStore(
     const register = async (userData) => {
       try {
         const response = await api.post(
-          '/auth/register',
+          '/api/auth/register',
           {
             name: userData.name,
             email: userData.email,
@@ -163,7 +163,7 @@ export const useAuthStore = defineStore(
     const requestPasswordReset = async (email) => {
       try {
         const response = await api.post(
-          '/auth/password-reset',
+          '/api/auth/password-reset',
           { email },
           { withCredentials: true },
         )
@@ -189,7 +189,7 @@ export const useAuthStore = defineStore(
           return false
         }
         console.log('Sending reset password request with token:', { token, password })
-        const response = await api.post('/auth/set-new-password', { token, password })
+        const response = await api.post('/api/auth/set-new-password', { token, password })
 
         // Проверяем успешный ответ
         if (response.data.status === 200) {
@@ -211,7 +211,7 @@ export const useAuthStore = defineStore(
 
     const validateResetToken = async (token) => {
       try {
-        const response = await api.post('/auth/validate-reset-token', { token })
+        const response = await api.post('/api/auth/validate-reset-token', { token })
         if (response.data.status === 200) {
           return {
             status: 200,
