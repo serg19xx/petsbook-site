@@ -15,5 +15,5 @@ i18n.global.missing = (locale, key) => {
 
 // Добавьте логирование
 console.log('i18n messages:', i18n.global.messages)
-
+///
 export default i18n
