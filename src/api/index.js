@@ -172,7 +172,7 @@ export const apiService = {
 
   async trackVisit(payload) {
     try {
-      await api.post('/stats/visit', payload)
+      await api.post('/api/stats/visit', payload)
       return {
         status: 200,
         error_code: '',

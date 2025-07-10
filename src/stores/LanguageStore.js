@@ -104,7 +104,7 @@ export const useLanguageStore = defineStore('language', () => {
     console.log('setLanguage called with:', lang)
     try {
       console.log('Перед await api.get')
-      const response = await api.get(`/i18n/translations/${lang}`)
+      const response = await api.get(`/api/i18n/translations/${lang}`)
       console.log('После await, API response:', response)
       const responseData = response.data
       console.log('API responseData:', responseData)
@@ -163,8 +163,8 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function addLanguage(langCode) {
     try {
-      console.log('Отправляем запрос на:', `/i18n/translate-language/${langCode}`)
-      const response = await api.post(`/i18n/translate-language/${langCode}`)
+      console.log('Отправляем запрос на:', `/api/i18n/translate-language/${langCode}`)
+      const response = await api.post(`/api/i18n/translate-language/${langCode}`)
       console.log('Получили ответ:', response.data)
       return true
     } catch (error) {
@@ -190,7 +190,7 @@ export const useLanguageStore = defineStore('language', () => {
 
   async function fetchLocales() {
     try {
-      const response = await api.get('/i18n/locales')
+      const response = await api.get('/api/i18n/locales')
       locales.value = response.data.locales // например: [{ code: 'en', label: 'English' }, ...]
     } catch (error) {
       console.error('Failed to fetch locales:', error)

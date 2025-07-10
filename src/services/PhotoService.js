@@ -220,7 +220,7 @@ export const apiService = {
       }
     }
   },
-
+  /*
   async trackVisit(payload) {
     try {
       await api.post('/stats/visit', payload)
@@ -239,4 +239,5 @@ export const apiService = {
       }
     }
   },
+  */
 }

@@ -53,7 +53,7 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
       isLoading.value = true
       error.value = null
 
-      const response = await api.get('/i18n/email-templates')
+      const response = await api.get('/api/i18n/email-templates')
 
       if (response.data.status === 200) {
         templates.value = response.data.data.templates || []
@@ -72,7 +72,7 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
 
   const loadLanguages = async () => {
     try {
-      const response = await api.get('/i18n/translated-languages')
+      const response = await api.get('/api/i18n/translated-languages')
 
       if (response.data.status === 200) {
         availableLanguages.value = response.data.data.languages || []
@@ -101,7 +101,7 @@ export const useEmailTemplateStore = defineStore('emailTemplate', () => {
       isLoading.value = true
       error.value = null
 
-      const response = await api.post('/i18n/email-templates/save', payload)
+      const response = await api.post('/api/i18n/email-templates/save', payload)
       const data = response.data
 
       if (data.action === 'created') {

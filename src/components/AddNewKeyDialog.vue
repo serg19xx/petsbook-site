@@ -180,11 +180,11 @@ async function handleSubmit() {
     if (props.keyId > 0) {
       // Обновление
       payload.key_id = props.keyId
-      response = await api.post('/i18n/update-translation-key', payload)
+              response = await api.post('/api/i18n/update-translation-key', payload)
       emit('key-updated', response.data.data)
     } else {
       // Добавление
-      response = await api.post('/i18n/add-translation-key', payload)
+              response = await api.post('/api/i18n/add-translation-key', payload)
       emit('key-added', response.data.data)
     }
 

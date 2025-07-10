@@ -140,7 +140,7 @@ function onKeyChanged() {
 
 function deleteKey(key) {
   if (!confirm('Delete this key and all its translations?')) return
-  api.post('/i18n/delete-translation-key', { key_id: key.key_id || key.id })
+          api.post('/api/i18n/delete-translation-key', { key_id: key.key_id || key.id })
     .then(() => {
       toast.success('Key deleted')
       loadKeys()
@@ -149,7 +149,7 @@ function deleteKey(key) {
 }
 
 async function loadKeys() {
-  const res = await api.get('/i18n/all-translation-keys')
+          const res = await api.get('/api/i18n/all-translation-keys')
   if (res.data.status === 200) {
     keys.value = res.data.data.keys
   }

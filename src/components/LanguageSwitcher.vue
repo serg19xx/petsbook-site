@@ -196,7 +196,7 @@ const progressBarClass = computed(() => {
 async function loadTranslatedLanguages() {
   try {
     isLoading.value = true
-    const response = await api.get(`/i18n/translated-languages`)
+            const response = await api.get(`/api/i18n/translated-languages`)
     const data = response.data
 
     if (data.status === 200) {
@@ -221,7 +221,7 @@ async function loadTranslatedLanguages() {
 async function loadAvailableLanguages() {
   try {
     isLoading.value = true
-    const response = await api.get('/i18n/available-languages')
+            const response = await api.get('/api/i18n/available-languages')
     const data = response.data
     if (data.status === 200) {
       availableLanguages.value = data.data.languages.map(lang => ({
@@ -307,11 +307,11 @@ const testServerConnection = async () => {
     console.log('=== ТЕСТИРУЕМ ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===')
 
     // Тестируем простой GET запрос
-    const testResponse = await api.get('/i18n/available-languages')
+            const testResponse = await api.get('/api/i18n/available-languages')
     console.log('Тестовый запрос прошел успешно:', testResponse.status)
 
     // Тестируем POST запрос без параметров
-    const testPostResponse = await api.post('/i18n/available-languages')
+            const testPostResponse = await api.post('/api/i18n/available-languages')
     console.log('Тестовый POST запрос прошел успешно:', testPostResponse.status)
 
   } catch (error) {
@@ -344,7 +344,7 @@ const handleAddLanguage = async (lang) => {
       console.log('Время начала запроса:', new Date().toISOString())
 
       console.log('=== ОТПРАВЛЯЕМ ЗАПРОС ===')
-      response = await api.get(`/i18n/translate-language/${lang.code}`)
+              response = await api.get(`/api/i18n/translate-language/${lang.code}`)
       console.log('=== ЗАПРОС ЗАВЕРШЕН ===')
 
       console.log('=== ПОСЛЕ API ЗАПРОСА ===')
@@ -387,7 +387,7 @@ const handleAddLanguage = async (lang) => {
     pollInterval = setInterval(async () => {
       try {
         console.log('Проверяем статус задачи:', taskId)
-        const statusResp = await api.get(`/i18n/task-status/${taskId}`)
+        const statusResp = await api.get(`/api/i18n/task-status/${taskId}`)
         console.log('Ответ статуса получен:', statusResp)
 
         const taskData = statusResp.data.data
@@ -539,7 +539,7 @@ const progressWidth = computed(() => {
 async function addLanguage(langCode) {
   try {
     console.log('Отправляем запрос на:', `/i18n/translate-language/${langCode}`)
-    const response = await api.post(`/i18n/translate-language/${langCode}`)
+            const response = await api.post(`/api/i18n/translate-language/${langCode}`)
     console.log('Получили ответ:', response.data)
     return true
   } catch (error) {

@@ -486,7 +486,7 @@ const availableLanguages = ref([])
 // Загрузка языков с сервера
 async function loadAvailableLanguages() {
   try {
-    const response = await api.get('/i18n/translated-languages')
+            const response = await api.get('/api/i18n/translated-languages')
     const data = response.data
     if (data.status === 200) {
       availableLanguages.value = data.data.languages.map(lang => ({
