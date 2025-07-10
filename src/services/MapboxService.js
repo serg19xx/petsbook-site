@@ -3,7 +3,7 @@ const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 export const mapboxService = {
   async searchLocation(query) {
     if (!query) return { features: [] }
-
+    //   sdsdfgsd
     try {
       // Улучшенные параметры поиска для глобального охвата
       const params = new URLSearchParams({
