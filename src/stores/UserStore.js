@@ -22,7 +22,7 @@ export const useUserStore = defineStore('user', () => {
     // Она просто получает данные и устанавливает состояние аутентификации.
     loading.value = true
     try {
-      const response = await api.get('/user/getuser', { withCredentials: true })
+      const response = await api.get('/api/user/getuser', { withCredentials: true })
       userData.value = response.data?.data
 
       if (userData.value) {
@@ -50,7 +50,7 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
 
     try {
-      const response = await api.put('/user/update', updateData, {
+      const response = await api.put('/api/user/update', updateData, {
         withCredentials: true,
       })
 
