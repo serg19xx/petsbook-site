@@ -13,7 +13,7 @@ i18n.global.missing = (locale, key) => {
   return key
 }
 // sdfg dfg sdf
-// Добавьте логирование врвапрвроваро
+// Добавьте логирование врвапрвровароvvvvvv
 console.log('i18n messages:', i18n.global.messages)
 ///
 export default i18n
