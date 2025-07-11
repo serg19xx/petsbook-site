@@ -54,7 +54,12 @@ export const useLanguageStore = defineStore('language', () => {
 
           // Создаем вложенную структуру
           for (let j = 0; j < keyParts.length - 1; j++) {
-            const part = keyParts[j]
+            const part = keyParts[j];
+            // Если уже есть строка — пропускаем этот ключ
+            if (typeof current[part] === 'string') {
+              console.warn(`Conflict: "${part}" is already a string, skipping key "${flatKey}"`);
+              continue;
+            }
             if (!current[part]) {
               current[part] = {}
             }

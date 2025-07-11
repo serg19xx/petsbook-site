@@ -63,6 +63,7 @@ export const useUserStore = defineStore('user', () => {
         }
         await fetchUserData()
         return {
+          success: true,
           status: 200,
           error_code: response.data?.error_code || 'USER_UPDATE_SUCCESS',
           message: response.data?.message || '',
@@ -70,6 +71,7 @@ export const useUserStore = defineStore('user', () => {
         }
       } else {
         return {
+          success: false,
           status: response.data?.status || 500,
           error_code: response.data?.error_code || 'USER_UPDATE_FAILED',
           message: response.data?.message || 'Failed to update user data',
@@ -79,6 +81,7 @@ export const useUserStore = defineStore('user', () => {
     } catch (err) {
       error.value = err.response?.data?.message || 'Failed to update user data'
       return {
+        success: false,
         status: err.response?.data?.status || 500,
         error_code: err.response?.data?.error_code || 'USER_UPDATE_FAILED',
         message: error.value,

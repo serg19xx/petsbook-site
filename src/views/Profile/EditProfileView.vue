@@ -114,7 +114,7 @@
               v-model="formData.location"
               :initial-value="formData.location"
               :label="'UI.editprofile.fields.location'"
-              placeholder="Start typing your location..."
+              :placeholder="'UI.editprofile.fields.location.unit_placeholder'"
               :error="getFieldError('location')"
               @location-selected="handleLocationSelected"
             />
