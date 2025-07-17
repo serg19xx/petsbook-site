@@ -65,6 +65,12 @@
             {{ $t('UI.loginview.rlink.register') }}
           </router-link>
         </div>
+
+        <!-- Показываем компонент для неверифицированных email -->
+        <EmailVerificationHandler
+          v-if="showEmailVerificationHandler"
+          :email="formData.email"
+        />
       </form>
     </div>
   </div>
@@ -83,6 +89,7 @@ import { useI18n } from 'vue-i18n'
 import { toast } from 'vue3-toastify'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
+import EmailVerificationHandler from '@/components/auth/EmailVerificationHandler.vue'
 
 const { t, locale, messages } = useI18n()
 const router = useRouter()
@@ -98,11 +105,11 @@ const formData = reactive({
 
 const rules = {
   email: {
-    required: withI18nMessage(required, 'VALIDATION.required'),
-    email: withI18nMessage(email, 'VALIDATION.email')
+    required: withI18nMessage(required, t('VALIDATION.required')),
+    email: withI18nMessage(email, t('VALIDATION.email'))
   },
   password: {
-    required: withI18nMessage(required, 'VALIDATION.required')
+    required: withI18nMessage(required, t('VALIDATION.required'))
   }
 }
 
@@ -111,6 +118,8 @@ const v$ = useVuelidate(rules, formData)
 const validateField = async (field) => {
   await v$.value[field].$touch()
 }
+
+const showEmailVerificationHandler = ref(false)
 
 const handleSubmit = async () => {
   error.value = ''
@@ -123,6 +132,7 @@ const handleSubmit = async () => {
   }
 
   loading.value = true
+  showEmailVerificationHandler.value = false
 
   try {
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -133,16 +143,34 @@ const handleSubmit = async () => {
       remember: formData.remember
     })
 
-    if (!(response.status === 200 && response.error_code === 'LOGIN_SUCCESS')) {
-      error.value = response.message || t('MESSAGE.loginview.errors.invalid_credentials')
-      toast.error(response.message || t('MESSAGE.loginview.errors.invalid_credentials'))
-      return
+    console.log('Login response:', response) // Отладка
+
+    if (response.status === 200 && response.error_code === 'LOGIN_SUCCESS') {
+      await userStore.fetchUserData()
+      const redirectPath = router.currentRoute.value.query.redirect || '/'
+      router.push(redirectPath)
+    } else if (response.error_code === 'EMAIL_NOT_VERIFIED') {
+      console.log('Email not verified, showing handler') // Отладка
+      showEmailVerificationHandler.value = true
+      error.value = response.message
+    } else {
+      if (response.isSystemError) {
+        toast.error(response.message, {
+          autoClose: false,
+          closeOnClick: false,
+          style: {
+            backgroundColor: '#dc2626',
+            color: 'white',
+            fontSize: '14px',
+            whiteSpace: 'pre-line'
+          }
+        })
+        console.error('System Error Details:', response.data)
+      } else {
+        error.value = response.message
+        toast.error(response.message)
+      }
     }
-
-    await userStore.fetchUserData()
-    const redirectPath = router.currentRoute.value.query.redirect || '/'
-    router.push(redirectPath)
-
   } catch (err) {
     console.error('Error logging in:', err)
     error.value = err.message || t('MESSAGE.loginview.errors.invalid_credentials')
@@ -153,9 +181,9 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => {
-  console.log('Current locale:', locale.value)
-  console.log('Messages:', messages.value)
-  console.log('Login title:', t('loginview.h2.title'))
+  //console.log('Current locale:', locale.value)
+  //console.log('Messages:', messages.value)
+  //console.log('Login title:', t('loginview.h2.title'))
 })
 
 </script>

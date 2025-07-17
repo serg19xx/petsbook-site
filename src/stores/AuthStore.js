@@ -29,6 +29,11 @@ export const useAuthStore = defineStore(
     const resetPasswordError = ref(null)
 
     const login = async (credentials) => {
+      const codeMapping = {
+        EMAIL_NOT_VERIFIED: 'MESSAGE.loginview.email_not_verified',
+        LOGIN_SUCCESS: 'MESSAGE.loginview.login_success',
+        MISSING_CREDENTIALS: 'MESSAGE.loginview.missing_credentials',
+      }
       loading.value = true
       try {
         const loginData = {
@@ -47,6 +52,27 @@ export const useAuthStore = defineStore(
 
         const response = await api.post('/api/auth/login', loginData, { withCredentials: true })
 
+        // Обработка системных ошибок (500)
+        if (response.data.status === 500 && response.data.error_code) {
+          const systemErrors = ['SYSTEM_ERROR', 'DATABASE_ERROR', 'EMAIL_SEND_ERROR']
+
+          if (systemErrors.includes(response.data.error_code)) {
+            const errorMessage = response.data.data?.message || 'Системная ошибка'
+            const errorDetails =
+              response.data.data?.file && response.data.data?.line
+                ? `\nФайл: ${response.data.data.file}:${response.data.data.line}`
+                : ''
+
+            return {
+              status: 500,
+              error_code: response.data.error_code,
+              message: `Ошибка системы: ${errorMessage}${errorDetails}`,
+              data: response.data.data,
+              isSystemError: true,
+            }
+          }
+        }
+
         if (response.data.status === 200) {
           isAuthenticated.value = true
           const userStore = useUserStore()
@@ -55,10 +81,22 @@ export const useAuthStore = defineStore(
           return {
             status: 200,
             error_code: response.data.error_code || 'LOGIN_SUCCESS',
-            message: response.data.message,
+            message: t('auth.api.login_success'),
             data: response.data.data || null,
           }
         }
+
+        // Обработка EMAIL_NOT_VERIFIED
+        if (response.data.error_code === 'EMAIL_NOT_VERIFIED') {
+          return {
+            status: 401,
+            error_code: 'EMAIL_NOT_VERIFIED',
+            message: response.data.message || t('auth.api.email_not_verified'),
+            data: response.data.data || null,
+            requiresEmailVerification: true,
+          }
+        }
+
         return {
           status: response.data.status || 500,
           error_code: response.data.error_code || 'LOGIN_FAILED',
@@ -236,6 +274,67 @@ export const useAuthStore = defineStore(
       }
     }
 
+    // Добавим методы для работы с неверифицированными email
+    const resendVerificationEmail = async (email) => {
+      try {
+        const response = await api.post(
+          '/auth/resend-verification',
+          { email },
+          { withCredentials: true },
+        )
+        return {
+          success: response.data.status === 200,
+          message: response.data.message || t('auth.api.verification_sent'),
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: error.response?.data?.message || t('auth.api.verification_error'),
+        }
+      }
+    }
+
+    const deleteUnverifiedAccount = async (email) => {
+      try {
+        const response = await api.delete('/auth/delete-unverified', {
+          data: { email },
+          withCredentials: true,
+        })
+        return {
+          success: response.data.status === 200,
+          message: response.data.message || t('auth.api.account_deleted'),
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: error.response?.data?.message || t('auth.api.delete_error'),
+        }
+      }
+    }
+
+    const updateEmailForUnverified = async (oldEmail, newEmail) => {
+      try {
+        const response = await api.put(
+          '/auth/update-email-unverified',
+          {
+            oldEmail,
+            newEmail,
+          },
+          { withCredentials: true },
+        )
+        return {
+          success: response.data.status === 200,
+          message: response.data.message || t('auth.api.email_updated'),
+          data: response.data.data,
+        }
+      } catch (error) {
+        return {
+          success: false,
+          message: error.response?.data?.message || t('auth.api.update_error'),
+        }
+      }
+    }
+
     return {
       loading,
       isAuthenticated,
@@ -251,6 +350,9 @@ export const useAuthStore = defineStore(
       loginInfo,
       resetPasswordSuccess,
       resetPasswordError,
+      resendVerificationEmail,
+      deleteUnverifiedAccount,
+      updateEmailForUnverified,
     }
   },
   { persist: true },
