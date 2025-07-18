@@ -273,12 +273,11 @@ export const useAuthStore = defineStore(
         }
       }
     }
-
     // Добавим методы для работы с неверифицированными email
     const resendVerificationEmail = async (email) => {
       try {
         const response = await api.post(
-          '/auth/resend-verification',
+          '/auth/resend-unverified-email',
           { email },
           { withCredentials: true },
         )
@@ -296,7 +295,7 @@ export const useAuthStore = defineStore(
 
     const deleteUnverifiedAccount = async (email) => {
       try {
-        const response = await api.delete('/auth/delete-unverified', {
+        const response = await api.delete('/auth/delete-unverified-email', {
           data: { email },
           withCredentials: true,
         })
@@ -314,8 +313,8 @@ export const useAuthStore = defineStore(
 
     const updateEmailForUnverified = async (oldEmail, newEmail) => {
       try {
-        const response = await api.put(
-          '/auth/update-email-unverified',
+        const response = await api.patch(
+          '/auth/update-unverified-email',
           {
             oldEmail,
             newEmail,

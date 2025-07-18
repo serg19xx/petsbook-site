@@ -70,6 +70,8 @@
         <EmailVerificationHandler
           v-if="showEmailVerificationHandler"
           :email="formData.email"
+          @clearForm="clearLoginForm"
+          @hideHandler="hideEmailVerificationHandler"
         />
       </form>
     </div>
@@ -120,6 +122,20 @@ const validateField = async (field) => {
 }
 
 const showEmailVerificationHandler = ref(false)
+
+const clearLoginForm = () => {
+  formData.email = ''
+  formData.password = ''
+  formData.remember = false
+
+  // Сбрасываем валидацию
+  v$.value.$reset()
+}
+
+const hideEmailVerificationHandler = () => {
+  console.log('hideEmailVerificationHandler called')
+  showEmailVerificationHandler.value = false
+}
 
 const handleSubmit = async () => {
   error.value = ''
