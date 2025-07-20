@@ -4,10 +4,6 @@ import router from '@/router'
 import { useAuthStore } from '@/stores/AuthStore'
 
 axios.defaults.withCredentials = true
-console.log('=== API CONFIGURATION ===')
-console.log('API BASE URL:', import.meta.env.VITE_API_BASE_URL)
-console.log('NODE ENV:', import.meta.env.NODE_ENV)
-console.log('DEV:', import.meta.env.DEV)
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
@@ -55,15 +51,6 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
-    console.error('=== API ERROR INTERCEPTOR ===')
-    console.error('URL:', error.config?.url)
-    console.error('Method:', error.config?.method)
-    console.error('Status:', error.response?.status)
-    console.error('StatusText:', error.response?.statusText)
-    console.error('Data:', error.response?.data)
-    console.error('Message:', error.message)
-    console.error('Stack:', error.stack)
-
     if (import.meta.env.DEV) {
       console.error('API Error Details:', {
         url: error.config?.url,

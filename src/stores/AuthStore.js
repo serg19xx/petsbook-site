@@ -49,32 +49,20 @@ export const useAuthStore = defineStore(
             data: null,
           }
         }
-        console.log('response1111111', null)
-        console.log('Отправляем запрос на логин с данными:', loginData)
 
         let response
         try {
           response = await api.post('/api/auth/login', loginData, { withCredentials: true })
-          console.log('response1111111', response)
         } catch (apiError) {
-          console.error('Ошибка API запроса:', apiError)
-          console.error('Статус ошибки:', apiError.response?.status)
-          console.error('Данные ошибки:', apiError.response?.data)
-          console.error('Сообщение ошибки:', apiError.message)
-
           // Получаем error_code из ответа сервера
           const errorCode = apiError.response?.data?.error_code || 'LOGIN_FAILED'
 
           // Используем codeMapping для получения переведенного сообщения
           const messageKey = codeMapping[errorCode]
-          console.log('Ключ сообщения:', messageKey)
-          console.log('Доступные переводы:', i18n.global.messages)
 
           const translatedMessage = messageKey
             ? t(messageKey)
             : apiError.response?.data?.message || apiError.message
-
-          console.log('Переведенное сообщение:', translatedMessage)
 
           // Возвращаем ошибку в том же формате
           return {
@@ -142,8 +130,6 @@ export const useAuthStore = defineStore(
           data: null,
         }
       } catch (err) {
-        console.error('Общая ошибка в login:', err)
-
         // Получаем error_code из ответа сервера
         const errorCode = err.response?.data?.error_code || 'LOGIN_FAILED'
 
@@ -344,7 +330,6 @@ export const useAuthStore = defineStore(
           return false
         }
 
-        console.log('Sending reset password request with token:', { token, password })
         const response = await api.post('/api/auth/set-new-password', { token, password })
 
         // Успешный сброс пароля

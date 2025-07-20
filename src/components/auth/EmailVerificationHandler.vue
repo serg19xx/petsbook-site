@@ -276,12 +276,8 @@ const handleDeleteAccount = async () => {
       toast.success(result.message)
       showEmailUpdate.value = false
       showDeletionMessage.value = true
-
-      console.log('Account deleted, starting timer...')
-
       // Скрываем блок через 5 секунд
       setTimeout(() => {
-        console.log('Timer finished, emitting events...')
         emit('clearForm')
         emit('hideHandler')
       }, 5000)
@@ -333,6 +329,6 @@ const showEmailUpdateModal = () => {
 
 // Добавьте watcher для отладки
 watch(showEmailUpdate, (newVal) => {
-  console.log('showEmailUpdate changed to:', newVal)
+  //console.log('showEmailUpdate changed to:', newVal)
 })
 </script>

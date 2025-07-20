@@ -133,7 +133,6 @@ const clearLoginForm = () => {
 }
 
 const hideEmailVerificationHandler = () => {
-  console.log('hideEmailVerificationHandler called')
   showEmailVerificationHandler.value = false
 }
 
@@ -159,14 +158,11 @@ const handleSubmit = async () => {
       remember: formData.remember
     })
 
-    console.log('Login response:', response) // Отладка
-
     if (response.status === 200 && response.error_code === 'LOGIN_SUCCESS') {
       await userStore.fetchUserData()
       const redirectPath = router.currentRoute.value.query.redirect || '/'
       router.push(redirectPath)
     } else if (response.error_code === 'EMAIL_NOT_VERIFIED') {
-      console.log('Email not verified, showing handler') // Отладка
       showEmailVerificationHandler.value = true
       error.value = response.message
     } else {
