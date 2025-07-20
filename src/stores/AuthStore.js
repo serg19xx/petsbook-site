@@ -30,9 +30,9 @@ export const useAuthStore = defineStore(
 
     const login = async (credentials) => {
       const codeMapping = {
-        EMAIL_NOT_VERIFIED: 'MESSAGE.loginview.email_not_verified',
-        LOGIN_SUCCESS: 'MESSAGE.loginview.login_success',
-        MISSING_CREDENTIALS: 'MESSAGE.loginview.missing_credentials',
+        EMAIL_NOT_VERIFIED: 'MESSAGE.loginview.errors.email_not_verified',
+        LOGIN_SUCCESS: 'MESSAGE.loginview.errors.login_success',
+        MISSING_CREDENTIALS: 'MESSAGE.loginview.errors.missing_credentials',
       }
       loading.value = true
       try {
@@ -45,13 +45,45 @@ export const useAuthStore = defineStore(
           return {
             status: 400,
             error_code: 'MISSING_CREDENTIALS',
-            message: t('auth.api.missing_credentials'),
+            message: t(codeMapping['MISSING_CREDENTIALS']),
             data: null,
           }
         }
+        console.log('response1111111', null)
+        console.log('Отправляем запрос на логин с данными:', loginData)
 
-        const response = await api.post('/api/auth/login', loginData, { withCredentials: true })
+        let response
+        try {
+          response = await api.post('/api/auth/login', loginData, { withCredentials: true })
+          console.log('response1111111', response)
+        } catch (apiError) {
+          console.error('Ошибка API запроса:', apiError)
+          console.error('Статус ошибки:', apiError.response?.status)
+          console.error('Данные ошибки:', apiError.response?.data)
+          console.error('Сообщение ошибки:', apiError.message)
 
+          // Получаем error_code из ответа сервера
+          const errorCode = apiError.response?.data?.error_code || 'LOGIN_FAILED'
+
+          // Используем codeMapping для получения переведенного сообщения
+          const messageKey = codeMapping[errorCode]
+          console.log('Ключ сообщения:', messageKey)
+          console.log('Доступные переводы:', i18n.global.messages)
+
+          const translatedMessage = messageKey
+            ? t(messageKey)
+            : apiError.response?.data?.message || apiError.message
+
+          console.log('Переведенное сообщение:', translatedMessage)
+
+          // Возвращаем ошибку в том же формате
+          return {
+            status: apiError.response?.data?.status || 500,
+            error_code: errorCode,
+            message: translatedMessage,
+            data: null,
+          }
+        }
         // Обработка системных ошибок (500)
         if (response.data.status === 500 && response.data.error_code) {
           const systemErrors = ['SYSTEM_ERROR', 'DATABASE_ERROR', 'EMAIL_SEND_ERROR']
@@ -81,7 +113,7 @@ export const useAuthStore = defineStore(
           return {
             status: 200,
             error_code: response.data.error_code || 'LOGIN_SUCCESS',
-            message: t('auth.api.login_success'),
+            message: t(codeMapping['LOGIN_SUCCESS']),
             data: response.data.data || null,
           }
         }
@@ -89,25 +121,41 @@ export const useAuthStore = defineStore(
         // Обработка EMAIL_NOT_VERIFIED
         if (response.data.error_code === 'EMAIL_NOT_VERIFIED') {
           return {
-            status: 401,
+            status: 403, // Используем правильный статус 403
             error_code: 'EMAIL_NOT_VERIFIED',
-            message: response.data.message || t('auth.api.email_not_verified'),
+            message: t(codeMapping['EMAIL_NOT_VERIFIED']),
             data: response.data.data || null,
             requiresEmailVerification: true,
           }
         }
 
+        // Для других ошибок используем codeMapping или fallback
+        const errorCode = response.data.error_code || 'LOGIN_FAILED'
+        const translatedMessage = codeMapping[errorCode]
+          ? t(codeMapping[errorCode])
+          : response.data.message || 'Login failed'
+
         return {
           status: response.data.status || 500,
-          error_code: response.data.error_code || 'LOGIN_FAILED',
-          message: response.data.message,
+          error_code: errorCode,
+          message: translatedMessage,
           data: null,
         }
       } catch (err) {
+        console.error('Общая ошибка в login:', err)
+
+        // Получаем error_code из ответа сервера
+        const errorCode = err.response?.data?.error_code || 'LOGIN_FAILED'
+
+        // Используем codeMapping для получения переведенного сообщения
+        const translatedMessage = codeMapping[errorCode]
+          ? t(codeMapping[errorCode])
+          : err.response?.data?.message || err.message
+
         return {
           status: err.response?.data?.status || 500,
-          error_code: err.response?.data?.error_code || 'LOGIN_FAILED',
-          message: err.response?.data?.message || t('auth.api.login_error'),
+          error_code: errorCode,
+          message: translatedMessage,
           data: null,
         }
       } finally {
@@ -140,6 +188,15 @@ export const useAuthStore = defineStore(
     }
 
     const register = async (userData) => {
+      const codeMapping = {
+        EMAIL_ALREADY_EXISTS: 'MESSAGE.signupview.error.email_already_exists',
+        REGISTRATION_SUCCESS: 'MESSAGE.signupview.success.registered',
+        REGISTRATION_FAILED: 'MESSAGE.signupview.error.registration_failed',
+        NETWORK_ERROR: 'MESSAGE.signupview.error.network_error',
+        SERVER_ERROR: 'MESSAGE.signupview.error.server_error',
+        VALIDATION_ERROR: 'MESSAGE.signupview.error.validation_error',
+      }
+
       try {
         const response = await api.post(
           '/api/auth/register',
@@ -152,53 +209,64 @@ export const useAuthStore = defineStore(
           { withCredentials: true },
         )
 
-        // Возвращаем статус для обработки в компоненте
-        if (response.status === 400) {
+        // Успешная регистрация
+        if (response.data.status === 200) {
+          return {
+            success: true,
+            message: t(codeMapping['REGISTRATION_SUCCESS']),
+          }
+        }
+
+        // Обработка ошибок валидации (400)
+        if (response.data.status === 400) {
+          const errorCode = response.data.error_code || 'VALIDATION_ERROR'
           return {
             success: false,
             status: 400,
-            error_code: response.data.error_code || 'REGISTRATION_FAILED',
-            message: response.data.message || t('notifications.registration.failed'),
+            error_code: errorCode,
+            message: t(codeMapping[errorCode] || codeMapping['VALIDATION_ERROR']),
           }
         }
 
-        if (response.status === 200) {
-          return {
-            success: true,
-            message: t('auth.api.registration_success'),
-          }
-        }
-
+        // Другие ошибки сервера
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
           success: false,
-          error_code: 'SERVER_ERROR',
-          message: t('notifications.registration.system_error'),
+          status: response.data.status || 500,
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       } catch (error) {
-        console.log('Registration error details:', {
-          response: error.response,
-          data: error.response?.data,
-          status: error.response?.status,
-        })
+        console.error('Registration error:', error)
 
+        // Сетевые ошибки
         if (!error.response) {
           return {
             success: false,
             error_code: 'NETWORK_ERROR',
-            message: t('notifications.registration.network_error'),
+            message: t(codeMapping['NETWORK_ERROR']),
           }
         }
 
+        // Ошибки от сервера
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
         return {
           success: false,
           status: error.response.status,
-          error_code: error.response.data.error_code || 'SERVER_ERROR',
-          message: error.response.data.message || t('notifications.registration.system_error'),
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       }
     }
 
     const requestPasswordReset = async (email) => {
+      const codeMapping = {
+        PASSWORD_RESET_EMAIL_SENT: 'MESSAGE.passwordrecoveryview.success.email_sent',
+        EMAIL_NOT_FOUND: 'MESSAGE.passwordrecoveryview.error.email_not_found',
+        NETWORK_ERROR: 'MESSAGE.passwordrecoveryview.error.network_error',
+        SERVER_ERROR: 'MESSAGE.passwordrecoveryview.error.server_error',
+      }
+
       try {
         const response = await api.post(
           '/api/auth/password-reset',
@@ -206,112 +274,280 @@ export const useAuthStore = defineStore(
           { withCredentials: true },
         )
 
-        return {
-          success: true,
-          message: t('auth.api.reset_link_sent'),
+        // Успешная отправка
+        if (response.data.status === 200) {
+          return {
+            success: true,
+            status: 200,
+            error_code: response.data.error_code || 'PASSWORD_RESET_EMAIL_SENT',
+            message: t(codeMapping['PASSWORD_RESET_EMAIL_SENT'], { email }),
+          }
         }
-      } catch (error) {
+
+        // Ошибки валидации
+        if (response.data.status === 400) {
+          const errorCode = response.data.error_code || 'EMAIL_NOT_FOUND'
+          return {
+            success: false,
+            status: 400,
+            error_code: errorCode,
+            message: t(codeMapping[errorCode] || codeMapping['EMAIL_NOT_FOUND']),
+          }
+        }
+
+        // Другие ошибки
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
           success: false,
-          message: error.response?.data?.message || t('auth.api.reset_request_error'),
+          status: response.data.status || 500,
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
+        }
+      } catch (error) {
+        console.error('Password reset request error:', error)
+
+        // Сетевые ошибки
+        if (!error.response) {
+          return {
+            success: false,
+            error_code: 'NETWORK_ERROR',
+            message: t(codeMapping['NETWORK_ERROR']),
+          }
+        }
+
+        // Ошибки от сервера
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
+        return {
+          success: false,
+          status: error.response.status,
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       }
     }
 
     const resetPassword = async (token, password) => {
+      const codeMapping = {
+        PASSWORD_RESET_SUCCESS: 'MESSAGE.resetpasswordview.success.password_changed',
+        INVALID_TOKEN: 'MESSAGE.resetpasswordview.error.invalid_token',
+        TOKEN_EXPIRED: 'MESSAGE.resetpasswordview.error.token_expired',
+        WEAK_PASSWORD: 'MESSAGE.resetpasswordview.error.weak_password',
+        NETWORK_ERROR: 'MESSAGE.resetpasswordview.error.network_error',
+        SERVER_ERROR: 'MESSAGE.resetpasswordview.error.server_error',
+      }
+
       try {
         // Проверяем, что token и password переданы корректно
         if (!token || !password) {
-          resetPasswordError.value = 'Missing token or password'
+          resetPasswordError.value = t(codeMapping['INVALID_TOKEN'])
           resetPasswordSuccess.value = false
           return false
         }
+
         console.log('Sending reset password request with token:', { token, password })
         const response = await api.post('/api/auth/set-new-password', { token, password })
 
-        // Проверяем успешный ответ
+        // Успешный сброс пароля
         if (response.data.status === 200) {
           resetPasswordSuccess.value = true
           resetPasswordError.value = null
           return true
-        } else {
-          resetPasswordError.value = response.data.message || 'Failed to reset password'
+        }
+
+        // Ошибки валидации
+        if (response.data.status === 400) {
+          const errorCode = response.data.error_code || 'INVALID_TOKEN'
+          resetPasswordError.value = t(codeMapping[errorCode] || codeMapping['INVALID_TOKEN'])
           resetPasswordSuccess.value = false
           return false
         }
+
+        // Другие ошибки
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
+        resetPasswordError.value = t(codeMapping[errorCode] || codeMapping['SERVER_ERROR'])
+        resetPasswordSuccess.value = false
+        return false
       } catch (error) {
         console.error('Reset password error:', error)
-        resetPasswordError.value = error.response?.data?.message || 'Failed to reset password'
+
+        // Сетевые ошибки
+        if (!error.response) {
+          resetPasswordError.value = t(codeMapping['NETWORK_ERROR'])
+          resetPasswordSuccess.value = false
+          return false
+        }
+
+        // Ошибки от сервера
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
+        resetPasswordError.value = t(codeMapping[errorCode] || codeMapping['SERVER_ERROR'])
         resetPasswordSuccess.value = false
         return false
       }
     }
 
     const validateResetToken = async (token) => {
+      const codeMapping = {
+        TOKEN_VALID: 'MESSAGE.resetpasswordview.success.token_valid',
+        INVALID_TOKEN: 'MESSAGE.resetpasswordview.error.invalid_token',
+        TOKEN_EXPIRED: 'MESSAGE.resetpasswordview.error.token_expired',
+        NETWORK_ERROR: 'MESSAGE.resetpasswordview.error.network_error',
+        SERVER_ERROR: 'MESSAGE.resetpasswordview.error.server_error',
+      }
+
       try {
         const response = await api.post('/api/auth/validate-reset-token', { token })
+
+        // Успешная валидация токена
         if (response.data.status === 200) {
           return {
             status: 200,
             error_code: response.data.error_code || 'TOKEN_VALID',
-            message: response.data.message || '',
+            message: t(codeMapping['TOKEN_VALID']),
             data: response.data.data || null,
           }
         }
+
+        // Ошибки валидации токена
+        if (response.data.status === 400) {
+          const errorCode = response.data.error_code || 'INVALID_TOKEN'
+          return {
+            status: 400,
+            error_code: errorCode,
+            message: t(codeMapping[errorCode] || codeMapping['INVALID_TOKEN']),
+            data: null,
+          }
+        }
+
+        // Другие ошибки
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
-          status: response.data.status || 400,
-          error_code: response.data.error_code || 'INVALID_TOKEN',
-          message: response.data.message || t('auth.api.invalid_token'),
+          status: response.data.status || 500,
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
           data: null,
         }
       } catch (error) {
+        console.error('Token validation error:', error)
+
+        // Сетевые ошибки
+        if (!error.response) {
+          return {
+            status: 500,
+            error_code: 'NETWORK_ERROR',
+            message: t(codeMapping['NETWORK_ERROR']),
+            data: null,
+          }
+        }
+
+        // Ошибки от сервера
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
         return {
-          status: error.response?.data?.status || 400,
-          error_code: error.response?.data?.error_code || 'INVALID_TOKEN',
-          message: error.response?.data?.message || t('auth.api.invalid_token'),
+          status: error.response.status || 500,
+          error_code: errorCode,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
           data: null,
         }
       }
     }
     // Добавим методы для работы с неверифицированными email
     const resendVerificationEmail = async (email) => {
+      const codeMapping = {
+        VERIFICATION_SENT: 'MESSAGE.emailverification.success.verification_sent',
+        EMAIL_NOT_FOUND: 'MESSAGE.emailverification.error.email_not_found',
+        NETWORK_ERROR: 'MESSAGE.emailverification.error.network_error',
+        SERVER_ERROR: 'MESSAGE.emailverification.error.server_error',
+      }
+
       try {
         const response = await api.post(
           '/auth/resend-unverified-email',
           { email },
           { withCredentials: true },
         )
-        return {
-          success: response.data.status === 200,
-          message: response.data.message || t('auth.api.verification_sent'),
+
+        if (response.data.status === 200) {
+          return {
+            success: true,
+            message: t(codeMapping['VERIFICATION_SENT']),
+          }
         }
-      } catch (error) {
+
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
           success: false,
-          message: error.response?.data?.message || t('auth.api.verification_error'),
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
+        }
+      } catch (error) {
+        console.error('Resend verification error:', error)
+
+        if (!error.response) {
+          return {
+            success: false,
+            message: t(codeMapping['NETWORK_ERROR']),
+          }
+        }
+
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
+        return {
+          success: false,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       }
     }
 
     const deleteUnverifiedAccount = async (email) => {
+      const codeMapping = {
+        ACCOUNT_DELETED: 'MESSAGE.emailverification.success.account_deleted',
+        EMAIL_NOT_FOUND: 'MESSAGE.emailverification.error.email_not_found',
+        NETWORK_ERROR: 'MESSAGE.emailverification.error.network_error',
+        SERVER_ERROR: 'MESSAGE.emailverification.error.server_error',
+      }
+
       try {
         const response = await api.delete('/auth/delete-unverified-email', {
           data: { email },
           withCredentials: true,
         })
-        return {
-          success: response.data.status === 200,
-          message: response.data.message || t('auth.api.account_deleted'),
+
+        if (response.data.status === 200) {
+          return {
+            success: true,
+            message: t(codeMapping['ACCOUNT_DELETED']),
+          }
         }
-      } catch (error) {
+
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
           success: false,
-          message: error.response?.data?.message || t('auth.api.delete_error'),
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
+        }
+      } catch (error) {
+        console.error('Delete unverified account error:', error)
+
+        if (!error.response) {
+          return {
+            success: false,
+            message: t(codeMapping['NETWORK_ERROR']),
+          }
+        }
+
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
+        return {
+          success: false,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       }
     }
 
     const updateEmailForUnverified = async (oldEmail, newEmail) => {
+      const codeMapping = {
+        EMAIL_UPDATED: 'MESSAGE.emailverification.success.email_updated',
+        EMAIL_NOT_FOUND: 'MESSAGE.emailverification.error.email_not_found',
+        EMAIL_ALREADY_EXISTS: 'MESSAGE.emailverification.error.email_already_exists',
+        NETWORK_ERROR: 'MESSAGE.emailverification.error.network_error',
+        SERVER_ERROR: 'MESSAGE.emailverification.error.server_error',
+      }
+
       try {
         const response = await api.patch(
           '/auth/update-unverified-email',
@@ -321,15 +557,34 @@ export const useAuthStore = defineStore(
           },
           { withCredentials: true },
         )
-        return {
-          success: response.data.status === 200,
-          message: response.data.message || t('auth.api.email_updated'),
-          data: response.data.data,
+
+        if (response.data.status === 200) {
+          return {
+            success: true,
+            message: t(codeMapping['EMAIL_UPDATED']),
+            data: response.data.data,
+          }
         }
-      } catch (error) {
+
+        const errorCode = response.data.error_code || 'SERVER_ERROR'
         return {
           success: false,
-          message: error.response?.data?.message || t('auth.api.update_error'),
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
+        }
+      } catch (error) {
+        console.error('Update email error:', error)
+
+        if (!error.response) {
+          return {
+            success: false,
+            message: t(codeMapping['NETWORK_ERROR']),
+          }
+        }
+
+        const errorCode = error.response.data?.error_code || 'SERVER_ERROR'
+        return {
+          success: false,
+          message: t(codeMapping[errorCode] || codeMapping['SERVER_ERROR']),
         }
       }
     }

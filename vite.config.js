@@ -11,6 +11,7 @@ export default defineConfig({
   },
   base: '/',
   server: {
+    historyApiFallback: true,
     host: true,
     port: 5173,
     proxy: {

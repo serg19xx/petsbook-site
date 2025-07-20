@@ -142,8 +142,8 @@ const handleSubmit = async () => {
   const isValid = await v$.value.$validate()
 
   if (!isValid) {
-    error.value = t('MESSAGE.loginview.errors.invalid_credentials')
-    toast.error(t('MESSAGE.loginview.errors.invalid_credentials'))
+    error.value = t('MESSAGE.loginview.errors.missing_credentials')
+    toast.error(t('MESSAGE.loginview.errors.missing_credentials'))
     return
   }
 
