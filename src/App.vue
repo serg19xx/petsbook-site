@@ -223,11 +223,20 @@ const menuItems = [
   { path: '/profile', label: 'profile' }
 ]
 
-const userMenuItems = [
-  { path: '/profile', label: 'my_profile' },
-  { path: '/settings', label: 'settings' },
-  { path: '/help', label: 'help' }
-]
+const userMenuItems = computed(() => {
+  const items = [
+    { path: '/profile', label: 'my_profile' },
+    { path: '/settings', label: 'settings' },
+    { path: '/help', label: 'help' }
+  ]
+
+  // Добавляем "My Pets" только для пользователей с ролью user
+  if (userStore.userData?.role === 'user') {
+    items.splice(1, 0, { path: '/my-pets', label: 'my_pets' })
+  }
+
+  return items
+})
 
 const handleLogout = async () => {
   const confirmed = await confirmDialogRef.value.show({

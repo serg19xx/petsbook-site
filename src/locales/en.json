@@ -5,5 +5,51 @@
     "url": "Please enter a valid domain (e.g., example.com)",
     "phoneFormat": "Please enter a valid phone number",
     "general_error": "Please fix the errors in the form"
+  },
+  "UI": {
+    "usermenu": {
+      "link": {
+        "my_profile": "Profile",
+        "my_pets": "My Pets",
+        "settings": "Settings",
+        "help": "Help",
+        "login": "Login",
+        "register": "Register"
+      },
+      "button": {
+        "logout": "Sign Out"
+      }
+    },
+    "mypets": {
+      "title": "My Pets",
+      "add_pet": "Add Pet",
+      "add_first_pet": "Add Your First Pet",
+      "empty_title": "No pets yet",
+      "empty_description": "Start by adding your first pet to your profile."
+    },
+    "pets": {
+      "types": {
+        "dog": "Dog",
+        "cat": "Cat",
+        "bird": "Bird",
+        "fish": "Fish",
+        "other": "Other"
+      },
+      "years": "years",
+      "weight_unit": "kg",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "owner": {
+        "actions": {
+          "edit": "Edit pet",
+          "delete": "Delete pet",
+          "view": "View details",
+          "share": "Share"
+        },
+        "last_updated": "Last updated"
+      }
+    }
   }
 }

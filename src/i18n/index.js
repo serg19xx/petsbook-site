@@ -12,8 +12,8 @@ i18n.global.missing = (locale, key) => {
   console.error(`Missing translation: ${key} for locale: ${locale}`)
   return key
 }
-// sdfg dfg sdf
-// Добавьте логирование врвапрвровароvvvvvv
+
+// Добавьте логирование
 console.log('i18n messages:', i18n.global.messages)
-///
+
 export default i18n

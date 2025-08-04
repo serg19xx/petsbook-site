@@ -15,18 +15,6 @@
           </div>
         </div>
 
-        <!-- Role Badge -->
-        <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
-             :class="{
-               'bg-blue-100 text-blue-800': userRole === 'petowner',
-               'bg-purple-100 text-purple-800': userRole === 'business',
-               'bg-green-100 text-green-800': userRole === 'producer',
-               'bg-gray-100 text-gray-800': userRole === 'user'
-             }">
-          <Icon :icon="getRoleIcon" class="w-4 h-4 mr-2" />
-          {{ $t(`UI.profileview.role.${userRole}`) }}
-        </div>
-
         <!-- Role-specific content will be rendered here through router-view -->
         <router-view></router-view>
       </div>
@@ -59,26 +47,6 @@ const { t } = useI18n()
 
 // Получаем роль из store
 const userRole = computed(() => userStore.userData?.role || 'user')
-
-const getRoleIcon = computed(() => {
-  const icons = {
-    petowner: 'mdi:paw',
-    business: 'mdi:domain',
-    producer: 'mdi:movie',
-    user: 'mdi:account'
-  }
-  return icons[userRole.value] || 'mdi:account'
-})
-
-const getRoleLabel = computed(() => {
-  const labels = {
-    petowner: t('roles.petowner'),
-    business: t('roles.business'),
-    producer: t('roles.producer'),
-    user: t('roles.user')
-  }
-  return labels[userRole.value] || t('roles.user')
-})
 
 const isOwnProfile = computed(() => {
   const result = !route.params.id || route.params.id === userStore.userData?.id

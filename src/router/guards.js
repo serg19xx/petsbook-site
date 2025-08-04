@@ -5,9 +5,12 @@ export function setupRouteGuards(router) {
     const userStore = useUserStore()
 
     // Проверка требований к роли
-    if (to.meta.requiresRole && userStore.userRole !== to.meta.requiresRole) {
-      next({ name: 'profile' }) // Редирект на основной профиль
-      return
+    if (to.meta.roles) {
+      const userRole = userStore.userData?.role || 'guest'
+      if (!to.meta.roles.includes(userRole)) {
+        next({ name: 'profile' }) // Редирект на основной профиль
+        return
+      }
     }
 
     next()

@@ -52,6 +52,15 @@ const router = createRouter({
       //meta: { requiresGuest: true },
     },
     {
+      path: '/my-pets',
+      name: 'my-pets',
+      component: () => import('@/views/MyPetsView.vue'),
+      meta: {
+        requiresAuth: true,
+        roles: ['user'], // Только для пользователей с ролью user
+      },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),
