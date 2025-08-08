@@ -93,3 +93,27 @@ export const optimizeCoverPhoto = async (file) => {
     reader.readAsDataURL(file)
   })
 }
+
+// Добавляем функцию для получения полного URL изображения
+export function getFullImageUrl(relativePath) {
+  if (!relativePath) return ''
+
+  // Если уже полный URL - возвращаем как есть
+  if (relativePath.startsWith('http')) {
+    return relativePath
+  }
+
+  // Получаем базовый URL в зависимости от окружения
+  let baseURL
+
+  if (import.meta.env.DEV) {
+    // Development - используем локальный сервер
+    baseURL = 'http://localhost:8080'
+  } else {
+    // Production - используем текущий домен или переменную окружения
+    baseURL = import.meta.env.VITE_API_BASE_URL || window.location.origin
+  }
+
+  // Добавляем базовый URL к относительному пути
+  return `${baseURL}${relativePath}`
+}

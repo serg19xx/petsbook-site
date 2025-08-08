@@ -1,190 +1,161 @@
 import api from './index'
 
-// Mock данные для питомцев
-const mockPets = [
-  {
-    id: 1,
-    name: 'Buddy',
-    type: 'dog',
-    breed: 'Golden Retriever',
-    age: 3,
-    weight: 25,
-    color: 'Golden',
-    microchip: 'CHIP123456789',
-    status: 'active',
-    photo: null,
-    createdAt: '2024-01-15T10:30:00Z',
-    updatedAt: '2024-01-20T14:45:00Z',
-  },
-  {
-    id: 2,
-    name: 'Whiskers',
-    type: 'cat',
-    breed: 'Persian',
-    age: 2,
-    weight: 4.5,
-    color: 'White',
-    microchip: 'CHIP987654321',
-    status: 'active',
-    photo: null,
-    createdAt: '2024-02-10T09:15:00Z',
-    updatedAt: '2024-02-15T16:20:00Z',
-  },
-  {
-    id: 3,
-    name: 'Polly',
-    type: 'bird',
-    breed: 'African Grey',
-    age: 5,
-    weight: 0.4,
-    color: 'Grey',
-    microchip: null,
-    status: 'active',
-    photo: null,
-    createdAt: '2023-12-05T11:00:00Z',
-    updatedAt: '2024-01-25T13:30:00Z',
-  },
-]
-
 export const petsApi = {
   // Получить список питомцев пользователя
   async fetchMyPets() {
-    try {
-      // Mock: имитируем задержку сети
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
-      // Возвращаем mock данные
-      return {
-        success: true,
-        data: mockPets,
-        message: 'Pets loaded successfully',
-      }
-    } catch (error) {
-      console.error('Error fetching my pets:', error)
-      throw error
-    }
+    const response = await api.get('/api/pets/my-pets', { withCredentials: true })
+    return response.data
   },
 
   // Получить детали питомца по ID
   async fetchPetDetails(petId) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 300))
-
-      const pet = mockPets.find((p) => p.id === parseInt(petId))
-      if (!pet) {
-        throw new Error('Pet not found')
-      }
-
-      return {
-        success: true,
-        data: pet,
-        message: 'Pet details loaded successfully',
-      }
-    } catch (error) {
-      console.error('Error fetching pet details:', error)
-      throw error
-    }
+    const response = await api.get(`/api/pets/${petId}`, { withCredentials: true })
+    return response.data
   },
 
   // Создать нового питомца
   async createPet(petData) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      const newPet = {
-        id: Date.now(), // Простой способ генерации ID
-        ...petData,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-
-      mockPets.push(newPet)
-
-      return {
-        success: true,
-        data: newPet,
-        message: 'Pet created successfully',
-      }
-    } catch (error) {
-      console.error('Error creating pet:', error)
-      throw error
-    }
+    const response = await api.post('/api/pets', petData, { withCredentials: true })
+    return response.data
   },
 
   // Обновить питомца
   async updatePet(petId, petData) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600))
-
-      const index = mockPets.findIndex((p) => p.id === parseInt(petId))
-      if (index === -1) {
-        throw new Error('Pet not found')
-      }
-
-      mockPets[index] = {
-        ...mockPets[index],
-        ...petData,
-        updatedAt: new Date().toISOString(),
-      }
-
-      return {
-        success: true,
-        data: mockPets[index],
-        message: 'Pet updated successfully',
-      }
-    } catch (error) {
-      console.error('Error updating pet:', error)
-      throw error
-    }
+    const response = await api.put(`/api/pets/${petId}`, petData, { withCredentials: true })
+    return response.data
   },
 
   // Удалить питомца
   async deletePet(petId) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400))
-
-      const index = mockPets.findIndex((p) => p.id === parseInt(petId))
-      if (index === -1) {
-        throw new Error('Pet not found')
-      }
-
-      mockPets.splice(index, 1)
-
-      return {
-        success: true,
-        message: 'Pet deleted successfully',
-      }
-    } catch (error) {
-      console.error('Error deleting pet:', error)
-      throw error
-    }
+    const response = await api.delete(`/api/pets/${petId}`, { withCredentials: true })
+    return response.data
   },
 
-  // Загрузить фото питомца
-  async uploadPetPhoto(petId, file) {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+  // Загрузить фото питомца (petId = 0 для создания нового)
+  async uploadPetPhoto(petId, file, filename = null) {
+    console.log('🚀 uploadPetPhoto called with:', {
+      petId,
+      filename,
+      fileInfo: {
+        name: file?.name,
+        size: file?.size,
+        type: file?.type,
+      },
+      fileExists: !!file,
+      fileType: typeof file,
+    })
 
-      const index = mockPets.findIndex((p) => p.id === parseInt(petId))
-      if (index === -1) {
-        throw new Error('Pet not found')
-      }
-
-      // Имитируем загрузку фото
-      const photoUrl = `https://via.placeholder.com/300x200/4F46E5/FFFFFF?text=Pet+Photo`
-
-      mockPets[index].photo = photoUrl
-      mockPets[index].updatedAt = new Date().toISOString()
-
-      return {
-        success: true,
-        data: { url: photoUrl },
-        message: 'Photo uploaded successfully',
-      }
-    } catch (error) {
-      console.error('Error uploading pet photo:', error)
-      throw error
+    // КРИТИЧЕСКАЯ ПРОВЕРКА
+    if (!file) {
+      console.error('❌ No file provided to uploadPetPhoto!')
+      throw new Error('File is required for photo upload')
     }
+
+    // 🔥 ПРОВЕРКА РАЗМЕРА ФАЙЛА (макс 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      throw new Error(`File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB (max: 10MB)`)
+    }
+
+    // 🔥 ПРОВЕРКА ТИПА ФАЙЛА
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error(`Invalid file type: ${file.type}`)
+    }
+
+    const formData = new FormData()
+    formData.append('photo', file)
+    formData.append('pet_id', petId)
+
+    if (filename) {
+      formData.append('filename', filename)
+      console.log('🔄 REPLACING existing file:', filename)
+    } else {
+      console.log('➕ ADDING new file')
+    }
+
+    // Дополнительная отладка
+    console.log('📊 Request details:', {
+      petId: petId,
+      filename: filename || 'null',
+      fileSize: file.size,
+      fileType: file.type,
+      fileName: file.name,
+      operation: filename ? 'REPLACE' : 'ADD',
+    })
+
+    // Отладка FormData
+    console.log('📦 FormData contents:')
+    for (let [key, value] of formData.entries()) {
+      console.log(
+        `  ${key}:`,
+        typeof value === 'object'
+          ? `File(${value.name}, ${value.size} bytes, ${value.type})`
+          : value,
+      )
+    }
+
+    const response = await api.post('/api/pets/photo/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      withCredentials: true,
+    })
+    return response.data
+  },
+
+  // Удалить фото питомца
+  async deletePetPhoto(petId, filename, userId = null) {
+    console.log('🗑️ deletePetPhoto called with:', {
+      petId,
+      filename,
+      userId,
+    })
+
+    const requestData = {
+      pet_id: petId,
+      filename: filename,
+    }
+
+    // Добавляем user_id если передан
+    if (userId) {
+      requestData.user_id = userId
+    }
+
+    const response = await api.post('/api/pets/photo/delete', requestData, {
+      withCredentials: true,
+    })
+    return response.data
+  },
+
+  // Получить все питомцев (для админов или публичный список)
+  async fetchAllPets(params = {}) {
+    const response = await api.get('/api/pets', { params, withCredentials: true })
+    return response.data
+  },
+
+  // Поиск питомцев
+  async searchPets(searchParams) {
+    const response = await api.get('/api/pets/search', {
+      params: searchParams,
+      withCredentials: true,
+    })
+    return response.data
+  },
+
+  // Обновить статус питомца (публикация)
+  async updatePetStatus(petId, status) {
+    console.log('🔄 updatePetStatus called with:', {
+      petId,
+      status,
+    })
+
+    const response = await api.patch(
+      `/api/pets/${petId}/status`,
+      { published: status },
+      { withCredentials: true },
+    )
+    console.log('✅ updatePetStatus response:', response.data)
+    return response.data
   },
 }

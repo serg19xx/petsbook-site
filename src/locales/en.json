@@ -7,6 +7,15 @@
     "general_error": "Please fix the errors in the form"
   },
   "UI": {
+    "common": {
+      "loading": "Loading...",
+      "error": "Error",
+      "retry": "Retry",
+      "save": "Save",
+      "create": "Create",
+      "cancel": "Cancel",
+      "saving": "Saving..."
+    },
     "usermenu": {
       "link": {
         "my_profile": "Profile",
@@ -24,23 +33,92 @@
       "title": "My Pets",
       "add_pet": "Add Pet",
       "add_first_pet": "Add Your First Pet",
-      "empty_title": "No pets yet",
-      "empty_description": "Start by adding your first pet to your profile."
+      "no_pets": "No pets yet",
+      "no_pets_description": "Start by adding your first pet to your profile."
     },
     "pets": {
+      "list": {
+        "title": "All Pets",
+        "subtitle": "Found {count} pets",
+        "no_pets_found": "No pets found",
+        "no_pets_description": "Try adjusting your search criteria or filters."
+      },
+      "filters": {
+        "title": "Filters",
+        "search": "Search",
+        "search_placeholder": "Search by name, breed...",
+        "species": "Species",
+        "all_species": "All species",
+        "size": "Size",
+        "all_sizes": "All sizes",
+        "gender": "Gender",
+        "all_genders": "All genders",
+        "clear": "Clear filters"
+      },
+      "fields": {
+        "name": "Name",
+        "species": "Species",
+        "breed": "Breed",
+        "gender": "Gender",
+        "dob": "Date of Birth",
+        "color": "Color",
+        "pet_size": "Size",
+        "description": "Description",
+        "yt_video": "YouTube Video"
+      },
+      "placeholders": {
+        "name": "Enter pet name",
+        "select_species": "Select species",
+        "breed": "Enter breed",
+        "select_gender": "Select gender",
+        "color": "Enter color",
+        "select_size": "Select size",
+        "description": "Tell us about your pet...",
+        "yt_video": "https://youtube.com/watch?v=..."
+      },
+      "details": {
+        "basic_info": "Basic Information",
+        "stats": "Statistics"
+      },
+      "stats": {
+        "views": "Views",
+        "created": "Created"
+      },
+      "owner": {
+        "title": "Owner Information"
+      },
       "types": {
         "dog": "Dog",
         "cat": "Cat",
         "bird": "Bird",
         "fish": "Fish",
+        "hamster": "Hamster",
+        "rabbit": "Rabbit",
         "other": "Other"
       },
+      "sizes": {
+        "small": "Small",
+        "medium": "Medium",
+        "large": "Large"
+      },
+      "genders": {
+        "boy": "Boy",
+        "girl": "Girl"
+      },
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "actions": {
+        "view": "View details",
+        "share": "Share",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "unnamed": "Unnamed Pet",
+      "unknown_breed": "Unknown breed",
       "years": "years",
       "weight_unit": "kg",
-      "status": {
-        "active": "Active",
-        "inactive": "Inactive"
-      },
       "owner": {
         "actions": {
           "edit": "Edit pet",

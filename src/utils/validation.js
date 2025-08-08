@@ -47,6 +47,17 @@ export const customValidators = {
   integer: (value) => !value || Number.isInteger(Number(value)),
   decimal: (value) => !value || !isNaN(parseFloat(value)),
   date: (value) => !value || !isNaN(Date.parse(value)),
+  // Добавляем валидаторы для питомцев
+  ageRange: (value) => {
+    if (!value) return true
+    const age = Number(value)
+    return age >= 0 && age <= 50
+  },
+  weightRange: (value) => {
+    if (!value) return true
+    const weight = Number(value)
+    return weight >= 0 && weight <= 1000
+  },
 }
 
 export const createValidationRules = (rules) => {

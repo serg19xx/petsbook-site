@@ -1,108 +1,103 @@
 <template>
-  <div
-    class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-  >
-    <!-- Pet Photo -->
-    <div class="relative h-48 bg-gray-100">
-      <img v-if="pet.photo" :src="pet.photo" :alt="pet.name" class="w-full h-full object-cover" />
-      <div v-else class="w-full h-full flex items-center justify-center">
-        <Icon icon="mdi:paw" class="w-12 h-12 text-gray-400" />
+  <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <!-- Pet Icon -->
+    <div class="relative">
+      <!-- Default Icon -->
+      <div class="w-full h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+        <div class="w-24 h-24 bg-white rounded-full shadow-lg flex items-center justify-center">
+          <Icon :icon="getSpeciesIcon(pet.species)" class="w-12 h-12 text-blue-600" />
+        </div>
       </div>
 
-      <!-- Owner Action Buttons -->
-      <div class="absolute top-2 right-2 flex gap-1">
+      <!-- Action Buttons -->
+      <div class="absolute top-3 right-3 flex items-center gap-1">
+        <!-- Publish/Unpublish Toggle -->
+        <button
+          @click="handleTogglePublish"
+          :class="[
+            'p-2 backdrop-blur-sm rounded-lg shadow-sm transition-colors',
+            pet.published
+              ? 'bg-white/90 text-green-600 hover:bg-red-50 hover:text-red-600'
+              : 'bg-white/90 text-gray-600 hover:bg-green-50 hover:text-green-600'
+          ]"
+          :title="pet.published ? 'Скрыть от публики' : 'Опубликовать'"
+        >
+          <Icon :icon="pet.published ? 'mdi:eye-off' : 'mdi:eye'" class="w-4 h-4" />
+        </button>
+
         <button
           @click="$emit('edit', pet)"
-          class="bg-white/80 p-1.5 rounded-full hover:bg-white transition-colors"
-          :title="$t('UI.pets.owner.actions.edit')"
+          class="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg shadow-sm transition-colors"
+          title="Edit pet"
         >
-          <Icon icon="mdi:pencil" class="w-4 h-4 text-gray-600" />
+          <Icon icon="mdi:pencil" class="w-4 h-4" />
         </button>
         <button
           @click="$emit('delete', pet)"
-          class="bg-white/80 p-1.5 rounded-full hover:bg-white transition-colors"
-          :title="$t('UI.pets.owner.actions.delete')"
+          class="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg shadow-sm transition-colors"
+          title="Delete pet"
         >
-          <Icon icon="mdi:delete" class="w-4 h-4 text-red-600" />
+          <Icon icon="mdi:delete" class="w-4 h-4" />
         </button>
-      </div>
-
-      <!-- Status Badge -->
-      <div class="absolute top-2 left-2">
-        <span
-          :class="[
-            'px-2 py-1 text-xs font-medium rounded-full',
-            pet.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-          ]"
-        >
-          {{ $t(`UI.pets.status.${pet.status || 'active'}`) }}
-        </span>
       </div>
     </div>
 
     <!-- Pet Info -->
     <div class="p-4">
-      <div class="flex justify-between items-start mb-2">
-        <h3 class="text-lg font-semibold text-gray-900">
-          {{ pet.name }}
+      <!-- Name and Species -->
+      <div class="mb-3">
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">
+          {{ pet.name || 'Unnamed Pet' }}
         </h3>
-        <span class="text-xs text-gray-500">#{{ pet.id }}</span>
+        <p class="text-sm text-gray-600">
+          {{ formatSpecies(pet.species) }} • {{ pet.breed || 'Unknown breed' }}
+        </p>
       </div>
 
-      <div class="space-y-2 text-sm text-gray-600">
-        <!-- Type and Breed -->
-        <div class="flex items-center gap-2">
-          <Icon icon="mdi:tag" class="w-4 h-4" />
-          <span>{{ $t(`UI.pets.types.${pet.type}`) }}</span>
-          <span v-if="pet.breed" class="text-gray-400">•</span>
-          <span v-if="pet.breed">{{ pet.breed }}</span>
+      <!-- Details -->
+      <div class="space-y-2 mb-3">
+        <div v-if="pet.gender" class="flex items-center gap-2 text-sm text-gray-600">
+          <Icon :icon="pet.gender.toLowerCase() === 'boy' ? 'mdi:gender-male' : 'mdi:gender-female'" class="w-4 h-4" />
+          <span>{{ pet.gender }}</span>
         </div>
 
-        <!-- Age -->
-        <div v-if="pet.age" class="flex items-center gap-2">
-          <Icon icon="mdi:cake-variant" class="w-4 h-4" />
-          <span>{{ pet.age }} {{ $t('UI.pets.years') }}</span>
-        </div>
-
-        <!-- Weight -->
-        <div v-if="pet.weight" class="flex items-center gap-2">
-          <Icon icon="mdi:scale" class="w-4 h-4" />
-          <span>{{ pet.weight }} {{ $t('UI.pets.weight_unit') }}</span>
-        </div>
-
-        <!-- Color -->
-        <div v-if="pet.color" class="flex items-center gap-2">
+        <div v-if="pet.color" class="flex items-center gap-2 text-sm text-gray-600">
           <Icon icon="mdi:palette" class="w-4 h-4" />
           <span>{{ pet.color }}</span>
         </div>
 
-        <!-- Microchip -->
-        <div v-if="pet.microchip" class="flex items-center gap-2">
-          <Icon icon="mdi:chip" class="w-4 h-4" />
-          <span class="text-xs">{{ pet.microchip }}</span>
+        <div v-if="pet.pet_size" class="flex items-center gap-2 text-sm text-gray-600">
+          <Icon icon="mdi:ruler" class="w-4 h-4" />
+          <span class="capitalize">{{ pet.pet_size }}</span>
+        </div>
+
+        <div v-if="pet.dob" class="flex items-center gap-2 text-sm text-gray-600">
+          <Icon icon="mdi:cake-variant" class="w-4 h-4" />
+          <span>{{ formatDate(pet.dob) }}</span>
         </div>
       </div>
 
-      <!-- Owner Actions Footer -->
-      <div class="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-        <div class="flex gap-2">
-          <button
-            @click="$emit('view', pet)"
-            class="text-blue-600 hover:text-blue-700 text-sm font-medium"
-          >
-            {{ $t('UI.pets.owner.actions.view') }}
-          </button>
-          <button
-            @click="$emit('share', pet)"
-            class="text-green-600 hover:text-green-700 text-sm font-medium"
-          >
-            {{ $t('UI.pets.owner.actions.share') }}
-          </button>
+      <!-- Description -->
+      <div v-if="pet.description" class="mb-3">
+        <p class="text-sm text-gray-600 line-clamp-2">{{ pet.description }}</p>
+      </div>
+
+      <!-- Status -->
+      <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div class="flex items-center gap-2">
+          <Icon
+            :icon="pet.published ? 'mdi:eye' : 'mdi:eye-off'"
+            :class="pet.published ? 'text-green-500' : 'text-gray-400'"
+            class="w-4 h-4"
+          />
+          <span class="text-xs" :class="pet.published ? 'text-green-600' : 'text-gray-500'">
+            {{ pet.published ? 'Опубликован' : 'Черновик' }}
+          </span>
         </div>
 
-        <div class="text-xs text-gray-500">
-          {{ $t('UI.pets.owner.last_updated') }}: {{ formatDate(pet.updatedAt) }}
-        </div>
+        <span class="text-xs text-gray-400">
+          {{ formatDate(pet.created) }}
+        </span>
       </div>
     </div>
   </div>
@@ -111,7 +106,6 @@
 <script setup>
 import { Icon } from '@iconify/vue'
 
-// Props
 const props = defineProps({
   pet: {
     type: Object,
@@ -119,13 +113,146 @@ const props = defineProps({
   },
 })
 
-// Emits
-defineEmits(['edit', 'delete', 'view', 'share'])
+const emit = defineEmits(['edit', 'delete', 'togglePublish'])
 
-// Helper function to format date
+// Добавляем функцию для обработки переключения публикации
+function handleTogglePublish() {
+  // Проверяем, что у питомца есть ID
+  console.log('🔍 Pet object in handleTogglePublish:', props.pet)
+  console.log('🔍 Pet ID:', props.pet.id)
+  console.log('🔍 Pet keys:', Object.keys(props.pet))
+
+  if (!props.pet.id) {
+    console.error('❌ Pet ID is missing:', props.pet)
+    return
+  }
+
+  console.log('🔄 Emitting togglePublish for pet:', props.pet.id, 'Current status:', props.pet.published)
+  emit('togglePublish', props.pet)
+}
+
+function formatSpecies(species) {
+  if (!species) return 'Unknown'
+  return species.charAt(0).toUpperCase() + species.slice(1).toLowerCase()
+}
+
+function getSpeciesIcon(species) {
+  if (!species) return 'mdi:paw'
+
+  const iconMap = {
+    // Категории из базы данных
+    dog: 'mdi:dog',
+    cat: 'mdi:cat',
+    rodents: 'mdi:hamster',
+    rabbits: 'mdi:rabbit',
+    mammals: 'mdi:deer',
+    camels: 'mdi:camel',
+    horse: 'mdi:horse',
+    reptiles: 'mdi:snake',
+    amphibians: 'mdi:frog',
+    fowl: 'mdi:bird',
+    anthropods: 'mdi:ant',
+    crustaceans: 'mdi:crab',
+    fish: 'mdi:fish',
+    insects: 'mdi:bug',
+    arachnids: 'mdi:spider',
+    pigs: 'mdi:pig',
+    birds_of_prey: 'mdi:eagle',
+
+    // Альтернативные названия для совместимости
+    'birds-of-prey': 'mdi:eagle',
+    'mammals (land)': 'mdi:deer',
+    'mammals_land': 'mdi:deer',
+    'mammals-land': 'mdi:deer',
+  }
+
+  const speciesLower = species.toLowerCase()
+
+  // Проверяем точное совпадение
+  if (iconMap[speciesLower]) {
+    return iconMap[speciesLower]
+  }
+
+  // Проверяем частичное совпадение для гибкости
+  for (const [key, icon] of Object.entries(iconMap)) {
+    if (speciesLower.includes(key) || key.includes(speciesLower)) {
+      return icon
+    }
+  }
+
+  // Fallback иконки по категориям
+  if (speciesLower.includes('dog') || speciesLower.includes('canine')) {
+    return 'mdi:dog'
+  }
+  if (speciesLower.includes('cat') || speciesLower.includes('feline')) {
+    return 'mdi:cat'
+  }
+  if (speciesLower.includes('rodent') || speciesLower.includes('hamster') || speciesLower.includes('mouse') || speciesLower.includes('rat') || speciesLower.includes('guinea')) {
+    return 'mdi:hamster'
+  }
+  if (speciesLower.includes('rabbit') || speciesLower.includes('bunny')) {
+    return 'mdi:rabbit'
+  }
+  if (speciesLower.includes('mammal') || speciesLower.includes('deer') || speciesLower.includes('fox')) {
+    return 'mdi:deer'
+  }
+  if (speciesLower.includes('camel') || speciesLower.includes('llama')) {
+    return 'mdi:camel'
+  }
+  if (speciesLower.includes('horse') || speciesLower.includes('pony') || speciesLower.includes('donkey')) {
+    return 'mdi:horse'
+  }
+  if (speciesLower.includes('reptile') || speciesLower.includes('snake') || speciesLower.includes('lizard') || speciesLower.includes('turtle')) {
+    return 'mdi:snake'
+  }
+  if (speciesLower.includes('amphibian') || speciesLower.includes('frog') || speciesLower.includes('toad') || speciesLower.includes('salamander')) {
+    return 'mdi:frog'
+  }
+  if (speciesLower.includes('fowl') || speciesLower.includes('bird') || speciesLower.includes('chicken') || speciesLower.includes('duck')) {
+    return 'mdi:bird'
+  }
+  if (speciesLower.includes('anthropod') || speciesLower.includes('ant') || speciesLower.includes('beetle')) {
+    return 'mdi:ant'
+  }
+  if (speciesLower.includes('crustacean') || speciesLower.includes('crab') || speciesLower.includes('lobster') || speciesLower.includes('shrimp')) {
+    return 'mdi:crab'
+  }
+  if (speciesLower.includes('fish') || speciesLower.includes('aquarium')) {
+    return 'mdi:fish'
+  }
+  if (speciesLower.includes('insect') || speciesLower.includes('bug') || speciesLower.includes('beetle') || speciesLower.includes('butterfly')) {
+    return 'mdi:bug'
+  }
+  if (speciesLower.includes('arachnid') || speciesLower.includes('spider') || speciesLower.includes('scorpion') || speciesLower.includes('tarantula')) {
+    return 'mdi:spider'
+  }
+  if (speciesLower.includes('pig') || speciesLower.includes('boar')) {
+    return 'mdi:pig'
+  }
+  if (speciesLower.includes('bird-of-prey') || speciesLower.includes('eagle') || speciesLower.includes('hawk') || speciesLower.includes('falcon')) {
+    return 'mdi:eagle'
+  }
+
+  // Общий fallback
+  return 'mdi:paw'
+}
+
 function formatDate(dateString) {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString()
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString()
+  } catch (error) {
+    return ''
+  }
 }
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

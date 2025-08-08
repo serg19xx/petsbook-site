@@ -37,6 +37,7 @@
     "csscolorparser": "^1.0.3",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "dayjs": "^1.11.13",
     "earcut": "^3.0.1",
     "geojson-vt": "^4.0.2",
     "gl-matrix": "^3.4.3",

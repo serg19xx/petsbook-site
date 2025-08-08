@@ -16,24 +16,17 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    // Добавляем токен из cookie
-    const token = getCookie('auth_token') // или как у вас называется cookie
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
+    // Убираем добавление Bearer token - используем только куки
+    // const token = getCookie('auth_token')
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`
+    // }
     return config
   },
   (error) => {
     return Promise.reject(error)
   },
 )
-
-// Функция для получения cookie
-function getCookie(name) {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) return parts.pop().split(';').shift()
-}
 
 // Response interceptor
 api.interceptors.response.use(
@@ -61,6 +54,12 @@ api.interceptors.response.use(
         headers: error.response?.headers,
         message: error.message,
       })
+    }
+
+    // Не делаем logout для API питомцев при 401
+    if (error.response?.status === 401 && error.config?.url?.includes('/api/pets/')) {
+      console.warn('401 error for pets API - not logging out')
+      return Promise.reject(error)
     }
 
     if (error.response?.status === 401) {
