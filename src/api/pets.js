@@ -96,11 +96,13 @@ export const petsApi = {
     }
 
     const response = await api.post('/api/pets/photo/upload', formData, {
+      withCredentials: true, // Важно для отправки cookies
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-      withCredentials: true,
     })
+
+    console.log('✅ Photo upload response:', response.data)
     return response.data
   },
 
