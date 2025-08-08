@@ -95,11 +95,14 @@ export const petsApi = {
       )
     }
 
+    // Отладка кук
+    console.log('📄 Current cookies:', document.cookie)
+    console.log('🔗 API base URL:', import.meta.env.VITE_API_BASE_URL)
+
+    // ВАЖНО: НЕ устанавливаем Content-Type вручную для FormData
+    // Браузер сам установит правильный Content-Type с boundary
     const response = await api.post('/api/pets/photo/upload', formData, {
       withCredentials: true, // Важно для отправки cookies
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
     })
 
     console.log('✅ Photo upload response:', response.data)

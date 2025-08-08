@@ -47,16 +47,23 @@ export const profileApi = {
       const formData = new FormData()
       formData.append('avatar', file)
 
-      const response = await api.post(
-        '/user/upload-avatar',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      // Извлекаем токен из кук
+      const cookies = document.cookie.split(';')
+      let token = null
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=')
+        if (name === 'auth_token') {
+          token = value
+          break
+        }
+      }
+
+      const response = await api.post('/user/upload-avatar', formData, {
+        withCredentials: true,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
         },
-        { withCredentials: true },
-      )
+      })
       return {
         status: response.data.status || response.status,
         error_code: response.data.error_code || '',
@@ -79,16 +86,23 @@ export const profileApi = {
       const formData = new FormData()
       formData.append('cover', file)
 
-      const response = await api.post(
-        '/user/cover',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+      // Извлекаем токен из кук
+      const cookies = document.cookie.split(';')
+      let token = null
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=')
+        if (name === 'auth_token') {
+          token = value
+          break
+        }
+      }
+
+      const response = await api.post('/user/cover', formData, {
+        withCredentials: true,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
         },
-        { withCredentials: true },
-      )
+      })
       return {
         success: true,
         data: response.data.data.cover,

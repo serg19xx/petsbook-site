@@ -115,8 +115,8 @@ export const PhotoService = {
       console.log('Extracted token:', token)
 
       const response = await api.post(endpoint, formData, {
+        // Убираем Content-Type - браузер сам установит правильный для FormData
         headers: {
-          'Content-Type': 'multipart/form-data',
           Authorization: token ? `Bearer ${token}` : '',
         },
         withCredentials: true,

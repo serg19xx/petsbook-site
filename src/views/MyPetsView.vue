@@ -1380,13 +1380,23 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
       file: file ? `File(${file.name}, ${file.size} bytes)` : 'NULL',
       filename,
       photoIndex,
-      fileType: typeof file
+      fileType: typeof file,
+      fileConstructor: file?.constructor?.name,
+      isFile: file instanceof File,
+      isBlob: file instanceof Blob
     })
 
     // КРИТИЧЕСКАЯ ПРОВЕРКА
     if (!file) {
       console.error('❌ No file provided to uploadPhotoToServer!')
       toast.error('Файл не найден для загрузки')
+      return
+    }
+
+    // Проверяем, что это действительно File объект
+    if (!(file instanceof File)) {
+      console.error('❌ File is not a File object:', file)
+      toast.error('Неправильный тип файла')
       return
     }
 
@@ -1421,6 +1431,17 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
       fileName: file.name,
       operation: filename ? 'REPLACE' : 'ADD'
     })
+
+    // Отладка FormData
+    console.log('📊 FormData contents:')
+    for (let [key, value] of formData.entries()) {
+      console.log(
+        `  ${key}:`,
+        typeof value === 'object'
+          ? `File(${value.name}, ${value.size} bytes, ${value.type})`
+          : value,
+      )
+    }
 
     const response = await petsStore.uploadPetPhoto(petId, file, filename)
 
@@ -1467,119 +1488,27 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
 
       const petInStore = petsStore.getPetById(petId)
       if (petInStore && petInStore.main_photos) {
-        // Получаем данные загруженной фотографии
-        const uploadedPhoto = form.value.main_photos[photoIndex]
-
-        if (uploadedPhoto && uploadedPhoto.filename) {
-          if (filename) {
-            // ЗАМЕНА: находим и обновляем существующую фотографию
-            const existingIndex = petInStore.main_photos.findIndex(p => p.filename === filename)
-            if (existingIndex !== -1) {
-              petInStore.main_photos[existingIndex] = {
-                filename: uploadedPhoto.filename,
-                url: response.data.photo_path
-              }
-              console.log('🔄 Replaced existing photo at index:', existingIndex)
-            }
-          } else {
-            // ДОБАВЛЕНИЕ: добавляем новую фотографию
-            petInStore.main_photos.push({
-              filename: uploadedPhoto.filename,
-              url: response.data.photo_path
-            })
-            console.log('➕ Added new photo')
-          }
-
-          console.log('✅ Pet data updated in store:', petInStore.main_photos)
-        }
+        // Обновляем список фото в store
+        petInStore.main_photos = form.value.main_photos.filter(p => p.uploaded || p.serverUrl)
+        console.log('✅ Updated pet photos in store')
       }
     }
-
-    console.log('🆔 Form ID after upload:', form.value.id)
-    console.log('🆔 SelectedPet ID after upload:', selectedPet.value?.id)
 
   } catch (error) {
     console.error('❌ Upload error:', error)
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
 
-    // Детальная информация об ошибке
-    if (error.response) {
-      console.error('📋 Error response data:', error.response.data)
-      console.error('📋 Error response status:', error.response.status)
-      console.error('📋 Error response headers:', error.response.headers)
-
-      // Проверяем конкретные ошибки
-      const errorData = error.response.data
-      if (errorData?.error_code === 'SYSTEM_ERROR') {
-        console.error('🔥 SYSTEM_ERROR detected - likely PHP backend issue')
-
-        // Если ошибка при замене файла - попробуем добавить как новый
-        if (filename) {
-          console.warn('⚠️ Replace failed, trying to add as new file...')
-          try {
-            // 🔥 ИСПРАВЛЯЕМ: используем правильные переменные из области видимости
-            let petId = form.value.id || selectedPet.value?.id
-            if (!petId) {
-              petId = 0
-            }
-
-            const retryResponse = await petsStore.uploadPetPhoto(petId, file, null)
-            console.log('✅ Retry successful:', retryResponse)
-
-            // Обрабатываем успешный retry
-            if (photoIndex >= 0 && form.value.main_photos[photoIndex]) {
-              const photo = form.value.main_photos[photoIndex]
-              photo.uploading = false
-              photo.uploaded = true
-              photo.serverUrl = getFullImageUrl(retryResponse.data.photo_path)
-              photo.filename = getFilenameFromPath(retryResponse.data.photo_path) || retryResponse.data.filename
-              photo.url = getFullImageUrl(retryResponse.data.photo_path)
-
-              console.log('📸 Retry photo updated - filename:', photo.filename)
-              console.log('📸 Retry photo updated - url:', photo.url)
-            }
-
-            toast.success('Фото загружено! (добавлено как новое)')
-
-            // 🔥 Обновляем store после успешного retry
-            if (petId && petId !== 0) {
-              const petInStore = petsStore.getPetById(petId)
-              if (petInStore && petInStore.main_photos) {
-                const uploadedPhoto = form.value.main_photos[photoIndex]
-                if (uploadedPhoto && uploadedPhoto.filename) {
-                  // Добавляем как новое фото
-                  petInStore.main_photos.push({
-                    filename: uploadedPhoto.filename,
-                    url: retryResponse.data.photo_path
-                  })
-                  console.log('✅ Pet data updated in store after retry:', petInStore.main_photos)
-                }
-              }
-            }
-
-            return
-          } catch (retryError) {
-            console.error('❌ Retry also failed:', retryError)
-          }
-        }
-      }
-
-      // Показываем конкретное сообщение с сервера
-      const serverMessage = error.response.data?.message || error.response.data?.error || 'Неизвестная ошибка сервера'
-      toast.error(`Ошибка загрузки фото: ${serverMessage}`)
-    } else if (error.request) {
-      console.error('📋 No response received:', error.request)
-      toast.error('Сервер не отвечает')
-    } else {
-      console.error('📋 Error setting up request:', error.message)
-      toast.error(`Ошибка запроса: ${error.message}`)
-    }
-
-    // Обновляем состояние фото при ошибке
     if (photoIndex >= 0 && form.value.main_photos[photoIndex]) {
       const photo = form.value.main_photos[photoIndex]
       photo.uploading = false
       photo.uploadError = true
     }
+
+    toast.error(error.message || 'Failed to upload photo')
   }
 }
 

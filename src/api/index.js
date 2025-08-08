@@ -7,8 +7,9 @@ axios.defaults.withCredentials = true
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
+    // Убираем Content-Type - он будет устанавливаться автоматически
+    // 'Content-Type': 'application/json', // УБРАНО
   },
   timeout: 10000,
 })
@@ -16,6 +17,11 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
+    // Устанавливаем Content-Type только для JSON запросов
+    if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json'
+    }
+
     // Убираем добавление Bearer token - используем только куки
     // const token = getCookie('auth_token')
     // if (token) {
