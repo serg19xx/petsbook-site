@@ -139,6 +139,35 @@ export const petsApi = {
     return response.data
   },
 
+  // Получить публичную галерею питомцев
+  async fetchPublicPets(params = {}) {
+    const queryParams = new URLSearchParams()
+
+    // Пагинация
+    if (params.page) queryParams.append('page', params.page)
+    if (params.limit) queryParams.append('limit', params.limit)
+
+    // Фильтры
+    if (params.species) queryParams.append('species', params.species)
+    if (params.gender) queryParams.append('gender', params.gender)
+    if (params.age) queryParams.append('age', params.age)
+    if (params.location) queryParams.append('location', params.location)
+    if (params.radius) queryParams.append('radius', params.radius)
+
+    // Геолокация пользователя
+    if (params.user_lat) queryParams.append('user_lat', params.user_lat)
+    if (params.user_lng) queryParams.append('user_lng', params.user_lng)
+
+    // Сортировка
+    if (params.sort) queryParams.append('sort', params.sort)
+
+    const url = `/api/pets/public${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    console.log('🔍 Fetching public pets:', url)
+
+    const response = await api.get(url)
+    return response.data
+  },
+
   // Поиск питомцев
   async searchPets(searchParams) {
     const response = await api.get('/api/pets/search', {
@@ -161,6 +190,22 @@ export const petsApi = {
       { withCredentials: true },
     )
     console.log('✅ updatePetStatus response:', response.data)
+    return response.data
+  },
+
+  // Поставить/убрать лайк питомцу
+  async togglePetLike(petId) {
+    console.log('❤️ Toggling like for pet:', petId)
+
+    const response = await api.post(
+      `/api/pets/${petId}/like`,
+      {},
+      {
+        withCredentials: true,
+      },
+    )
+
+    console.log('✅ Like response:', response.data)
     return response.data
   },
 }

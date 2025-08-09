@@ -17,28 +17,62 @@ export const useUserStore = defineStore('user', () => {
 
   const isAuthenticated = computed(() => !!userData.value && !!userData.value.id)
 
-  const fetchUserData = async () => {
-    // Эта функция больше не управляет isReady.
-    // Она просто получает данные и устанавливает состояние аутентификации.
-    loading.value = true
-    try {
-      const response = await api.get('/api/user/getuser', { withCredentials: true })
-      userData.value = response.data?.data
+  // Добавляем флаг для предотвращения множественных запросов
+  let fetchPromise = null
 
-      if (userData.value) {
-        authStore.isAuthenticated = true
-        // authStore.loginInfo = { ...authStore.loginInfo, avatar: userData.value.avatar } // УДАЛЯЕМ ЭТО
-      } else {
-        authStore.isAuthenticated = false
-        userData.value = null
-      }
-    } catch (err) {
-      console.error('Failed to fetch user data, treating as guest.', err)
-      userData.value = null
-      authStore.isAuthenticated = false
-    } finally {
-      loading.value = false
+  const fetchUserData = async (force = false) => {
+    // Если уже есть активный запрос и это не принудительный вызов, возвращаем существующий промис
+    if (fetchPromise && !force) {
+      console.log('🔄 fetchUserData already in progress, waiting for existing request')
+      return fetchPromise
     }
+
+    // Если уже загружается и это не принудительный вызов, пропускаем
+    if (loading.value && !force) {
+      console.log('🔄 fetchUserData already loading, skipping duplicate call')
+      return
+    }
+
+    console.log('📥 fetchUserData started:', {
+      force,
+      hasToken: document.cookie.includes('auth_token='),
+    })
+
+    loading.value = true
+
+    fetchPromise = (async () => {
+      try {
+        const response = await api.get('/api/user/getuser', { withCredentials: true })
+        userData.value = response.data?.data
+
+        if (userData.value) {
+          authStore.isAuthenticated = true
+          console.log('✅ User data loaded successfully:', userData.value.email)
+        } else {
+          // Если нет данных пользователя, но запрос прошёл успешно
+          console.warn('⚠️ No user data received, but request was successful')
+          userData.value = null
+          // НЕ трогаем authStore.isAuthenticated - пусть API интерцептор решает
+        }
+      } catch (err) {
+        console.error('❌ Failed to fetch user data:', {
+          status: err.response?.status,
+          message: err.message,
+          url: err.config?.url,
+        })
+
+        // Очищаем userData, но НЕ трогаем authStore.isAuthenticated
+        // Пусть API интерцептор решает, нужно ли делать logout
+        userData.value = null
+
+        console.warn('🔄 Keeping auth state, API interceptor will handle logout if needed')
+      } finally {
+        loading.value = false
+        fetchPromise = null // Сбрасываем промис после завершения
+      }
+    })()
+
+    return fetchPromise
   }
 
   const updateUserData = async (updateData) => {
@@ -61,7 +95,7 @@ export const useUserStore = defineStore('user', () => {
           avatar: updateData.avatar || userData.value.avatar,
           cover: updateData.cover || userData.value.cover,
         }
-        await fetchUserData()
+        await fetchUserData(true) // Принудительно обновляем данные
         return {
           success: true,
           status: 200,
@@ -95,14 +129,10 @@ export const useUserStore = defineStore('user', () => {
   const clearUserData = () => {
     userData.value = null
     error.value = null
-    // isReady.value = false // This was already removed, which is good.
+    fetchPromise = null // Сбрасываем активный промис при очистке
 
     // При выходе из системы, НЕ очищаем версии.
     // Они привязаны к файлам на сервере и должны сохраняться между сессиями.
-    // localStorage.removeItem('avatarVersion')
-    // localStorage.removeItem('coverVersion')
-    // avatarVersion.value = 1
-    // coverVersion.value = 1
   }
 
   const updateAvatarUrl = (newAvatarPath) => {

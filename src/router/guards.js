@@ -1,18 +1,9 @@
 import { useUserStore } from '@/stores/UserStore'
+import { useAuthStore } from '@/stores/AuthStore'
 
 export function setupRouteGuards(router) {
-  router.beforeEach((to, from, next) => {
-    const userStore = useUserStore()
-
-    // Проверка требований к роли
-    if (to.meta.roles) {
-      const userRole = userStore.userData?.role || 'guest'
-      if (!to.meta.roles.includes(userRole)) {
-        next({ name: 'profile' }) // Редирект на основной профиль
-        return
-      }
-    }
-
+  router.beforeEach(async (to, from, next) => {
+    // Просто пропускаем все - никаких проверок ролей
     next()
   })
 }

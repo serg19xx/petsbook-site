@@ -26,9 +26,6 @@ async function initializeApp() {
 
   app.use(pinia)
 
-  //const authStore = useAuthStore()
-  //const userStore = useUserStore()
-
   app.use(router)
   app.use(i18n)
   app.use(Vue3Toastify, {
@@ -70,21 +67,33 @@ async function initializeApp() {
     // Создаем массив промисов для всех асинхронных задач инициализации
     const startupPromises = []
 
-    // 1. Инициализация языка - используем правильное имя функции
+    // 1. Инициализация языка
     startupPromises.push(languageStore.initializeLanguage())
 
-    // 2. Если есть токен, добавляем в очередь загрузку данных пользователя
-    if (document.cookie.includes('auth_token=')) {
+    // 2. СРАЗУ инициализируем аутентификацию
+    const hasToken = authStore.initializeAuth()
+    console.log('🔐 Auth initialized:', { hasToken, isAuthenticated: authStore.isAuthenticated })
+
+    // 3. Если есть токен, загружаем данные пользователя
+    if (hasToken) {
+      console.log('📥 Loading user data...')
       startupPromises.push(userStore.fetchUserData())
     }
 
     // Ждем выполнения всех задач
     await Promise.all(startupPromises)
+
+    console.log('✅ App initialization completed:', {
+      isAuthenticated: authStore.isAuthenticated,
+      userRole: userStore.userData?.role,
+      hasToken: hasToken,
+    })
   } catch (error) {
-    console.error('Ошибка инициализации приложения:', error)
+    console.error('❌ Ошибка инициализации приложения:', error)
   } finally {
     // Вне зависимости от успеха/ошибки, сообщаем, что инициализация завершена
     authStore.isReady = true
+    console.log('🚀 App ready, mounting...')
 
     // Монтируем приложение только СЕЙЧАС, когда все готово
     app.mount('#app')

@@ -85,6 +85,7 @@
             v-for="pet in pets"
             :key="pet.id"
             :pet="pet"
+            :is-logged-in="isLoggedIn"
             @like="handleLike"
             @comment="handleComment"
             @view="handleViewPet"
@@ -92,7 +93,7 @@
         </div>
 
         <!-- Load More Button -->
-        <div v-if="hasMore" class="flex justify-center mt-12">
+        <div v-if="hasMore && !loading && pets.length > 0" class="flex justify-center mt-12">
           <button
             @click="loadMore"
             :disabled="loadingMore"
@@ -141,10 +142,10 @@
           <div class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="flex items-start justify-between">
               <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ selectedPet.name }}</h1>
-                <p class="text-lg text-gray-600">{{ selectedPet.breed }}</p>
+                <h1 class="text-3xl font-bold text-gray-900">{{ selectedPet?.name || 'Unknown Pet' }}</h1>
+                <p class="text-lg text-gray-600">{{ selectedPet?.breed || 'Unknown breed' }}</p>
                 <p class="text-sm text-gray-500 mt-1">
-                  {{ selectedPet.location }} • {{ selectedPet.distance }}
+                  {{ selectedPet?.location || 'Unknown location' }} • {{ selectedPet?.distance || 'Unknown distance' }}
                 </p>
               </div>
             </div>
@@ -155,14 +156,14 @@
             <h2 class="text-xl font-semibold text-gray-900 mb-4">Photos</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
-                v-for="(photo, index) in selectedPet.photos"
+                v-for="(photo, index) in selectedPet?.photos || []"
                 :key="index"
                 class="aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                 @click="openPhotoGallery(index)"
               >
                 <img
                   :src="photo"
-                  :alt="`${selectedPet.name} photo ${index + 1}`"
+                  :alt="`${selectedPet?.name || 'Pet'} photo ${index + 1}`"
                   class="w-full h-full object-cover"
                 />
               </div>
@@ -209,13 +210,13 @@
                 <h3 class="font-medium text-gray-900 mb-2">Owner</h3>
                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <img
-                    :src="selectedPet.owner.avatar"
-                    :alt="selectedPet.owner.name"
+                    :src="selectedPet?.owner?.avatar || 'https://via.placeholder.com/48x48?text=Owner'"
+                    :alt="selectedPet?.owner?.name || 'Owner'"
                     class="w-12 h-12 rounded-full"
                   />
                   <div>
-                    <p class="font-medium text-gray-900">{{ selectedPet.owner.name }}</p>
-                    <p class="text-sm text-gray-600">{{ selectedPet.location }}</p>
+                    <p class="font-medium text-gray-900">{{ selectedPet?.owner?.name || 'Unknown Owner' }}</p>
+                    <p class="text-sm text-gray-600">{{ selectedPet?.location || 'Unknown location' }}</p>
                   </div>
                 </div>
               </div>
@@ -246,14 +247,14 @@
           <div class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="flex items-center gap-4">
               <img
-                :src="selectedPetForComments.photos[0]"
-                :alt="selectedPetForComments.name"
+                :src="selectedPetForComments?.photos?.[0] || 'https://via.placeholder.com/64x64?text=No+Photo'"
+                :alt="selectedPetForComments?.name || 'Pet'"
                 class="w-16 h-16 rounded-lg object-cover"
               />
               <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ selectedPetForComments.name }}</h1>
-                <p class="text-gray-600">{{ selectedPetForComments.breed }}</p>
-                <p class="text-sm text-gray-500">{{ selectedPetForComments.comments }} comments</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ selectedPetForComments?.name || 'Unknown Pet' }}</h1>
+                <p class="text-gray-600">{{ selectedPetForComments?.breed || 'Unknown breed' }}</p>
+                <p class="text-sm text-gray-500">{{ selectedPetForComments?.comments || 0 }} comments</p>
               </div>
             </div>
           </div>
@@ -518,6 +519,13 @@ import MainLayout from '@/layouts/MainLayout.vue'
 import PetCard from '@/components/Pets/PetCard.vue'
 import Dialog from '@/components/ui/Dialog.vue'
 import { PET_SPECIES } from '@/constants/petSpecies.js'
+import { petsApi } from '@/api/pets'
+import { useAuthStore } from '@/stores/AuthStore'
+import { useUserStore } from '@/stores/UserStore'
+
+// Stores
+const authStore = useAuthStore()
+const userStore = useUserStore()
 
 // State
 const pets = ref([])
@@ -557,18 +565,15 @@ const sortOptions = [
 
 // Computed
 const isLoggedIn = computed(() => {
-  // TODO: Get from auth store
-  return false
+  return authStore.isAuthenticated
 })
 
 const currentUserAvatar = computed(() => {
-  // TODO: Get from auth store
-  return 'https://via.placeholder.com/40x40/4ECDC4/FFFFFF?text=U'
+  return userStore.userData?.owner_avatar || userStore.userData?.avatar || 'https://via.placeholder.com/40x40/4ECDC4/FFFFFF?text=U'
 })
 
 const currentUserName = computed(() => {
-  // TODO: Get from auth store
-  return 'Current User'
+  return userStore.userData?.full_name || userStore.userData?.nickname || 'Current User'
 })
 
 const activeFiltersCount = computed(() => {
@@ -595,51 +600,142 @@ async function loadPets(reset = false) {
   error.value = null
 
   try {
-    // TODO: Replace with actual API call
-    const response = await fetchPets(filters)
+    // Получаем геолокацию пользователя
+    const userLocation = await getCurrentLocation()
 
-    if (reset) {
-      pets.value = response.pets
-    } else {
-      pets.value.push(...response.pets)
+    const params = {
+      page: filters.page,
+      limit: 12, // Количество питомцев на странице
+      species: filters.species,
+      gender: filters.gender,
+      age: filters.age,
+      location: filters.location,
+      radius: filters.radius,
+      sort: sortBy.value,
+      // Добавляем координаты пользователя если есть
+      ...(userLocation && {
+        user_lat: userLocation.lat,
+        user_lng: userLocation.lng
+      })
     }
 
-    hasMore.value = response.hasMore
+    console.log('🔍 Loading pets with params:', params)
+
+    // Используем реальный API
+    const response = await petsApi.fetchPublicPets(params)
+
+    console.log('✅ API response:', response)
+    console.log('✅ API response type:', typeof response)
+    console.log('✅ API response keys:', Object.keys(response || {}))
+
+    // Детальный анализ структуры ответа
+    if (response) {
+      console.log('�� Response structure analysis:')
+      console.log('  - response.pets:', response.pets)
+      console.log('  - response.data:', response.data)
+      console.log('  - response.data?.pets:', response.data?.pets)
+      console.log('  - response.data?.data:', response.data?.data)
+      console.log('  - response.data?.data?.pets:', response.data?.data?.pets)
+    }
+
+    // Попробуем разные варианты структуры ответа
+    let petsData = null
+    let hasMoreData = false
+
+    if (response?.pets) {
+      // Формат: { pets: [...], hasMore: true }
+      petsData = response.pets
+      hasMoreData = response.hasMore ?? false
+      console.log('📋 Using format: response.pets')
+    } else if (response?.data?.pets) {
+      // Формат: { data: { pets: [...], hasMore: true } }
+      petsData = response.data.pets
+      hasMoreData = response.data.hasMore ?? false
+      console.log('📋 Using format: response.data.pets')
+    } else if (response?.data?.data?.pets) {
+      // Формат: { data: { data: { pets: [...] } } }
+      petsData = response.data.data.pets
+      hasMoreData = response.data.data.hasMore ?? false
+      console.log('📋 Using format: response.data.data.pets')
+    } else if (Array.isArray(response?.data)) {
+      // Формат: { data: [...] } (массив питомцев напрямую)
+      petsData = response.data
+      hasMoreData = false // Нет информации о пагинации
+      console.log('📋 Using format: response.data (array)')
+    } else if (Array.isArray(response)) {
+      // Формат: [...] (массив питомцев напрямую)
+      petsData = response
+      hasMoreData = false
+      console.log('📋 Using format: response (array)')
+    }
+
+    console.log('📊 Final extracted data:', {
+      petsCount: petsData?.length || 0,
+      hasMore: hasMoreData,
+      firstPet: petsData?.[0]
+    })
+
+    if (petsData && Array.isArray(petsData)) {
+      let newPets = petsData
+
+      // Инициализируем поля лайков если их нет
+      newPets = newPets.map(pet => {
+        const convertedLiked = convertToBoolean(pet.is_liked)
+        console.log(`🐾 Pet ${pet.id}: original is_liked=${pet.is_liked}, converted=${convertedLiked}`)
+
+        // Преобразуем main_photos в photos для компонента
+        let photos = []
+        if (pet.main_photos && Array.isArray(pet.main_photos)) {
+          photos = pet.main_photos.map(photo => {
+            // Если URL относительный, добавляем базовый URL
+            if (photo.url && !photo.url.startsWith('http')) {
+              return import.meta.env.VITE_API_BASE_URL + photo.url
+            }
+            return photo.url
+          })
+        }
+
+        console.log(`📸 Pet ${pet.id} photos:`, photos)
+
+        return {
+          ...pet,
+          isLiked: convertedLiked,
+          likes: pet.likes_count || pet.likes || 0,
+          comments: pet.comments || 0,
+          photos: photos // Добавляем преобразованные фотографии
+        }
+      })
+
+      if (reset) {
+        pets.value = newPets
+      } else {
+        pets.value.push(...newPets)
+      }
+
+      hasMore.value = hasMoreData
+      console.log(`📊 Loaded ${newPets.length} pets, has more: ${hasMore.value}`)
+    } else {
+      console.error('❌ No valid pets data found in response')
+      throw new Error('Invalid response format - no pets data found')
+    }
+
   } catch (err) {
     error.value = 'Error loading pets'
-    console.error('Error loading pets:', err)
+    console.error('❌ Error loading pets:', err)
+    toast.error('Failed to load pets')
   } finally {
     loading.value = false
   }
 }
 
-async function loadMore() {
-  if (loadingMore.value) return
-
-  loadingMore.value = true
-  filters.page++
-
-  try {
-    const response = await fetchPets(filters)
-    pets.value.push(...response.pets)
-    hasMore.value = response.hasMore
-  } catch (err) {
-    toast.error('Error loading more pets')
-    console.error('Error loading more pets:', err)
-  } finally {
-    loadingMore.value = false
-  }
-}
-
-async function fetchPets(filters) {
-  // TODO: Replace with actual API call
-  // Mock data for now
+// Временная mock функция
+async function fetchPetsMock(params) {
   await new Promise((resolve) => setTimeout(resolve, 1000))
 
   return {
     pets: [
       {
-        id: 1,
+        id: 229,
         name: 'Whisky',
         species: 'Cat',
         breed: 'Bengal',
@@ -653,6 +749,7 @@ async function fetchPets(filters) {
           'https://via.placeholder.com/300x200/45B7D1/FFFFFF?text=Photo+3',
           'https://via.placeholder.com/300x200/96CEB4/FFFFFF?text=Photo+4',
         ],
+        // Инициализируем поля лайков
         likes: 42,
         comments: 8,
         isLiked: false,
@@ -663,7 +760,7 @@ async function fetchPets(filters) {
         },
       },
       {
-        id: 2,
+        id: 230,
         name: 'Buddy',
         species: 'Dog',
         breed: 'Golden Retriever',
@@ -679,7 +776,7 @@ async function fetchPets(filters) {
         ],
         likes: 67,
         comments: 12,
-        isLiked: true,
+        isLiked: false,
         owner: {
           id: 2,
           name: 'Jane Smith',
@@ -688,6 +785,52 @@ async function fetchPets(filters) {
       },
     ],
     hasMore: false,
+  }
+}
+
+async function getCurrentLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      console.log('Geolocation not supported')
+      resolve(null)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const location = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        }
+        console.log('📍 User location:', location)
+        resolve(location)
+      },
+      (error) => {
+        console.log('Geolocation error:', error.message)
+        resolve(null) // Продолжаем без геолокации
+      },
+      {
+        timeout: 10000,
+        enableHighAccuracy: false
+      }
+    )
+  })
+}
+
+async function loadMore() {
+  if (loadingMore.value) return
+
+  loadingMore.value = true
+  filters.page++
+
+  try {
+    await loadPets(false) // false = не сбрасывать существующие данные
+  } catch (err) {
+    toast.error('Error loading more pets')
+    console.error('❌ Error loading more pets:', err)
+    filters.page-- // Откатываем страницу при ошибке
+  } finally {
+    loadingMore.value = false
   }
 }
 
@@ -731,15 +874,158 @@ function useCurrentLocation() {
   }
 }
 
-function handleLike() {
+async function handleLike(petId) {
   if (!isLoggedIn.value) {
     toast.error('Please log in to like pets')
     return
   }
 
-  // TODO: Implement like logic
-  console.log('Like pet:', selectedPet.value?.id || 'gallery')
-  toast.success('Like added!')
+  console.log('🔍 handleLike called for petId:', petId)
+
+  try {
+    // Найдем питомца в массиве
+    const petIndex = pets.value.findIndex(p => p.id === petId)
+    if (petIndex === -1) {
+      console.error('Pet not found:', petId)
+      return
+    }
+
+    const pet = pets.value[petIndex]
+    const originalState = {
+      isLiked: pet.isLiked,
+      likes: pet.likes
+    }
+
+    console.log('📊 Original state:', originalState)
+
+    // Оптимистичное обновление UI
+    pet.isLiked = !originalState.isLiked
+    pet.likes += pet.isLiked ? 1 : -1
+
+    console.log('📊 After optimistic update:', {
+      isLiked: pet.isLiked,
+      likes: pet.likes
+    })
+
+    // Отправляем запрос на сервер
+    const response = await petsApi.togglePetLike(petId)
+
+    console.log('🚨 ПОЛНЫЙ ОТВЕТ СЕРВЕРА:')
+    console.log('Raw response object:', response)
+    console.log('Response type:', typeof response)
+    console.log('Response keys:', Object.keys(response))
+
+    if (response.status) {
+      console.log('Response status:', response.status, typeof response.status)
+    }
+
+    if (response.data) {
+      console.log('Response.data:', response.data)
+      console.log('Response.data type:', typeof response.data)
+      console.log('Response.data keys:', Object.keys(response.data))
+
+      if (response.data.data) {
+        console.log('Response.data.data:', response.data.data)
+        console.log('Response.data.data type:', typeof response.data.data)
+        console.log('Response.data.data keys:', Object.keys(response.data.data))
+
+        const serverData = response.data.data
+        console.log('🔍 ДЕТАЛЬНЫЙ АНАЛИЗ ДАННЫХ СЕРВЕРА:')
+        console.log('serverData.liked:', serverData.liked, 'type:', typeof serverData.liked)
+        console.log('serverData.action:', serverData.action, 'type:', typeof serverData.action)
+
+        if (serverData.hasOwnProperty('liked')) {
+          console.log('Has liked property: true')
+        } else {
+          console.log('Has liked property: false')
+        }
+
+        if (serverData.hasOwnProperty('action')) {
+          console.log('Has action property: true')
+        } else {
+          console.log('Has action property: false')
+        }
+      }
+    }
+
+    // Обрабатываем ответ сервера с правильной структурой
+    if (response.status === 200 && response.data) {
+      const serverData = response.data
+
+      // Более надёжная конверсия типов - поддерживаем все возможные варианты
+      const likedValue = serverData.liked
+      let isLiked = false
+
+      // Проверяем все возможные варианты true
+      if (likedValue === 1 || likedValue === "1" || likedValue === true || likedValue === "true") {
+        isLiked = true
+      } else if (likedValue === 0 || likedValue === "0" || likedValue === false || likedValue === "false") {
+        isLiked = false
+      }
+
+      const action = serverData.action
+
+      console.log('📊 Server data conversion:', {
+        originalLiked: serverData.liked,
+        likedType: typeof serverData.liked,
+        convertedIsLiked: isLiked,
+        action: action,
+        actionType: typeof action
+      })
+
+      // Обновляем состояние на основе ответа сервера
+      pet.isLiked = isLiked
+
+      // Количество лайков обновляем на основе действия
+      if (action === 'liked') {
+        pet.likes = originalState.likes + 1
+      } else if (action === 'unliked') {
+        pet.likes = Math.max(0, originalState.likes - 1) // Не даем уйти в минус
+      }
+
+      console.log('📊 Final state after server response:', {
+        isLiked: pet.isLiked,
+        likes: pet.likes
+      })
+
+      toast.success(action === 'liked' ? 'Like added!' : 'Like removed!')
+    } else {
+      console.log('🚨 НЕОЖИДАННЫЙ ФОРМАТ ОТВЕТА:')
+      console.log('Response status:', response.status)
+      console.log('Response.data exists:', !!response.data)
+      console.log('Response.data.data exists:', !!response.data?.data)
+    }
+
+  } catch (error) {
+    console.error('❌ Like error:', error)
+    console.log('Error type:', typeof error)
+    console.log('Error keys:', Object.keys(error))
+
+    if (error.response) {
+      console.log('Error response:', error.response)
+      console.log('Error response status:', error.response.status)
+      console.log('Error response data:', error.response.data)
+    }
+
+    console.log('🔄 Rolling back...')
+
+    // Откатываем оптимистичное обновление при ошибке
+    const petIndex = pets.value.findIndex(p => p.id === petId)
+    if (petIndex !== -1) {
+      const pet = pets.value[petIndex]
+
+      // Возвращаем исходное состояние
+      pet.isLiked = originalState.isLiked
+      pet.likes = originalState.likes
+
+      console.log('📊 After rollback:', {
+        isLiked: pet.isLiked,
+        likes: pet.likes
+      })
+    }
+
+    toast.error('Failed to update like')
+  }
 }
 
 function handleComment(pet) {
@@ -865,6 +1151,19 @@ function formatDate(date) {
 function openPhotoGallery(index) {
   // TODO: Implement photo gallery modal
   console.log('Open photo gallery at index:', index)
+}
+
+// Добавляем в начало скрипта
+function convertToBoolean(value) {
+  console.log('🔄 convertToBoolean called with:', value, 'type:', typeof value)
+
+  // Конвертируем любое значение в boolean
+  if (value === 1 || value === "1" || value === true || value === "true") {
+    console.log('✅ Converting to true')
+    return true
+  }
+  console.log('❌ Converting to false')
+  return false
 }
 
 // Lifecycle

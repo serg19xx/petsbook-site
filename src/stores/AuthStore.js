@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-undef */
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import api from '@/api' // Updated import
 import i18n from '@/i18n'
 import router from '@/router'
@@ -20,13 +20,38 @@ export const useAuthStore = defineStore(
     const loading = ref(false)
     const { t } = i18n.global
 
-    const isAuthenticated = ref(false)
     const isReady = ref(false)
-
-    //const userAvatar = ref(null)
-
     const resetPasswordSuccess = ref(false)
     const resetPasswordError = ref(null)
+
+    // Возвращаем ref, но правильно инициализируем
+    const isAuthenticated = ref(false)
+
+    // Функция инициализации
+    const initializeAuth = () => {
+      const hasToken = document.cookie.includes('auth_token=')
+      const hasLoginInfo = !!loginInfo.value
+
+      console.log('🔐 initializeAuth called:', {
+        hasToken,
+        hasLoginInfo,
+        currentIsAuthenticated: isAuthenticated.value,
+        cookies: document.cookie,
+        timestamp: new Date().toISOString(),
+      })
+
+      // Если есть токен ИЛИ есть сохранённая информация о логине, считаем аутентифицированным
+      isAuthenticated.value = hasToken || hasLoginInfo
+
+      console.log('🔐 Auth state updated:', {
+        isAuthenticated: isAuthenticated.value,
+        timestamp: new Date().toISOString(),
+      })
+      return hasToken || hasLoginInfo
+    }
+
+    // Инициализируем сразу при создании store
+    initializeAuth()
 
     const login = async (credentials) => {
       const codeMapping = {
@@ -94,9 +119,36 @@ export const useAuthStore = defineStore(
         }
 
         if (response.data.status === 200) {
+          console.log('🎉 Login successful, updating auth state')
+
+          // Принудительно устанавливаем состояние аутентификации
           isAuthenticated.value = true
+
+          // Сохраняем информацию о логине
+          loginInfo.value = {
+            email: credentials.email,
+            loginTime: new Date().toISOString(),
+            ...response.data.data,
+          }
+
           const userStore = useUserStore()
           await userStore.fetchUserData()
+
+          // Проверяем, установились ли куки после логина
+          const hasTokenAfterLogin = document.cookie.includes('auth_token=')
+          console.log('🍪 Cookies after login:', {
+            hasToken: hasTokenAfterLogin,
+            allCookies: document.cookie,
+            isAuthenticated: isAuthenticated.value,
+          })
+
+          // Если куки не установились, но логин успешный - всё равно считаем пользователя аутентифицированным
+          if (!hasTokenAfterLogin) {
+            console.warn(
+              '⚠️ No auth token cookie found after successful login, but keeping authenticated state',
+            )
+          }
+
           router.push('/')
           return {
             status: 200,
@@ -150,15 +202,22 @@ export const useAuthStore = defineStore(
     }
 
     const logout = async () => {
+      console.log('🚪 LOGOUT CALLED:', {
+        currentlyAuthenticated: isAuthenticated.value,
+        hasToken: document.cookie.includes('auth_token='),
+        stackTrace: new Error().stack,
+        timestamp: new Date().toISOString(),
+      })
+
       try {
         // Можно добавить запрос к API для логаута на сервере, если требуется
         const userStore = useUserStore()
         userStore.clearUserData()
         await api.post('/api/auth/logout', {}, { withCredentials: true })
         loginInfo.value = null
-        isAuthenticated.value = false
         localStorage.removeItem('auth')
         router.push('/login')
+        isAuthenticated.value = false
 
         return {
           success: true,
@@ -574,17 +633,31 @@ export const useAuthStore = defineStore(
       }
     }
 
+    // Отслеживаем изменения isAuthenticated
+    watch(
+      isAuthenticated,
+      (newValue, oldValue) => {
+        console.log('🔐 Auth state changed:', {
+          from: oldValue,
+          to: newValue,
+          hasToken: document.cookie.includes('auth_token='),
+          timestamp: new Date().toISOString(),
+          stackTrace: new Error().stack,
+        })
+      },
+      { immediate: false },
+    )
+
     return {
       loading,
       isAuthenticated,
       isReady,
-      //initializeAuth,
+      initializeAuth,
       login,
       logout,
       register,
       requestPasswordReset,
       resetPassword,
-      //userAvatar,
       validateResetToken,
       loginInfo,
       resetPasswordSuccess,
@@ -594,5 +667,10 @@ export const useAuthStore = defineStore(
       updateEmailForUnverified,
     }
   },
-  { persist: true },
+  {
+    persist: {
+      // Исключаем isAuthenticated из persist - он будет инициализироваться из куков
+      paths: ['loginInfo', 'resetPasswordSuccess', 'resetPasswordError'],
+    },
+  },
 )

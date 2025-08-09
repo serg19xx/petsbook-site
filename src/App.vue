@@ -209,9 +209,17 @@ watch(
 )
 
 onMounted(async () => {
-  // Если пользователь аутентифицирован, но данные не загружены, загружаем их
-  if (authStore.isAuthenticated && !userStore.userData) {
+  // Проверяем, нужно ли загружать данные пользователя
+  // Если пользователь аутентифицирован, но данные не загружены И не загружаются сейчас
+  if (authStore.isAuthenticated && !userStore.userData && !userStore.loading) {
+    console.log('🔄 App.vue: Loading user data on mount')
     await userStore.fetchUserData()
+  } else {
+    console.log('🔄 App.vue: Skipping user data load:', {
+      isAuthenticated: authStore.isAuthenticated,
+      hasUserData: !!userStore.userData,
+      isLoading: userStore.loading
+    })
   }
 })
 

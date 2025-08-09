@@ -8,115 +8,92 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   headers: {
     Accept: 'application/json',
-    // Убираем Content-Type - он будет устанавливаться автоматически
-    // 'Content-Type': 'application/json', // УБРАНО
   },
   timeout: 10000,
 })
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Устанавливаем Content-Type только для JSON запросов
+  function(config) {
     if (!config.headers['Content-Type'] && !(config.data instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json'
     }
-
-    // Убираем добавление Bearer token - используем только куки
-    // const token = getCookie('auth_token')
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`
-    // }
     return config
   },
-  (error) => {
+  function(error) {
     return Promise.reject(error)
   },
 )
 
 // Response interceptor
 api.interceptors.response.use(
-  (response) => {
+  function(response) {
     if (import.meta.env.DEV) {
-      console.log('API Response Details:', {
+      console.log('✅ API Success:', {
         url: response.config.url,
         method: response.config.method,
         status: response.status,
-        statusText: response.statusText,
-        data: response.data,
-        headers: response.headers,
+        hasAuthToken: document.cookie.includes('auth_token='),
+        timestamp: new Date().toISOString(),
       })
     }
     return response
   },
-  (error) => {
-    if (import.meta.env.DEV) {
-      console.error('API Error Details:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        message: error.message,
-      })
-    }
+  function(error) {
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      message: error.message,
+      hasAuthToken: document.cookie.includes('auth_token='),
+      timestamp: new Date().toISOString(),
+    })
 
-    // Не делаем logout для API питомцев при 401
-    if (error.response?.status === 401 && error.config?.url?.includes('/api/pets/')) {
-      console.warn('401 error for pets API - not logging out')
-      return Promise.reject(error)
-    }
-
+    // Улучшенная логика для 401 ошибок
     if (error.response?.status === 401) {
+      console.warn('🚨 401 Unauthorized detected for:', error.config?.url)
+      console.warn('🍪 Current cookies:', document.cookie)
+
       const authStore = useAuthStore()
-      authStore.logout()
-      //notify('У вас нет доступа к этому ресурсу')
-      router.push('/login')
+      const isCurrentlyAuthenticated = authStore.isAuthenticated
+      const hasLoginInfo = !!authStore.loginInfo
+
+      console.log('🔍 Auth state check:', {
+        isAuthenticated: isCurrentlyAuthenticated,
+        hasLoginInfo: hasLoginInfo,
+        url: error.config?.url,
+      })
+
+      const isProtectedEndpoint =
+        !error.config?.url?.includes('/api/pets/') &&
+        !error.config?.url?.includes('/api/user/getuser')
+
+      if (isCurrentlyAuthenticated && isProtectedEndpoint) {
+        console.warn('🚪 401 error on protected endpoint - logging out user')
+        authStore.logout()
+        router.push('/login')
+      } else {
+        console.warn('🔄 401 error but not logging out - either not authenticated or public endpoint')
+      }
     } else if (error.response?.status === 403) {
-      // Не обрабатываем 403 автоматически для EMAIL_NOT_VERIFIED
-      // Позволяем компонентам обработать эту ошибку самостоятельно
+      console.warn('🚨 403 Forbidden detected for:', error.config?.url)
+
       const errorCode = error.response?.data?.error_code
       if (errorCode !== 'EMAIL_NOT_VERIFIED') {
         const authStore = useAuthStore()
+        console.warn('🚪 403 error - logging out user')
         authStore.logout()
-        //notify('У вас нет доступа к этому ресурсу')
         router.push('/login')
+      } else {
+        console.warn('🔄 403 EMAIL_NOT_VERIFIED - not logging out')
       }
     }
 
     return Promise.reject(error)
   },
 )
-
-// API endpoints
-/*
-export const endpoints = {
-  auth: {
-    login: '/auth/login',
-    register: '/auth/register',
-    logout: '/auth/logout',
-    refresh: '/auth/refresh',
-    resetPassword: '/auth/reset-password',
-    requestReset: '/auth/request-reset',
-  },
-  user: {
-    profile: '/user/profile',
-    update: '/user/update',
-    settings: '/user/settings',
-  },
-  pets: {
-    list: '/pets',
-    create: '/pets',
-    update: (id) => `/pets/${id}`,
-    delete: (id) => `/pets/${id}`,
-    details: (id) => `/pets/${id}`,
-  },
-  stats: {
-    visit: '/stats/visit',
-  },
-}
-*/
 
 export default api
 

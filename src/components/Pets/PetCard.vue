@@ -28,22 +28,23 @@
 
         <!-- Navigation Arrows (only on hover) -->
         <button
-          v-if="pet.photos.length > 1"
+          v-if="pet.photos && pet.photos.length > 1"
           @click.stop="previousPhoto"
           class="absolute left-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100"
         >
           <Icon icon="mdi:chevron-left" class="w-6 h-6" />
         </button>
         <button
-          v-if="pet.photos.length > 1"
+          v-if="pet.photos && pet.photos.length > 1"
           @click.stop="nextPhoto"
           class="absolute right-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/30 hover:bg-black/50 text-white rounded-full flex items-center justify-center transition-all duration-200 opacity-0 group-hover:opacity-100"
         >
           <Icon icon="mdi:chevron-right" class="w-6 h-6" />
         </button>
 
-        <!-- Floating Like Button -->
+        <!-- Floating Like Button (только для залогиненных) -->
         <button
+          v-if="isLoggedIn"
           @click.stop="handleLike"
           :class="[
             'absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg',
@@ -114,6 +115,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  isLoggedIn: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 // Emits
@@ -125,6 +130,9 @@ const showPhotoViewer = ref(false)
 
 // Computed
 const currentPhoto = computed(() => {
+  if (!props.pet?.photos || props.pet.photos.length === 0) {
+    return 'https://via.placeholder.com/300x200?text=No+Photo'
+  }
   return props.pet.photos[currentPhotoIndex.value] || props.pet.photos[0]
 })
 
@@ -146,6 +154,8 @@ function openPhotoViewer() {
 }
 
 function nextPhoto() {
+  if (!props.pet?.photos || props.pet.photos.length <= 1) return
+
   if (currentPhotoIndex.value < props.pet.photos.length - 1) {
     currentPhotoIndex.value++
   } else {
@@ -154,6 +164,8 @@ function nextPhoto() {
 }
 
 function previousPhoto() {
+  if (!props.pet?.photos || props.pet.photos.length <= 1) return
+
   if (currentPhotoIndex.value > 0) {
     currentPhotoIndex.value--
   } else {
