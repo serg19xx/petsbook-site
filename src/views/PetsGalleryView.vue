@@ -44,7 +44,7 @@
                 class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
               >
                 <Icon icon="mdi:sort-variant" class="w-4 h-4" />
-                <span class="hidden sm:inline">{{ $t('UI.common.sort') }}</span>
+                <span class="hidden sm:inline">{{ $t('UI.petsgallery.button.sort') }}</span>
               </button>
             </div>
           </div>
@@ -469,7 +469,7 @@
       </Dialog>
 
       <!-- Sort Dialog -->
-      <Dialog :model-value="showSortDialog" @close="showSortDialog = false" :title="$t('UI.common.sort')" size="sm">
+      <Dialog :model-value="showSortDialog" @close="showSortDialog = false" :title="$t('UI.petsgallery.button.sort')" size="sm">
         <div class="space-y-3">
           <label
             v-for="option in sortOptions"
