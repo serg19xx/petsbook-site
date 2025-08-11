@@ -26,7 +26,7 @@
             ></canvas>
             <div v-else class="w-full h-full flex flex-col items-center justify-center bg-gray-100">
               <Icon icon="mdi:paw" class="w-16 h-16 text-gray-400 mb-2" />
-              <p class="text-sm text-gray-500">Выберите фото питомца</p>
+              <p class="text-sm text-gray-500">{{ $t('UI.mypets.photo_editor.select_photo') }}</p>
             </div>
             <img v-if="imageUrl" ref="imageRef" :src="imageUrl" @load="drawImage" class="hidden" />
           </div>
@@ -48,7 +48,7 @@
           <button
             @click="$refs.fileInput.click()"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Выбрать фото"
+            :title="$t('UI.mypets.photo_editor.select_photo')"
           >
             <Icon icon="mdi:image-plus" class="w-6 h-6 text-gray-600" />
           </button>
@@ -56,7 +56,7 @@
             v-if="imageUrl"
             @click="centerImage"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Центрировать"
+            :title="$t('UI.mypets.photo_editor.center')"
           >
             <Icon icon="mdi:image-filter-center-focus" class="w-6 h-6 text-gray-600" />
           </button>
@@ -64,7 +64,7 @@
             v-if="imageUrl"
             @click="rotateLeft"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Повернуть влево"
+            :title="$t('UI.mypets.photo_editor.rotate_left')"
           >
             <Icon icon="mdi:rotate-left" class="w-6 h-6 text-gray-600" />
           </button>
@@ -72,7 +72,7 @@
             v-if="imageUrl"
             @click="rotateRight"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Повернуть вправо"
+            :title="$t('UI.mypets.photo_editor.rotate_right')"
           >
             <Icon icon="mdi:rotate-right" class="w-6 h-6 text-gray-600" />
           </button>
@@ -80,7 +80,7 @@
             v-if="imageUrl"
             @click="zoomIn"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Увеличить"
+            :title="$t('UI.mypets.photo_editor.zoom_in')"
           >
             <Icon icon="mdi:magnify-plus" class="w-6 h-6 text-gray-600" />
           </button>
@@ -88,7 +88,7 @@
             v-if="imageUrl"
             @click="zoomOut"
             class="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            title="Уменьшить"
+            :title="$t('UI.mypets.photo_editor.zoom_out')"
           >
             <Icon icon="mdi:magnify-minus" class="w-6 h-6 text-gray-600" />
           </button>
@@ -99,14 +99,14 @@
             @click="cancel"
             class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            Отмена
+            {{ $t('UI.mypets.photo_editor.cancel') }}
           </button>
           <button
             :disabled="!imageUrl"
             @click="save"
             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            Сохранить
+            {{ $t('UI.mypets.photo_editor.save') }}
           </button>
         </div>
       </div>

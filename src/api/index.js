@@ -66,16 +66,23 @@ api.interceptors.response.use(
         url: error.config?.url,
       })
 
-      const isProtectedEndpoint =
-        !error.config?.url?.includes('/api/pets/') &&
-        !error.config?.url?.includes('/api/user/getuser')
+      // Определяем публичные эндпоинты (не требующие аутентификации)
+      const isPublicEndpoint =
+        error.config?.url?.includes('/api/i18n/') ||
+        error.config?.url?.includes('/api/stats/visit') ||
+        error.config?.url?.includes('/api/auth/login') ||
+        error.config?.url?.includes('/api/auth/register') ||
+        error.config?.url?.includes('/api/auth/forgot-password') ||
+        error.config?.url?.includes('/api/auth/reset-password')
 
-      if (isCurrentlyAuthenticated && isProtectedEndpoint) {
+      if (isCurrentlyAuthenticated && !isPublicEndpoint) {
         console.warn('🚪 401 error on protected endpoint - logging out user')
         authStore.logout()
         router.push('/login')
       } else {
-        console.warn('🔄 401 error but not logging out - either not authenticated or public endpoint')
+        console.warn(
+          '🔄 401 error but not logging out - either not authenticated or public endpoint',
+        )
       }
     } else if (error.response?.status === 403) {
       console.warn('🚨 403 Forbidden detected for:', error.config?.url)

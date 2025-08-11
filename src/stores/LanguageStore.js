@@ -45,6 +45,12 @@ export const useLanguageStore = defineStore('language', () => {
       // Обрабатываем каждый ключ
       for (let i = 0; i < keys.length; i++) {
         const flatKey = keys[i]
+
+        // Добавьте проверку на ключи видов животных
+        if (flatKey.includes('petspecies.options')) {
+          console.log('🔍 Found petspecies key:', flatKey, '->', flatObj[flatKey])
+        }
+
         console.log(`Processing key ${i + 1}/${keys.length}:`, flatKey)
 
         try {
@@ -54,11 +60,11 @@ export const useLanguageStore = defineStore('language', () => {
 
           // Создаем вложенную структуру
           for (let j = 0; j < keyParts.length - 1; j++) {
-            const part = keyParts[j];
+            const part = keyParts[j]
             // Если уже есть строка — пропускаем этот ключ
             if (typeof current[part] === 'string') {
-              console.warn(`Conflict: "${part}" is already a string, skipping key "${flatKey}"`);
-              continue;
+              console.warn(`Conflict: "${part}" is already a string, skipping key "${flatKey}"`)
+              continue
             }
             if (!current[part]) {
               current[part] = {}

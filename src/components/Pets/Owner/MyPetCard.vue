@@ -20,7 +20,7 @@
               ? 'bg-white/90 text-green-600 hover:bg-red-50 hover:text-red-600'
               : 'bg-white/90 text-gray-600 hover:bg-green-50 hover:text-green-600'
           ]"
-          :title="pet.published ? 'Скрыть от публики' : 'Опубликовать'"
+          :title="pet.published ? $t('UI.mypets.button.publish.no') : $t('UI.mypets.button.publish.yes')"
         >
           <Icon :icon="pet.published ? 'mdi:eye-off' : 'mdi:eye'" class="w-4 h-4" />
         </button>
@@ -28,14 +28,14 @@
         <button
           @click="$emit('edit', pet)"
           class="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg shadow-sm transition-colors"
-          title="Edit pet"
+          :title="$t('UI.mypets.button.edit.title')"
         >
           <Icon icon="mdi:pencil" class="w-4 h-4" />
         </button>
         <button
           @click="$emit('delete', pet)"
           class="p-2 bg-white/90 backdrop-blur-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg shadow-sm transition-colors"
-          title="Delete pet"
+          :title="$t('UI.mypets.button.delete.title')"
         >
           <Icon icon="mdi:delete" class="w-4 h-4" />
         </button>
@@ -47,10 +47,10 @@
       <!-- Name and Species -->
       <div class="mb-3">
         <h3 class="text-lg font-semibold text-gray-900 mb-1">
-          {{ pet.name || 'Unnamed Pet' }}
+          {{ pet.name || '---' }}
         </h3>
         <p class="text-sm text-gray-600">
-          {{ formatSpecies(pet.species) }} • {{ pet.breed || 'Unknown breed' }}
+          {{ formatSpecies(pet.species) }} • {{ pet.breed || '---' }}
         </p>
       </div>
 
@@ -91,7 +91,7 @@
             class="w-4 h-4"
           />
           <span class="text-xs" :class="pet.published ? 'text-green-600' : 'text-gray-500'">
-            {{ pet.published ? 'Опубликован' : 'Черновик' }}
+            {{ pet.published ? $t('UI.mypets.fields.published') : $t('UI.mypets.fields.draft') }}
           </span>
         </div>
 
@@ -132,7 +132,7 @@ function handleTogglePublish() {
 }
 
 function formatSpecies(species) {
-  if (!species) return 'Unknown'
+  if (!species) return '---'
   return species.charAt(0).toUpperCase() + species.slice(1).toLowerCase()
 }
 

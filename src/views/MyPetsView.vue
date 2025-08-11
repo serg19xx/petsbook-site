@@ -23,7 +23,7 @@
         <!-- <div v-if="petsStore.loading" class="flex justify-center py-8">
           <div class="flex items-center gap-2 text-gray-600">
             <Icon icon="mdi:loading" class="w-5 h-5 animate-spin" />
-            {{ $t('UI.common.loading') }}
+            {{ t('UI.common.loading') }}
           </div>
         </div> -->
 
@@ -71,7 +71,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center">
           <h1 class="text-2xl font-bold text-gray-900">
-            {{ isEditMode ? $t('UI.pets.edit_pet') : $t('UI.pets.add_pet') }}
+            {{ isEditMode ? $t('UI.mypets.edit_pet') : $t('UI.mypets.add_pet') }}
           </h1>
           <button
             @click="handleCancel"
@@ -87,7 +87,7 @@
             <!-- Main Photos Upload -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Фотографии питомца (до 4 фото)
+                {{ $t('UI.mypets.photos.title') }} (<5)
               </label>
 
               <!-- Photos Grid -->
@@ -125,7 +125,7 @@
                   >
                     <div class="bg-white rounded-lg p-2 flex items-center gap-2">
                       <Icon icon="mdi:alert-circle" class="w-4 h-4 text-red-500" />
-                      <span class="text-xs text-red-600">Ошибка</span>
+                      <span class="text-xs text-red-600">{{ $t('UI.mypets.photos.error') }}</span>
                     </div>
                   </div>
 
@@ -134,7 +134,7 @@
                     @click.stop.prevent="editPhoto(photo)"
                     type="button"
                     class="absolute bottom-2 right-2 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-blue-600 transition-all shadow-lg z-10"
-                    title="Редактировать фото"
+                    :title="$t('UI.mypets.photo.button.title.edit')"
                   >
                     <Icon icon="mdi:camera-plus" class="w-4 h-4" />
                   </button>
@@ -145,7 +145,7 @@
                     type="button"
                     :disabled="photo.deleting"
                     class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors shadow-lg z-10 disabled:opacity-50 disabled:cursor-not-allowed"
-                    :title="photo.deleting ? 'Удаление...' : 'Удалить'"
+                    :title="photo.deleting ? $t('UI.mypets.photos.deleting') : $t('UI.mypets.photos.delete')"
                   >
                     <Icon
                       v-if="!photo.deleting"
@@ -181,7 +181,7 @@
                       class="w-8 h-8 text-gray-400 group-hover:text-gray-500 mx-auto mb-2 transition-colors"
                     />
                     <p class="text-xs text-gray-500 group-hover:text-gray-600 transition-colors">
-                      Добавить фото
+                      {{ $t('UI.mypets.photos.add') }}
                     </p>
                     <p class="text-xs text-gray-400 mt-1">
                       {{ form.main_photos?.length || 0 }}/4
@@ -208,22 +208,18 @@
 
               <!-- Info -->
               <div class="text-sm text-gray-600">
-                <p class="flex items-center gap-1">
-                  <Icon icon="mdi:information" class="w-4 h-4" />
-                  Все фотографии равнозначные
-                </p>
                 <p class="text-xs text-gray-500 mt-1">
-                  Нажмите на фотографию для предпросмотра • Перетащите файлы для быстрого добавления
+                  {{ $t('UI.mypets.photos.info') }}
                 </p>
               </div>
             </div>
 
             <!-- Basic Information -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-6">
               <!-- Name -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {{ $t('UI.pets.fields.name') }}
+                  {{ $t('UI.mypets.fields.name') }}
                 </label>
                 <input
                   v-model="form.name"
@@ -233,7 +229,7 @@
                     'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
                     hasError('name') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   ]"
-                  :placeholder="$t('UI.pets.placeholders.name')"
+                  :placeholder="$t('UI.mypets.placeholders.name')"
                 />
                 <div v-if="hasError('name')" class="mt-1 text-sm text-red-600">
                   {{ errors.name }}
@@ -245,7 +241,7 @@
                 <!-- Species -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ $t('UI.pets.fields.species') }} *
+                    {{ $t('UI.mypets.fields.species') }} *
                   </label>
                   <select
                     v-model="form.species"
@@ -255,14 +251,14 @@
                       hasError('species') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                     ]"
                   >
-                    <option value="">{{ $t('UI.pets.placeholders.select_species') }}</option>
+                    <option value="">{{ $t('UI.mypets.placeholders.select_species') }}</option>
                     <option
-                      v-for="species in petSpeciesOptions"
+                      v-for="species in petSpeciesOptionsWithFallback"
                       :key="species.value"
                       :value="species.value"
                       :disabled="species.disabled"
                     >
-                      {{ species.label }}
+                      {{ species.displayLabel }}
                     </option>
                   </select>
                   <div v-if="hasError('species')" class="mt-1 text-sm text-red-600">
@@ -273,7 +269,7 @@
                 <!-- Breed -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ $t('UI.pets.fields.breed') }} *
+                    {{ $t('UI.mypets.fields.breed') }} *
                   </label>
                   <input
                     v-model="form.breed"
@@ -283,7 +279,7 @@
                       'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
                       hasError('breed') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                     ]"
-                    :placeholder="$t('UI.pets.placeholders.breed')"
+                    :placeholder="$t('UI.mypets.placeholders.breed')"
                   />
                   <div v-if="hasError('breed')" class="mt-1 text-sm text-red-600">
                     {{ errors.breed }}
@@ -298,7 +294,7 @@
               <!-- Gender -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {{ $t('UI.pets.fields.gender') }}
+                  {{ $t('UI.mypets.fields.gender') }}
                 </label>
                 <select
                   v-model="form.gender"
@@ -308,9 +304,9 @@
                     hasError('gender') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   ]"
                 >
-                  <option value="">{{ $t('UI.pets.placeholders.select_gender') }}</option>
-                  <option value="Boy">{{ $t('UI.pets.placeholders.select_boy') }}</option>
-                  <option value="Girl">{{ $t('UI.pets.placeholders.select_girl') }}</option>
+                  <option value="">{{ $t('UI.mypets.placeholders.select_gender') }}</option>
+                  <option value="Boy">{{ $t('UI.mypets.placeholders.select_boy') }}</option>
+                  <option value="Girl">{{ $t('UI.mypets.placeholders.select_girl') }}</option>
                 </select>
                 <div v-if="hasError('gender')" class="mt-1 text-sm text-red-600">
                   {{ errors.gender }}
@@ -320,7 +316,7 @@
               <!-- Date of Birth (Year and Month only) -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {{ $t('UI.pets.fields.dob') }}
+                  {{ $t('UI.mypets.fields.dob') }}
                 </label>
                 <input
                   v-model="form.dob"
@@ -342,7 +338,7 @@
               <!-- Color -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {{ $t('UI.pets.fields.color') }}
+                  {{ $t('UI.mypets.fields.color') }}
                 </label>
                 <input
                   v-model="form.color"
@@ -352,7 +348,7 @@
                     'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
                     hasError('color') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   ]"
-                  :placeholder="$t('UI.pets.placeholders.color')"
+                  :placeholder="$t('UI.mypets.placeholders.color')"
                 />
                 <div v-if="hasError('color')" class="mt-1 text-sm text-red-600">
                   {{ errors.color }}
@@ -362,7 +358,7 @@
               <!-- Pet Size -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {{ $t('UI.pets.fields.pet_size') }}
+                  {{ $t('UI.mypets.fields.pet_size') }}
                 </label>
                 <select
                   v-model="form.pet_size"
@@ -372,10 +368,10 @@
                     hasError('pet_size') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                   ]"
                 >
-                  <option value="">{{ $t('UI.pets.placeholders.select_size') }}</option>
-                  <option value="small">{{ $t('UI.pets.placeholders.select_small') }}</option>
-                  <option value="medium">{{ $t('UI.pets.placeholders.select_medium') }}</option>
-                  <option value="large">{{ $t('UI.pets.placeholders.select_large') }}</option>
+                  <option value="">{{ $t('UI.mypets.placeholders.select_size') }}</option>
+                  <option value="small">{{ $t('UI.mypets.placeholders.select_small') }}</option>
+                  <option value="medium">{{ $t('UI.mypets.placeholders.select_medium') }}</option>
+                  <option value="large">{{ $t('UI.mypets.placeholders.select_large') }}</option>
                 </select>
                 <div v-if="hasError('pet_size')" class="mt-1 text-sm text-red-600">
                   {{ errors.pet_size }}
@@ -386,7 +382,7 @@
             <!-- Description -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                {{ $t('UI.pets.fields.description') }}
+                {{ $t('UI.mypets.fields.description') }}
               </label>
               <textarea
                 v-model="form.description"
@@ -396,7 +392,7 @@
                   'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2',
                   hasError('description') ? 'border-red-300 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
                 ]"
-                :placeholder="$t('UI.pets.placeholders.description')"
+                :placeholder="$t('UI.mypets.placeholders.description')"
               ></textarea>
               <div v-if="hasError('description')" class="mt-1 text-sm text-red-600">
                 {{ errors.description }}
@@ -416,10 +412,11 @@
                   />
                   <div class="ml-3">
                     <label class="text-sm font-medium text-gray-900">
-                      {{ $t('UI.pets.fields.published') }}
+                      {{ $t('UI.mypets.fields.published') }}
                     </label>
                     <p class="text-xs text-gray-500 mt-1">
-                      {{ form.published ? 'Питомец виден всем пользователям' : 'Питомец виден только вам' }}
+                      <!--{{ form.published ? 'Питомец виден всем пользователям' : 'Питомец виден только вам' }}-->
+                      {{ form.published ? $t('UI.mypets.published.prompt.yes') : $t('UI.mypets.published.prompt.no') }}
                     </p>
                   </div>
                 </div>
@@ -440,7 +437,7 @@
                 @click="handleCancel"
                 class="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
-                {{ $t('UI.common.cancel') }}
+                {{ $t('UI.mypets.common.cancel') }}
               </button>
               <button
                 type="submit"
@@ -449,10 +446,10 @@
               >
                 <span v-if="loading">
                   <Icon icon="mdi:loading" class="w-4 h-4 mr-2 animate-spin" />
-                  {{ $t('UI.common.saving') }}
+                  {{ $t('UI.mypets.common.saving') }}
                 </span>
                 <span v-else>
-                  {{ isEditMode ? $t('UI.common.save') : $t('UI.common.create') }}
+                  {{ isEditMode ? $t('UI.mypets.common.save') : $t('UI.mypets.common.create') }}
                 </span>
               </button>
             </div>
@@ -465,8 +462,8 @@
   <!-- Confirm Dialogs -->
   <ConfirmDialog
     :is-open="showCancelDialog"
-    title="Discard Changes"
-    message="You have unsaved changes. Are you sure you want to discard them?"
+    :title="$t('UI.mypets.dialog.title')"
+    :message="$t('MESSAGE.mypets.confirmdialog.unsaved_changes')"
     icon="mdi:alert-circle"
     icon-class="text-yellow-500"
     confirm-text="Discard"
@@ -478,8 +475,8 @@
 
   <ConfirmDialog
     :is-open="showDeleteDialog"
-    title="Delete Pet"
-    :message="`Are you sure you want to delete ${petToDelete?.name}? This action cannot be undone.`"
+    :title="$t('UI.mypets.dialog.confirm.delete')"
+    :message="$t('MESSAGE.mypets.confirmdialog.delete_pet')"
     icon="mdi:delete"
     icon-class="text-red-500"
     confirm-text="Delete"
@@ -493,7 +490,7 @@
   <Dialog
     :model-value="showPhotoPreview"
     @close="closePhotoPreview"
-    title="Предпросмотр фотографии"
+    :title="$t('UI.mypets.dialog.title.preview_photo')"
     size="xl"
   >
     <div class="flex items-center justify-center">
@@ -509,11 +506,11 @@
   <Dialog
     :model-value="showPhotoEditorDialog"
     @close="closePhotoEditor"
-    title="Редактирование фото питомца"
+    :title="$t('UI.mypets.dialog.photo_editor.title')"
     size="lg"
+    :hide-footer="true"
   >
     <div v-if="showPhotoEditorDialog">
-      <p class="text-sm text-gray-500 mb-2">Debug: Dialog is open, editing index: {{ editingPhotoIndex }}</p>
       <PetPhotoEditor
         @save="handlePhotoSave"
         @cancel="closePhotoEditor"
@@ -539,6 +536,16 @@ import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc' // для работы с UTC
 import timezone from 'dayjs/plugin/timezone' // для работы с временными зонами
 import { PET_SPECIES } from '@/constants/petSpecies.js'
+
+// Добавьте в самом начале script setup
+console.log('🔍 MyPetsView script setup started')
+
+// После импортов
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+
+console.log(' MyPetsView loaded, t function:', typeof t)
+console.log('🔍 Cat translation test:', t('UI.const.petspecies.options.cat'))
 
 // Инициализируем плагины
 dayjs.extend(utc)
@@ -599,6 +606,22 @@ const errors = reactive({
 const isEditMode = computed(() => !!selectedPet.value)
 const petSpeciesOptions = computed(() => PET_SPECIES.getWithPopularFirst())
 
+const petSpeciesOptionsWithFallback = computed(() => {
+  const options = PET_SPECIES.getWithPopularFirst()
+
+  return options.map(species => {
+    const translation = t(species.label)
+
+    // Для отладки
+    console.log(` Species: ${species.value}, Label: ${species.label}, Translation: ${translation}`)
+
+    return {
+      ...species,
+      displayLabel: translation // Показываем перевод (или ключ, если перевод не найден)
+    }
+  })
+})
+
 // Validation functions
 function validateField(fieldName, value) {
   errors[fieldName] = ''
@@ -608,9 +631,9 @@ function validateField(fieldName, value) {
       // Имя необязательное, но если указано, должно быть валидным
       if (value && value.trim() !== '') {
         if (value.length < 2) {
-          errors.name = 'Name must be at least 2 characters'
+          errors.name = t('VALIDATION.minLength', { min: 2 })
         } else if (value.length > 100) {
-          errors.name = 'Name cannot exceed 100 characters'
+          errors.name = t('VALIDATION.maxLength', { max: 100 })
         }
       }
       break
@@ -618,24 +641,24 @@ function validateField(fieldName, value) {
     case 'species':
       // Вид животного - обязательное поле
       if (!value || value.trim() === '') {
-        errors.species = 'Species is required'
+        errors.species = t('VALIDATION.required')
       } else if (value.length > 100) {
-        errors.species = 'Species cannot exceed 100 characters'
+        errors.species = t('VALIDATION.maxLength', { max: 100 })
       }
       break
 
     case 'breed':
       // Порода - обязательное поле
       if (!value || value.trim() === '') {
-        errors.breed = 'Breed is required'
+        errors.breed = t('VALIDATION.required')
       } else if (value.length > 100) {
-        errors.breed = 'Breed cannot exceed 100 characters'
+        errors.breed = t('VALIDATION.maxLength', { max: 100 })
       }
       break
 
     case 'gender':
       if (value && value.length > 10) {
-        errors.gender = 'Gender cannot exceed 10 characters'
+        errors.gender = t('VALIDATION.maxLength', { max: 10 })
       }
       break
 
@@ -644,7 +667,7 @@ function validateField(fieldName, value) {
         // Проверяем формат YYYY-MM
         const dateRegex = /^\d{4}-\d{2}$/
         if (!dateRegex.test(value)) {
-          errors.dob = 'Please enter a valid date in YYYY-MM format'
+          errors.dob = t('VALIDATION.date')
         } else {
           const [year, month] = value.split('-')
           const yearNum = parseInt(year)
@@ -653,19 +676,19 @@ function validateField(fieldName, value) {
           // Проверяем диапазон года (не раньше 1990 и не позже текущего года)
           const currentYear = new Date().getFullYear()
           if (yearNum < 1990 || yearNum > currentYear) {
-            errors.dob = `Year must be between 1990 and ${currentYear}`
+            errors.dob = t('VALIDATION.between', { min: 1990, max: currentYear })
           }
 
           // Проверяем диапазон месяца
           if (monthNum < 1 || monthNum > 12) {
-            errors.dob = 'Month must be between 01 and 12'
+            errors.dob = t('VALIDATION.between', { min: 1, max: 12 })
           }
 
           // Проверяем, что дата не в будущем
           const selectedDate = new Date(yearNum, monthNum - 1)
           const currentDate = new Date()
           if (selectedDate > currentDate) {
-            errors.dob = 'Date of birth cannot be in the future'
+            errors.dob = t('VALIDATION.before', { date: 'current date' })
           }
         }
       }
@@ -673,19 +696,19 @@ function validateField(fieldName, value) {
 
     case 'color':
       if (value && value.length > 50) {
-        errors.color = 'Color cannot exceed 50 characters'
+        errors.color = t('VALIDATION.maxLength', { max: 50 })
       }
       break
 
     case 'description':
       if (value && value.length > 1000) {
-        errors.description = 'Description cannot exceed 1000 characters'
+        errors.description = t('VALIDATION.maxLength', { max: 1000 })
       }
       break
 
     case 'pet_size':
       if (value && value.length > 45) {
-        errors.pet_size = 'Size cannot exceed 45 characters'
+        errors.pet_size = t('VALIDATION.maxLength', { max: 45 })
       }
       break
   }
@@ -845,7 +868,7 @@ async function handleSave() {
   if (!isValid) {
     console.log('Form is invalid, showing error toast')
     console.log('Validation errors:', errors)
-    toast.error('Please fix the validation errors')
+    toast.error(t('MESSAGE.mypets.error.validation_errors'))
     return
   }
 
@@ -915,13 +938,13 @@ async function handleSave() {
             console.log(` Uploading photo ${i + 1}/${form.value.main_photo_files.length}`)
             await petsStore.uploadPetPhoto(petId, form.value.main_photo_files[i], i)
           }
-          toast.success('Питомец обновлен и фото загружены!')
+          toast.success(t('MESSAGE.mypets.success.pet_updated_photo_uploaded'))
         } catch (photoError) {
           console.error('Photo upload error:', photoError)
-          toast.warning('Питомец обновлен, но загрузка фото не удалась')
+          toast.warning(t('MESSAGE.mypets.warning.photo_upload_failed'))
         }
       } else {
-        toast.success('Питомец обновлен успешно!')
+        toast.success(t('MESSAGE.mypets.success.pet_updated'))
       }
     } else {
       console.log('➕ Creating new pet')
@@ -969,13 +992,13 @@ async function handleSave() {
             console.log(` Uploading photo ${i + 1}/${form.value.main_photo_files.length}`)
             await petsStore.uploadPetPhoto(newPet.id, form.value.main_photo_files[i], i)
           }
-          toast.success('Питомец создан и фото загружены!')
+          toast.success(t('MESSAGE.mypets.success.pet_created_photo_uploaded'))
         } catch (photoError) {
           console.error('Photo upload error for new pet:', photoError)
-          toast.warning('Питомец создан, но загрузка фото не удалась')
+          toast.warning(t('MESSAGE.mypets.warning.pet_created_photo_upload_failed'))
         }
       } else {
-        toast.success('Питомец создан успешно!')
+        toast.success(t('MESSAGE.mypets.success.pet_created'))
       }
     }
 
@@ -987,7 +1010,7 @@ async function handleSave() {
       response: error.response?.data,
       status: error.response?.status
     })
-    toast.error(error.message || 'Failed to save pet')
+    toast.error(error.message || t('MESSAGE.mypets.error.failed_to_save'))
   } finally {
     loading.value = false
   }
@@ -1018,9 +1041,9 @@ async function confirmDelete() {
 
   try {
     await petsStore.deletePet(petToDelete.value.id)
-    toast.success('Pet deleted successfully!')
+    toast.success(t('MESSAGE.mypets.success.pet_deleted'))
   } catch (error) {
-    toast.error(error.message || 'Failed to delete pet')
+    toast.error(error.message || t('MESSAGE.mypets.error.pet_delete_failed'))
   } finally {
     showDeleteDialog.value = false
     petToDelete.value = null
@@ -1045,7 +1068,7 @@ function handlePhotoDrop(event) {
   const imageFiles = files.filter(file => file.type.startsWith('image/'))
 
   if (imageFiles.length === 0) {
-    toast.error('Пожалуйста, перетащите изображения')
+    toast.error(t('MESSAGE.mypets.error.drag_image'))
     return
   }
 
@@ -1053,7 +1076,7 @@ function handlePhotoDrop(event) {
   const remainingSlots = 4 - currentCount
 
   if (imageFiles.length > remainingSlots) {
-    toast.warning(`Можно добавить только ${remainingSlots} фото (${currentCount}/4)`)
+    toast.warning(t('MESSAGE.mypets.warning.allowed_count_photos',{count:4}))
     imageFiles.splice(remainingSlots)
   }
 
@@ -1080,7 +1103,7 @@ async function processMultipleFiles(files) {
       }
     } catch (error) {
       console.error('Error processing file:', error)
-      toast.error(`Ошибка обработки файла ${files[i].name}`)
+      toast.error(t('MESSAGE.mypets.error.file_processing', {file: files[i].name}))
     }
   }
 
@@ -1092,7 +1115,7 @@ async function processFile(file) {
   return new Promise((resolve) => {
     // Validate file
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(`Файл ${file.name} слишком большой (максимум 5MB)`)
+      toast.error(t('MESSAGE.mypets.error.file_too_large', {file: file[i].name}))
       resolve()
       return
     }
@@ -1195,7 +1218,7 @@ async function removePhoto(photo) {
         form.value.main_photos[photoIndex].deleting = true
       } else {
         console.error('❌ Photo not found in form array!')
-        toast.error('Фотография не найдена в форме')
+        toast.error(t('MESSAGE.mypets.error.photo_not_found'))
         return
       }
 
@@ -1216,9 +1239,9 @@ async function removePhoto(photo) {
       // Показываем сообщение с информацией об оставшихся фото
       const remainingPhotos = response?.data?.remaining_photos || 0
       if (remainingPhotos === 0) {
-        toast.success('Фото удалено! У питомца больше нет фотографий.')
+        toast.success(t('MESSAGE.mypets.success.photo_deleted'))
       } else {
-        toast.success(`Фото удалено! Осталось фотографий: ${remainingPhotos}`)
+        toast.success(t('MESSAGE.mypets.success.photo_deleted_photo_remaining',{photo:remainingPhotos}))
       }
     } else {
       console.log('⚠️ Not deleting from server - conditions not met:', {
@@ -1241,10 +1264,10 @@ async function removePhoto(photo) {
       if (index !== -1) {
         form.value.main_photos.splice(index, 1)
         form.value.main_photo_files.splice(index, 1)
-        toast.success('Фото удалено из формы!')
+        toast.success(t('MESSAGE.mypets.success.photo_deleted'))
       } else {
         console.error('❌ Photo not found in form array!')
-        toast.error('Фотография не найдена в форме')
+        toast.error(t('MESSAGE.error.photo_not_found'))
       }
     }
   } catch (error) {
@@ -1324,7 +1347,7 @@ async function handlePhotoSave(file) {
         console.log('📋 Final filename to send:', originalFilename)
       } else {
         console.error('❌ Target photo not found!')
-        toast.error('Не удалось найти фотографию для замены')
+        toast.error(t('MESSAGE.mypets.error.no_phot_for_replace'))
         return
       }
     } else {
@@ -1362,12 +1385,12 @@ async function handlePhotoSave(file) {
       await uploadPhotoToServer(file, filename, replacedIndex)
     } else {
       form.value.main_photos[replacedIndex].uploading = false
-      toast.success('Фото готово к сохранению!')
+      toast.success(t('MESSAGE.mypets.success.photo_ready_to_save'))
     }
 
   } catch (error) {
     console.error('Photo processing error:', error)
-    toast.error('Ошибка при обработке фото')
+    toast.error(t('MESSAGE.mypets.error.photo_processing_error'))
   } finally {
     photoUploading.value = false
   }
@@ -1389,14 +1412,14 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
     // КРИТИЧЕСКАЯ ПРОВЕРКА
     if (!file) {
       console.error('❌ No file provided to uploadPhotoToServer!')
-      toast.error('Файл не найден для загрузки')
+      toast.error(t('MESSAGE.mypets.error.no_file_to_upload'))
       return
     }
 
     // Проверяем, что это действительно File объект
     if (!(file instanceof File)) {
       console.error('❌ File is not a File object:', file)
-      toast.error('Неправильный тип файла')
+      toast.error(t('MESSAGE.mypets.error.wrong_file_type'))
       return
     }
 
@@ -1451,7 +1474,7 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
     // В uploadPhotoToServer добавляем проверку успешной операции
     if (response?.data?.operation_skipped) {
       console.warn('⚠️ Upload skipped:', response.data.message)
-      toast.warning(response.data.message || 'Операция пропущена')
+      toast.warning(response.data.message || t('MESSAGE.mypets.warning.upload_skipped'))
 
       if (photoIndex >= 0 && form.value.main_photos[photoIndex]) {
         const photo = form.value.main_photos[photoIndex]
@@ -1480,7 +1503,7 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
       console.log('📸 Photo updated - url:', photo.url)
     }
 
-    toast.success('Фото загружено!')
+    toast.success(t('MESSAGE.mypets.success.photo_uploaded'))
 
     // 🔥 ВАЖНО: Обновляем данные питомца в store
     if (petId && petId !== 0) {
@@ -1508,7 +1531,7 @@ async function uploadPhotoToServer(file, filename = null, photoIndex) {
       photo.uploadError = true
     }
 
-    toast.error(error.message || 'Failed to upload photo')
+    toast.error(error.message || t('MESSAGE.mypets.error.photo_upload_failed'))
   }
 }
 
@@ -1542,7 +1565,7 @@ async function handleTogglePublish(pet) {
     // НЕ ОБНОВЛЯЕМ объект pet - store уже обновил данные реактивно
     // Компонент автоматически обновится через реактивность
 
-    toast.success(newStatus ? 'Питомец опубликован!' : 'Питомец скрыт от публики!')
+    //toast.success(newStatus ? 'Питомец опубликован!' : 'Питомец скрыт от публики!')
   } catch (error) {
     console.error('❌ Error toggling publish status:', error)
     console.error('Error details:', {
@@ -1550,7 +1573,7 @@ async function handleTogglePublish(pet) {
       response: error.response?.data,
       status: error.response?.status
     })
-    toast.error('Ошибка при изменении статуса публикации')
+    //toast.error('Ошибка при изменении статуса публикации')
   }
 }
 

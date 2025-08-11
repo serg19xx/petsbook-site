@@ -13,7 +13,11 @@ export const useUserStore = defineStore('user', () => {
   // 1. При инициализации, читаем версию из localStorage, или ставим 1 по умолчанию.
   const avatarVersion = ref(parseInt(localStorage.getItem('avatarVersion') || '1', 10))
   const coverVersion = ref(parseInt(localStorage.getItem('coverVersion') || '1', 10))
-  const defaultAvatar = ref(null)
+
+  // Устанавливаем дефолтный аватар
+  const defaultAvatar = ref(
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNlNWU3ZWIiLz4KPHBhdGggZD0iTTIwIDEwQzIyLjIwOTEgMTAgMjQgMTEuNzkwOSAyNCAxNEMyNCAxNi4yMDkxIDIyLjIwOTEgMTggMjAgMThDMTcuNzkwOSAxOCAxNiAxNi4yMDkxIDE2IDE0QzE2IDExLjc5MDkgMTcuNzkwOSAxMCAyMCAxMFoiIGZpbGw9IiM5Y2EzYWYiLz4KPHBhdGggZD0iTTI4IDMwQzI4IDI2LjY4NjMgMjQuNDE4MyAyNCAyMCAyNEMxNS41ODE3IDI0IDEyIDI2LjY4NjMgMTIgMzBIMjhaIiBmaWxsPSIjOWNhM2FmIi8+Cjwvc3ZnPgo=',
+  )
 
   const isAuthenticated = computed(() => !!userData.value && !!userData.value.id)
 
@@ -43,11 +47,20 @@ export const useUserStore = defineStore('user', () => {
     fetchPromise = (async () => {
       try {
         const response = await api.get('/api/user/getuser', { withCredentials: true })
+
+        console.log('🔍 Полный ответ от сервера:', response)
+        console.log('🔍 response.data:', response.data)
+        console.log('🔍 response.data?.data:', response.data?.data)
+
         userData.value = response.data?.data
 
         if (userData.value) {
           authStore.isAuthenticated = true
           console.log('✅ User data loaded successfully:', userData.value.email)
+          console.log('🔍 Avatar field:', userData.value.avatar)
+          console.log('🔍 Avatar type:', typeof userData.value.avatar)
+          console.log('🔍 Avatar length:', userData.value.avatar?.length)
+          console.log('🔍 Full userData:', userData.value)
         } else {
           // Если нет данных пользователя, но запрос прошёл успешно
           console.warn('⚠️ No user data received, but request was successful')
@@ -155,10 +168,20 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const getAvatarUrl = computed(() => {
-    if (userData.value?.avatar) {
-      return `${userData.value.avatar}?v=${avatarVersion.value}`
+    if (userData.value?.avatar && userData.value.avatar.trim() !== '') {
+      // Проверяем, является ли avatar уже полным URL
+      if (
+        userData.value.avatar.startsWith('http://') ||
+        userData.value.avatar.startsWith('https://')
+      ) {
+        return `${userData.value.avatar}?v=${avatarVersion.value}`
+      }
+
+      // Если это относительный путь, добавляем базовый URL
+      const cleanAvatar = userData.value.avatar.replace(/^\/+|\/+$/g, '')
+      return `${import.meta.env.VITE_API_BASE_URL || ''}/${cleanAvatar}?v=${avatarVersion.value}`
     }
-    return defaultAvatar
+    return defaultAvatar.value
   })
 
   const getCoverUrl = computed(() => {

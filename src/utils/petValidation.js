@@ -2,42 +2,42 @@ import { createValidationRules } from './validation.js'
 
 export const petValidationRules = createValidationRules({
   name: {
-    required: { value: true, message: 'validation.required' },
-    minLength: { value: 2, message: 'validation.minLength' },
-    maxLength: { value: 100, message: 'validation.maxLength' },
+    required: { value: true, message: 'required' },
+    minLength: { value: 2, message: 'minLength' },
+    maxLength: { value: 100, message: 'maxLength' },
   },
 
   species: {
-    required: { value: true, message: 'validation.required' },
-    maxLength: { value: 100, message: 'validation.maxLength' },
+    required: { value: true, message: 'required' },
+    maxLength: { value: 100, message: 'maxLength' },
   },
 
   breed: {
-    maxLength: { value: 100, message: 'validation.maxLength' },
+    maxLength: { value: 100, message: 'maxLength' },
   },
 
   gender: {
-    required: { value: true, message: 'validation.required' },
+    required: { value: true, message: 'required' },
   },
 
   dob: {
-    date: { value: true, message: 'validation.date' },
+    date: { value: true, message: 'date' },
   },
 
   color: {
-    maxLength: { value: 50, message: 'validation.maxLength' },
+    maxLength: { value: 50, message: 'maxLength' },
   },
 
   description: {
-    maxLength: { value: 1000, message: 'validation.maxLength' },
+    maxLength: { value: 1000, message: 'maxLength' },
   },
 
   pet_size: {
-    maxLength: { value: 45, message: 'validation.maxLength' },
+    maxLength: { value: 45, message: 'maxLength' },
   },
 
   yt_video: {
-    url: { value: true, message: 'validation.url' },
+    url: { value: true, message: 'url' },
   },
 })
 

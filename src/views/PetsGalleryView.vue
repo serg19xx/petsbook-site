@@ -12,13 +12,7 @@
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <Icon icon="mdi:paw" class="w-4 h-4 text-blue-600" />
                 </div>
-                <span class="font-medium">{{ pets.length }} pets found</span>
-              </div>
-              <div v-if="activeFiltersCount > 0" class="flex items-center gap-2">
-                <Icon icon="mdi:filter" class="w-4 h-4 text-blue-500" />
-                <span class="text-blue-600 font-medium"
-                  >{{ activeFiltersCount }} active filters</span
-                >
+                <span class="font-medium">{{ pets.length }} {{ $t('UI.petsgallery.pets_found', { count: pets.length }) }}</span>
               </div>
             </div>
 
@@ -35,7 +29,7 @@
                 ]"
               >
                 <Icon icon="mdi:filter-variant" class="w-4 h-4" />
-                <span class="hidden sm:inline">Filters</span>
+                <span class="hidden sm:inline">{{ $t('UI.petsgallery.button.filters') }}</span>
                 <span
                   v-if="activeFiltersCount > 0"
                   class="bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold"
@@ -50,7 +44,7 @@
                 class="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg transition-all duration-200 font-medium"
               >
                 <Icon icon="mdi:sort-variant" class="w-4 h-4" />
-                <span class="hidden sm:inline">Sort</span>
+                <span class="hidden sm:inline">{{ $t('UI.common.sort') }}</span>
               </button>
             </div>
           </div>
@@ -60,7 +54,7 @@
         <div v-if="loading" class="flex justify-center py-8">
           <div class="flex items-center gap-2 text-gray-600">
             <Icon icon="mdi:loading" class="w-5 h-5 animate-spin" />
-            Loading pets...
+            {{ $t('UI.common.loading') }}
           </div>
         </div>
 
@@ -75,8 +69,8 @@
         <!-- Empty State -->
         <div v-else-if="pets.length === 0" class="text-center py-12">
           <Icon icon="mdi:paw" class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No pets found</h3>
-          <p class="text-gray-600">Try adjusting your search criteria</p>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">{{ $t('UI.petsgallery.no_pets_found') }}</h3>
+          <p class="text-gray-600">{{ $t('UI.petsgallery.no_pets_description') }}</p>
         </div>
 
         <!-- Pets Grid -->
@@ -100,12 +94,12 @@
             class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:shadow-md"
           >
             <Icon v-if="loadingMore" icon="mdi:loading" class="w-5 h-5 animate-spin" />
-            <span class="font-medium">{{ loadingMore ? 'Loading...' : 'Load more pets' }}</span>
+            <span class="font-medium">{{ loadingMore ? $t('UI.common.loading') : $t('UI.common.load_more') }}</span>
           </button>
         </div>
       </div>
 
-      <!-- Pet Detail View -->
+            <!-- Pet Detail View -->
       <div v-else-if="currentView === 'detail' && selectedPet" class="max-w-4xl mx-auto">
         <!-- Header with Back Button -->
         <div class="flex items-center justify-between mb-6">
@@ -114,7 +108,7 @@
             class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <Icon icon="mdi:arrow-left" class="w-5 h-5" />
-            <span>Back to gallery</span>
+            <span>{{ $t('UI.petsgallery.back_to_gallery') }}</span>
           </button>
 
           <div class="flex items-center gap-2">
@@ -142,10 +136,10 @@
           <div class="bg-white rounded-lg border border-gray-200 p-6">
             <div class="flex items-start justify-between">
               <div>
-                <h1 class="text-3xl font-bold text-gray-900">{{ selectedPet?.name || 'Unknown Pet' }}</h1>
-                <p class="text-lg text-gray-600">{{ selectedPet?.breed || 'Unknown breed' }}</p>
+                <h1 class="text-3xl font-bold text-gray-900">{{ selectedPet?.name || 'sdfsdfs' }}</h1>
+                <p class="text-lg text-gray-600">{{ selectedPet?.breed || '---' }}</p>
                 <p class="text-sm text-gray-500 mt-1">
-                  {{ selectedPet?.location || 'Unknown location' }} • {{ selectedPet?.distance || 'Unknown distance' }}
+                  {{ selectedPet?.location || '---' }} • {{ selectedPet?.distance || '---' }}
                 </p>
               </div>
             </div>
@@ -153,7 +147,7 @@
 
           <!-- Photo Gallery -->
           <div class="bg-white rounded-lg border border-gray-200 p-4">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Photos</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ $t('UI.petsgallery.photos') }}</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div
                 v-for="(photo, index) in selectedPet?.photos || []"
@@ -163,7 +157,7 @@
               >
                 <img
                   :src="photo"
-                  :alt="`${selectedPet?.name || 'Pet'} photo ${index + 1}`"
+                  :alt="`${selectedPet?.name || $t('UI.petsgallery.unnamed_pet')} ${$t('UI.petsgallery.photo')} ${index + 1}`"
                   class="w-full h-full object-cover"
                 />
               </div>
@@ -172,51 +166,50 @@
 
           <!-- Pet Information -->
           <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4">Pet Information</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ $t('UI.petsgallery.pet_information') }}</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h3 class="font-medium text-gray-900 mb-2">Basic Information</h3>
+                <h3 class="font-medium text-gray-900 mb-2">{{ $t('UI.petsgallery.basic_information') }}</h3>
                 <dl class="space-y-2">
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Species:</dt>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.species') || '---' }}:</dt>
                     <dd class="font-medium">{{ selectedPet.species }}</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Breed:</dt>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.breed') || '---' }}:</dt>
                     <dd class="font-medium">{{ selectedPet.breed }}</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Gender:</dt>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.gender') || '---' }}:</dt>
                     <dd class="font-medium">
-                      {{ selectedPet.gender === 'Boy' ? 'Male' : 'Female' }}
+                      {{ selectedPet.gender }}
                     </dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Age:</dt>
-                    <dd class="font-medium">{{ selectedPet.age }}</dd>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.age') }}:</dt>
+                    <dd class="font-medium">{{ selectedPet.age || '---' }}</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Color:</dt>
-                    <dd class="font-medium">{{ selectedPet.color || 'Not specified' }}</dd>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.color') }}:</dt>
+                    <dd class="font-medium">{{ selectedPet.color || '---' }}</dd>
                   </div>
                   <div class="flex justify-between">
-                    <dt class="text-gray-600">Size:</dt>
-                    <dd class="font-medium">{{ selectedPet.size || 'Not specified' }}</dd>
+                    <dt class="text-gray-600">{{ $t('UI.petsgallery.fields.size') }}:</dt>
+                    <dd class="font-medium">{{ selectedPet.size || '---' }}</dd>
                   </div>
                 </dl>
               </div>
 
               <div>
-                <h3 class="font-medium text-gray-900 mb-2">Owner</h3>
+                <h3 class="font-medium text-gray-900 mb-2">{{ $t('UI.petsgallery.owner') }}</h3>
                 <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                   <img
-                    :src="selectedPet?.owner?.avatar || 'https://via.placeholder.com/48x48?text=Owner'"
-                    :alt="selectedPet?.owner?.name || 'Owner'"
+                    :src="selectedPet?.owner?.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjQiIGN5PSIyNCIgcj0iMjQiIGZpbGw9IiNlNWU3ZWIiLz4KPHBhdGggZD0iTTI0IDEyQzI2LjYyOTEgMTIgMjggMTMuMzcxIDI4IDE2QzI4IDE4LjYyOTEgMjYuNjI5MSAyMCAyNCAyMEMyMS4zNzEgMjAgMjAgMTguNjI5MSAyMCAxNkMyMCAxMy4zNzEgMjEuMzcxIDEyIDI0IDEyWk0zMiAzNkMzMiAzMi42ODYzIDI5LjMxMzcgMzAgMjYgMzBIMjJDMTguNjg2MyAzMCAxNiAzMi42ODYzIDE2IDM2SDMyWiIgZmlsbD0iIzljYTNhZiIvPgo8L3N2Zz4K'"
                     class="w-12 h-12 rounded-full"
                   />
                   <div>
-                    <p class="font-medium text-gray-900">{{ selectedPet?.owner?.name || 'Unknown Owner' }}</p>
-                    <p class="text-sm text-gray-600">{{ selectedPet?.location || 'Unknown location' }}</p>
+                    <p class="font-medium text-gray-900">{{ selectedPet?.owner?.name || '---' }}</p>
+                    <p class="text-sm text-gray-600">{{ selectedPet?.location || '---' }}</p>
                   </div>
                 </div>
               </div>
@@ -237,7 +230,7 @@
             class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <Icon icon="mdi:arrow-left" class="w-5 h-5" />
-            <span>Back to gallery</span>
+            <span>{{ $t('UI.petsgallery.back_to_gallery') }}</span>
           </button>
         </div>
 
@@ -248,57 +241,65 @@
             <div class="flex items-center gap-4">
               <img
                 :src="selectedPetForComments?.photos?.[0] || 'https://via.placeholder.com/64x64?text=No+Photo'"
-                :alt="selectedPetForComments?.name || 'Pet'"
+                :alt="selectedPetForComments?.name || $t('UI.petsgallery.unnamed_pet')"
                 class="w-16 h-16 rounded-lg object-cover"
               />
               <div>
-                <h1 class="text-2xl font-bold text-gray-900">{{ selectedPetForComments?.name || 'Unknown Pet' }}</h1>
-                <p class="text-gray-600">{{ selectedPetForComments?.breed || 'Unknown breed' }}</p>
-                <p class="text-sm text-gray-500">{{ selectedPetForComments?.comments || 0 }} comments</p>
+                <h1 class="text-2xl font-bold text-gray-900">{{ selectedPetForComments?.name || 'Unnamed Pet' }}</h1>
+                <p class="text-gray-600">{{ selectedPetForComments?.breed || 'Unknown Breed' }}</p>
+                <p class="text-sm text-gray-500">{{ selectedPetForComments?.comments || 0 }} {{ $t('UI.petsgallery.comments') }}</p>
               </div>
             </div>
           </div>
 
           <!-- Comment Form (for logged in users) -->
           <div v-if="isLoggedIn" class="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Add a comment</h2>
-            <div class="flex items-start gap-3">
-              <img :src="currentUserAvatar" :alt="currentUserName" class="w-10 h-10 rounded-full" />
-              <div class="flex-1">
-                <textarea
-                  v-model="newComment"
-                  rows="3"
-                  placeholder="Write a comment..."
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                ></textarea>
-                <div class="flex justify-end mt-2">
-                  <button
-                    @click="addComment"
-                    :disabled="!newComment.trim()"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors font-medium"
-                  >
-                    Post comment
-                  </button>
-                </div>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('UI.petsgallery.add_comment') }}</h2>
+
+            <!-- User info row -->
+            <div class="flex items-center gap-3 mb-3">
+              <img :src="currentUserAvatar" class="w-10 h-10 rounded-full flex-shrink-0" />
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-gray-900 truncate">{{ currentUserName }}</p>
+                <p class="text-sm text-gray-500 truncate">{{ userStore.userData?.email }}</p>
+              </div>
+            </div>
+
+            <!-- Comment textarea -->
+            <div class="mt-4">
+              <textarea
+                v-model="newComment"
+                rows="3"
+                :placeholder="$t('UI.petsgallery.comment_placeholder')"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              ></textarea>
+              <div class="flex justify-end mt-2">
+                <button
+                  @click="addComment"
+                  :disabled="!newComment.trim()"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors font-medium"
+                >
+                  {{ $t('UI.petsgallery.post_comment') }}
+                </button>
               </div>
             </div>
           </div>
 
           <!-- Comments List -->
           <div class="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ $t('UI.petsgallery.comments') }}</h2>
 
             <div v-if="commentsLoading" class="flex justify-center py-8">
               <div class="flex items-center gap-2 text-gray-600">
                 <Icon icon="mdi:loading" class="w-5 h-5 animate-spin" />
-                Loading comments...
+                {{ $t('UI.common.loading') }}
               </div>
             </div>
 
             <div v-else-if="comments.length === 0" class="text-center py-8">
               <Icon icon="mdi:comment-outline" class="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p class="text-gray-500">No comments yet</p>
-              <p class="text-sm text-gray-400 mt-1">Be the first to comment!</p>
+              <p class="text-gray-500">{{ $t('UI.petsgallery.no_comments') }}</p>
+              <p class="text-sm text-gray-400 mt-1">{{ $t('UI.petsgallery.be_the_first_to_comment') }}</p>
             </div>
 
             <div v-else class="space-y-4">
@@ -309,7 +310,6 @@
               >
                 <img
                   :src="comment.author.avatar"
-                  :alt="comment.author.name"
                   class="w-10 h-10 rounded-full flex-shrink-0"
                 />
                 <div class="flex-1 min-w-0">
@@ -340,7 +340,7 @@
                       class="flex items-center gap-1 text-gray-500 hover:text-blue-600 transition-colors"
                     >
                       <Icon icon="mdi:reply" class="w-4 h-4" />
-                      <span>Reply</span>
+                      <span>{{ $t('UI.petsgallery.reply') }}</span>
                     </button>
                   </div>
                 </div>
@@ -354,70 +354,70 @@
       <Dialog
         :model-value="showFilterDialog"
         @close="showFilterDialog = false"
-        title="Filters"
+        :title="$t('UI.petsgallery.filters.title')"
         size="md"
       >
         <div class="space-y-6 px-4 py-2">
           <!-- Species Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Animal Type</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('UI.petsgallery.fields.species') }}</label>
             <select
               v-model="filters.species"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">All types</option>
+              <option value="">{{ $t('UI.petsgallery.filters.all_species') }}</option>
               <option
-                v-for="species in petSpeciesOptions"
+                v-for="species in petSpeciesOptionsWithFallback"
                 :key="species.value"
                 :value="species.value"
                 :disabled="species.disabled"
               >
-                {{ species.label }}
+                {{ species.displayLabel }}
               </option>
             </select>
           </div>
 
           <!-- Gender Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('UI.petsgallery.fields.gender') }}</label>
             <select
               v-model="filters.gender"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Any</option>
-              <option value="Boy">Male</option>
-              <option value="Girl">Female</option>
+              <option value="">{{ $t('UI.petsgallery.filters.all_genders') }}</option>
+              <option value="Boy">{{ $t('UI.petsgallery.genders.boy') }}</option>
+              <option value="Girl">{{ $t('UI.petsgallery.genders.girl') }}</option>
             </select>
           </div>
 
           <!-- Age Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Age</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('UI.petsgallery.filters.age') }}</label>
             <select
               v-model="filters.age"
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="">Any</option>
-              <option value="young">Under 1 year</option>
-              <option value="adult">1-5 years</option>
-              <option value="senior">Over 5 years</option>
+              <option value="">{{ $t('UI.petsgallery.filters.all_ages') }}</option>
+              <option value="young">{{ $t('UI.petsgallery.ages.young') }}</option>
+              <option value="adult">{{ $t('UI.petsgallery.ages.adult') }}</option>
+              <option value="senior">{{ $t('UI.petsgallery.ages.senior') }}</option>
             </select>
           </div>
 
           <!-- Location Filter -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">{{ $t('UI.petsgallery.filters.location') }}</label>
             <div class="flex items-center gap-2">
               <input
                 v-model="filters.location"
                 type="text"
-                placeholder="Enter city"
+                :placeholder="$t('UI.petsgallery.fields.location_placeholder')"
                 class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <button
                 @click="useCurrentLocation"
                 class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                title="Use current location"
+                :title="$t('UI.petsgallery.fields.use_current_location')"
               >
                 <Icon icon="mdi:crosshairs-gps" class="w-4 h-4" />
               </button>
@@ -427,14 +427,14 @@
           <!-- Search Radius -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              Search radius: {{ filters.radius }} km
+              {{ $t('UI.petsgallery.fields.radius_km', { radius: filters.radius }) }}
             </label>
             <input
               v-model="filters.radius"
               type="range"
               min="1"
               max="100"
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
             />
           </div>
 
@@ -444,7 +444,7 @@
               @click="clearFilters"
               class="w-full px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
             >
-              Clear all filters
+              {{ $t('UI.petsgallery.filters.clear') }}
             </button>
           </div>
         </div>
@@ -456,20 +456,20 @@
               @click="showFilterDialog = false"
               class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
-              Cancel
+              {{ $t('UI.common.cancel') }}
             </button>
             <button
               @click="applyFilters"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Apply
+              {{ $t('UI.common.apply') }}
             </button>
           </div>
         </template>
       </Dialog>
 
       <!-- Sort Dialog -->
-      <Dialog :model-value="showSortDialog" @close="showSortDialog = false" title="Sort" size="sm">
+      <Dialog :model-value="showSortDialog" @close="showSortDialog = false" :title="$t('UI.common.sort')" size="sm">
         <div class="space-y-3">
           <label
             v-for="option in sortOptions"
@@ -496,13 +496,13 @@
               @click="showSortDialog = false"
               class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
-              Cancel
+              {{ $t('UI.common.cancel') }}
             </button>
             <button
               @click="applySort"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Apply
+              {{ $t('UI.common.apply') }}
             </button>
           </div>
         </template>
@@ -522,6 +522,8 @@ import { PET_SPECIES } from '@/constants/petSpecies.js'
 import { petsApi } from '@/api/pets'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useUserStore } from '@/stores/UserStore'
+import { useI18n } from 'vue-i18n'
+import { useLanguageStore } from '@/stores/LanguageStore'
 
 // Stores
 const authStore = useAuthStore()
@@ -569,7 +571,7 @@ const isLoggedIn = computed(() => {
 })
 
 const currentUserAvatar = computed(() => {
-  return userStore.userData?.owner_avatar || userStore.userData?.avatar || 'https://via.placeholder.com/40x40/4ECDC4/FFFFFF?text=U'
+  return userStore.userData?.owner_avatar || userStore.userData?.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNlNWU3ZWIiLz4KPHBhdGggZD0iTTIwIDEwQzIyLjIwOTEgMTAgMjQgMTEuNzkwOSAyNCAxNEMyNCAxNi4yMDkxIDIyLjIwOTEgMTggMjAgMThDMTcuNzkwOSAxOCAxNiAxNi4yMDkxIDE2IDE0QzE2IDExLjc5MDkgMTcuNzkwOSAxMCAyMCAxMFoiIGZpbGw9IiM5Y2EzYWYiLz4KPHBhdGggZD0iTTI4IDMwQzI4IDI2LjY4NjMgMjQuNDE4MyAyNCAyMCAyNEMxNS41ODE3IDI0IDEyIDI2LjY4NjMgMTIgMzBIMjhaIiBmaWxsPSIjOWNhM2FmIi8+Cjwvc3ZnPgo='
 })
 
 const currentUserName = computed(() => {
@@ -587,6 +589,68 @@ const activeFiltersCount = computed(() => {
 })
 
 const petSpeciesOptions = computed(() => PET_SPECIES.getWithPopularFirst())
+
+// Добавьте после импортов
+const { t } = useI18n()
+
+// Добавьте простой лог для проверки
+console.log('🔍 PetsGalleryView loaded')
+console.log(' t function type:', typeof t)
+console.log(' Cat translation:', t('UI.const.petspecies.options.cat'))
+console.log(' Dog translation:', t('UI.const.petspecies.options.dog'))
+console.log('🔍 Fish translation:', t('UI.const.petspecies.options.fish'))
+console.log('🔍 Loading translation:', t('UI.common.loading'))
+
+// Добавьте функцию для проверки i18n
+function debugI18n() {
+  console.log('🔍 Debugging i18n...')
+  console.log('🔍 t function:', typeof t)
+  console.log(' Test translation 1:', t('UI.common.loading'))
+  console.log(' Test translation 2:', t('VALIDATION.required'))
+  console.log(' Cat translation:', t('UI.const.petspecies.options.cat'))
+  console.log(' Dog translation:', t('UI.const.petspecies.options.dog'))
+  console.log('🔍 Fish translation:', t('UI.const.petspecies.options.fish'))
+  console.log('🔍 Non-existent key:', t('UI.const.petspecies.options.axolotl'))
+}
+
+// Вызываем отладку при монтировании
+onMounted(() => {
+  debugI18n()
+})
+
+// Добавьте computed для отладки
+const debugPetSpeciesOptions = computed(() => {
+  const options = PET_SPECIES.getWithPopularFirst()
+  console.log('🔍 Debug petSpeciesOptions:', options)
+
+  return options.map(species => {
+    const translatedLabel = t(species.label)
+    console.log(`🔍 Translation for "${species.label}": "${translatedLabel}"`)
+    return {
+      ...species,
+      translatedLabel
+    }
+  })
+})
+
+// Добавьте computed для отображения с fallback
+const petSpeciesOptionsWithFallback = computed(() => {
+  const options = PET_SPECIES.getWithPopularFirst()
+
+  return options.map(species => {
+    const translation = t(species.label)
+    // Если перевод не найден (возвращается тот же ключ), используем value
+    const displayLabel = translation === species.label ? species.value : translation
+
+    // Для отладки
+    console.log(` Species: ${species.value}, Label: ${species.label}, Translation: ${translation}, Display: ${displayLabel}`)
+
+    return {
+      ...species,
+      displayLabel
+    }
+  })
+})
 
 // Methods
 async function loadPets(reset = false) {
@@ -1091,24 +1155,35 @@ async function loadComments() {
   }
 }
 
-function addComment() {
-  if (!newComment.value.trim()) return
+async function addComment() {
+  if (!newComment.value.trim() || !selectedPetForComments.value) return
 
-  const comment = {
-    id: Date.now(),
-    text: newComment.value,
-    author: {
-      name: currentUserName.value,
-      avatar: currentUserAvatar.value,
-    },
-    date: new Date(),
-    likes: 0,
-    isLiked: false,
+  try {
+    // Здесь должен быть API запрос для добавления комментария
+    // const response = await api.post(`/api/pets/${selectedPetForComments.value.id}/comments`, {
+    //   text: newComment.value
+    // })
+
+    // Временно добавляем локально для демонстрации
+    const comment = {
+      id: Date.now(),
+      text: newComment.value,
+      author: {
+        name: currentUserName.value,
+        avatar: currentUserAvatar.value,
+      },
+      date: new Date(),
+      likes: 0,
+      isLiked: false,
+    }
+
+    comments.value.unshift(comment)
+    newComment.value = ''
+    toast.success('Comment posted!')
+  } catch (error) {
+    console.error('Error posting comment:', error)
+    toast.error('Failed to post comment')
   }
-
-  comments.value.unshift(comment)
-  newComment.value = ''
-  toast.success('Comment posted!')
 }
 
 function handleLikeComment(comment) {
