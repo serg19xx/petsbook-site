@@ -54,7 +54,7 @@
         <div v-if="loading" class="flex justify-center py-8">
           <div class="flex items-center gap-2 text-gray-600">
             <Icon icon="mdi:loading" class="w-5 h-5 animate-spin" />
-            {{ $t('UI.common.loading') }}
+            {{ $t('UI.petsgallery.loading') }}
           </div>
         </div>
 
@@ -94,7 +94,7 @@
             class="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-blue-400 disabled:to-blue-500 transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:shadow-md"
           >
             <Icon v-if="loadingMore" icon="mdi:loading" class="w-5 h-5 animate-spin" />
-            <span class="font-medium">{{ loadingMore ? $t('UI.common.loading') : $t('UI.common.load_more') }}</span>
+            <span class="font-medium">{{ loadingMore ? $t('UI.petsgallery.loading') : $t('UI.petsgallery.load_more') }}</span>
           </button>
         </div>
       </div>
@@ -292,7 +292,7 @@
             <div v-if="commentsLoading" class="flex justify-center py-8">
               <div class="flex items-center gap-2 text-gray-600">
                 <Icon icon="mdi:loading" class="w-5 h-5 animate-spin" />
-                {{ $t('UI.common.loading') }}
+                {{ $t('UI.petsgallery.loading') }}
               </div>
             </div>
 
@@ -599,13 +599,13 @@ console.log(' t function type:', typeof t)
 console.log(' Cat translation:', t('UI.const.petspecies.options.cat'))
 console.log(' Dog translation:', t('UI.const.petspecies.options.dog'))
 console.log('🔍 Fish translation:', t('UI.const.petspecies.options.fish'))
-console.log('🔍 Loading translation:', t('UI.common.loading'))
+console.log('🔍 Loading translation:', t('UI.petsgallery.loading'))
 
 // Добавьте функцию для проверки i18n
 function debugI18n() {
   console.log('🔍 Debugging i18n...')
   console.log('🔍 t function:', typeof t)
-  console.log(' Test translation 1:', t('UI.common.loading'))
+  console.log(' Test translation 1:', t('UI.petsgallery.loading'))
   console.log(' Test translation 2:', t('VALIDATION.required'))
   console.log(' Cat translation:', t('UI.const.petspecies.options.cat'))
   console.log(' Dog translation:', t('UI.const.petspecies.options.dog'))
