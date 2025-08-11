@@ -354,7 +354,7 @@
       <Dialog
         :model-value="showFilterDialog"
         @close="showFilterDialog = false"
-        :title="$t('UI.petsgallery.filters.title')"
+        :title="$t('UI.petsgallery.filterdlg.title')"
         size="md"
       >
         <div class="space-y-6 px-4 py-2">
@@ -456,13 +456,13 @@
               @click="showFilterDialog = false"
               class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
-              {{ $t('UI.common.cancel') }}
+              {{ $t('UI.petsgallery.filterdlg.cancel') }}
             </button>
             <button
               @click="applyFilters"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {{ $t('UI.common.apply') }}
+              {{ $t('UI.petsgallery.filterdlg.apply') }}
             </button>
           </div>
         </template>
@@ -496,13 +496,13 @@
               @click="showSortDialog = false"
               class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
-              {{ $t('UI.common.cancel') }}
+              {{ $t('UI.petsgallery.filterdlg.cancel') }}
             </button>
             <button
               @click="applySort"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              {{ $t('UI.common.apply') }}
+              {{ $t('UI.petsgallery.filterdlg.apply') }}
             </button>
           </div>
         </template>
